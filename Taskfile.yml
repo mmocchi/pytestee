@@ -1,0 +1,56 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install dependencies"
+    cmds:
+      - uv sync
+
+  check:
+    desc: "Check all"
+    cmds:
+      - task: lint
+      - task: format:check
+      - task: typecheck
+      - task: test
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - uv run pytest
+
+  lint:
+    desc: "Run linting"
+    cmds:
+      - uv run ruff check
+
+  typecheck:
+    desc: "Run type checking"
+    cmds:
+      - uv run mypy src/
+      - uv run mypy tests/
+
+  format:
+    desc: "Format code"
+    cmds:
+      - uv run ruff format
+
+  format:check:
+    desc: "Check formatting"
+    cmds:
+      - uv run ruff check --fix
+
+  build:
+    desc: "Build package"
+    cmds:
+      - uv build
+
+  dev:
+    desc: "Run in development mode"
+    cmds:
+      - uv run python -m pytestee
+
+  clean:
+    desc: "Clean build artifacts"
+    cmds:
+      - rm -rf dist/ build/ *.egg-info/
