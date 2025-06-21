@@ -2,7 +2,7 @@
 
 import ast
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from ..domain.models import TestFile, TestFunction
 
@@ -57,10 +57,9 @@ class ASTParser:
                     decorator.value.value.id == "pytest" and
                     decorator.value.attr == "mark"):
                     return True
-            elif isinstance(decorator.value, ast.Name):
+            elif isinstance(decorator.value, ast.Name) and decorator.value.id == "mark":
                 # mark.something (if mark is imported)
-                if decorator.value.id == "mark":
-                    return True
+                return True
         elif isinstance(decorator, ast.Call):
             return self._has_pytest_mark(decorator.func)
 
@@ -97,9 +96,9 @@ class ASTParser:
         """Get the name of a decorator."""
         if isinstance(decorator, ast.Name):
             return decorator.id
-        elif isinstance(decorator, ast.Attribute):
+        if isinstance(decorator, ast.Attribute):
             return self._get_attribute_name(decorator)
-        elif isinstance(decorator, ast.Call):
+        if isinstance(decorator, ast.Call):
             return self._get_decorator_name(decorator.func)
 
         return None
@@ -134,7 +133,7 @@ class ASTParser:
             return test_function.end_lineno - test_function.lineno + 1
         return len(test_function.body)
 
-    def find_comments(self, test_function: TestFunction, file_content: str) -> List[tuple[int, str]]:
+    def find_comments(self, test_function: TestFunction, file_content: str) -> List[Tuple[int, str]]:
         """Find comments in a test function."""
         comments = []
         lines = file_content.split('\n')

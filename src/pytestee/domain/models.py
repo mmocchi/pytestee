@@ -1,4 +1,4 @@
-"""Domain models for pytestee."""
+"""pytesteeのドメインモデル定義。"""
 
 import ast
 from dataclasses import dataclass
@@ -8,21 +8,24 @@ from typing import Any, Dict, List, Optional
 
 
 class CheckSeverity(Enum):
-    """Severity levels for check results."""
+    """チェック結果の重要度レベル。"""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
 
 
 class PatternType(Enum):
-    """Test pattern types."""
+    """テストパターンの種類。"""
+
     AAA = "aaa"  # Arrange, Act, Assert
     GWT = "gwt"  # Given, When, Then
 
 
 @dataclass
 class TestFunction:
-    """Represents a test function in the code."""
+    """コード内のテスト関数を表すクラス。"""
+
     name: str
     lineno: int
     col_offset: int
@@ -30,16 +33,18 @@ class TestFunction:
     end_col_offset: Optional[int]
     body: List[ast.stmt]
     docstring: Optional[str] = None
-    decorators: List[str] = None
+    decorators: Optional[List[str]] = None
 
     def __post_init__(self) -> None:
+        # デコレータがNoneの場合は空のリストで初期化
         if self.decorators is None:
             self.decorators = []
 
 
 @dataclass
 class TestFile:
-    """Represents a test file containing test functions."""
+    """テスト関数を含むテストファイルを表すクラス。"""
+
     path: Path
     content: str
     ast_tree: ast.AST
@@ -47,14 +52,16 @@ class TestFile:
 
     @property
     def relative_path(self) -> str:
-        """Get relative path as string."""
+        """相対パスを文字列として取得。"""
         return str(self.path)
 
 
 @dataclass
 class CheckResult:
-    """Result of a quality check."""
+    """品質チェックの結果。"""
+
     checker_name: str
+    rule_id: str
     severity: CheckSeverity
     message: str
     file_path: Path
@@ -64,13 +71,15 @@ class CheckResult:
     context: Optional[Dict[str, Any]] = None
 
     def __post_init__(self) -> None:
+        # コンテキストがNoneの場合は空の辞書で初期化
         if self.context is None:
             self.context = {}
 
 
 @dataclass
 class AnalysisResult:
-    """Result of analyzing test files."""
+    """テストファイル解析の結果。"""
+
     total_files: int
     total_tests: int
     passed_checks: int
@@ -79,7 +88,7 @@ class AnalysisResult:
 
     @property
     def success_rate(self) -> float:
-        """Calculate success rate as percentage."""
+        """成功率をパーセンテージで計算。"""
         total = self.passed_checks + self.failed_checks
         if total == 0:
             return 100.0
@@ -87,22 +96,24 @@ class AnalysisResult:
 
     @property
     def has_errors(self) -> bool:
-        """Check if there are any error-level issues."""
+        """エラーレベルの問題があるかをチェック。"""
         return any(result.severity == CheckSeverity.ERROR for result in self.check_results)
 
     @property
     def has_warnings(self) -> bool:
-        """Check if there are any warning-level issues."""
+        """警告レベルの問題があるかをチェック。"""
         return any(result.severity == CheckSeverity.WARNING for result in self.check_results)
 
 
 @dataclass
 class CheckerConfig:
-    """Configuration for checkers."""
+    """チェッカーの設定。"""
+
     name: str
     enabled: bool = True
-    config: Dict[str, Any] = None
+    config: Optional[Dict[str, Any]] = None
 
     def __post_init__(self) -> None:
+        # 設定がNoneの場合は空の辞書で初期化
         if self.config is None:
             self.config = {}

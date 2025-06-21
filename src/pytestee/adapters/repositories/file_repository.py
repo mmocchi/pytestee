@@ -40,7 +40,7 @@ class FileRepository(ITestRepository):
 
     def _is_test_file(self, file_path: Path) -> bool:
         """Check if a file is a test file."""
-        if not file_path.suffix == ".py":
+        if file_path.suffix != ".py":
             return False
 
         name = file_path.name

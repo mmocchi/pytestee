@@ -1,6 +1,7 @@
 """Assert density checker for test functions."""
 
-from typing import List, Optional
+import ast
+from typing import List, Optional, Union
 
 from ...domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ...infrastructure.ast_parser import ASTParser
@@ -32,6 +33,7 @@ class AssertDensityChecker(BaseChecker):
         # Check minimum assertions
         if assert_count < min_asserts:
             results.append(self._create_result(
+                "PTAS001",
                 "warning",
                 f"Too few assertions: {assert_count} (minimum recommended: {min_asserts})",
                 test_file,
@@ -41,6 +43,7 @@ class AssertDensityChecker(BaseChecker):
         # Check maximum assertions
         if assert_count > max_asserts:
             results.append(self._create_result(
+                "PTAS002",
                 "warning",
                 f"Too many assertions: {assert_count} (maximum recommended: {max_asserts})",
                 test_file,
@@ -52,6 +55,7 @@ class AssertDensityChecker(BaseChecker):
             density = assert_count / function_lines
             if density > max_density:
                 results.append(self._create_result(
+                    "PTAS003",
                     "info",
                     f"High assertion density: {density:.2f} ({assert_count} assertions in {function_lines} lines)",
                     test_file,
@@ -61,6 +65,7 @@ class AssertDensityChecker(BaseChecker):
         # Check for no assertions (potential issue)
         if assert_count == 0:
             results.append(self._create_result(
+                "PTAS004",
                 "error",
                 "No assertions found - test function should verify expected behavior",
                 test_file,
@@ -70,6 +75,7 @@ class AssertDensityChecker(BaseChecker):
         # If all checks pass, add positive result
         if not results and assert_count >= min_asserts and assert_count <= max_asserts:
             results.append(self._create_result(
+                "PTAS005",
                 "info",
                 f"Assertion count OK: {assert_count} assertions",
                 test_file,
@@ -78,7 +84,7 @@ class AssertDensityChecker(BaseChecker):
 
         return results
 
-    def _get_config_value(self, config: Optional[CheckerConfig], key: str, default: int | float) -> int | float:
+    def _get_config_value(self, config: Optional[CheckerConfig], key: str, default: Union[int, float]) -> Union[int, float]:
         """Get configuration value with fallback to default."""
         if config and config.config:
             return config.config.get(key, default)
@@ -122,15 +128,11 @@ class AssertDensityChecker(BaseChecker):
 
     def _calculate_complexity_score(self, test_function: TestFunction) -> int:
         """Calculate a simple complexity score based on control flow."""
-        import ast
-
         complexity = 1  # Base complexity
 
         for node in ast.walk(ast.Module(body=test_function.body, type_ignores=[])):
             # Add complexity for control flow structures
-            if isinstance(node, (ast.If, ast.While, ast.For, ast.Try, ast.With)):
-                complexity += 1
-            elif isinstance(node, ast.ExceptHandler):
+            if isinstance(node, (ast.If, ast.While, ast.For, ast.Try, ast.With, ast.ExceptHandler)):
                 complexity += 1
 
         return complexity

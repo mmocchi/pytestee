@@ -1,0 +1,405 @@
+# Pytestee Rule Reference
+
+このドキュメントでは、pytesteeで実装されているすべてのルールについて、識別と設定を容易にするカテゴリ化されたルールIDシステムと共に説明します。
+
+## Rule Categories
+
+### PTCM: Comment-Based Pattern Rules
+
+#### PTCM001: AAA Pattern Detected in Comments
+- **Severity**: INFO
+- **Description**: コメント解析によってAAA（Arrange, Act, Assert）パターンが検出された場合
+- **Good Examples**:
+  ```python
+  # Example 1: Standard AAA pattern
+  def test_user_creation():
+      # Arrange
+      name = "John Doe"
+      email = "john@example.com"
+      
+      # Act
+      user = User.create(name, email)
+      
+      # Assert
+      assert user.name == name
+      assert user.email == email
+  
+  # Example 2: Combined Act & Assert comment
+  def test_simple_calculation():
+      # Arrange
+      calculator = Calculator()
+      
+      # Act & Assert
+      assert calculator.add(2, 3) == 5
+  ```
+- **Bad Examples** (would not trigger this rule):
+  ```python
+  # Bad: No pattern comments
+  def test_without_comments():
+      user = User("John")
+      result = user.get_name()
+      assert result == "John"
+  
+  # Bad: Mixed pattern terminology
+  def test_mixed_patterns():
+      # Given
+      user = User("John")
+      # Act
+      result = user.get_name()
+      # Then
+      assert result == "John"
+  ```
+
+#### PTCM002: GWT Pattern Detected in Comments  
+- **Severity**: INFO
+- **Description**: コメント解析によってGWT（Given, When, Then）パターンが検出された場合
+- **Good Examples**:
+  ```python
+  # Example 1: Standard GWT pattern
+  def test_user_authentication():
+      # Given
+      user = User("john", "password123")
+      auth_service = AuthService()
+      
+      # When
+      is_authenticated = auth_service.authenticate(user.username, "password123")
+      
+      # Then
+      assert is_authenticated is True
+  
+  # Example 2: Combined When & Then
+  def test_quick_validation():
+      # Given
+      validator = EmailValidator()
+      
+      # When & Then
+      assert validator.is_valid("test@example.com") is True
+  ```
+- **Bad Examples** (would not trigger this rule):
+  ```python
+  # Bad: No pattern comments
+  def test_without_comments():
+      user = User("John")
+      result = user.get_name()
+      assert result == "John"
+  
+  # Bad: Mixed with AAA terminology
+  def test_mixed_patterns():
+      # Arrange
+      user = User("John")
+      # When
+      result = user.get_name()
+      # Assert
+      assert result == "John"
+  ```
+
+### PTST: Structural Pattern Rules
+
+#### PTST001: AAA Pattern Detected Through Structural Separation
+- **Severity**: INFO
+- **Description**: コードセクションを分離する空行によってAAAパターンが検出された場合
+- **Good Examples**:
+  ```python
+  # Example 1: Clear three-section structure
+  def test_order_processing():
+      # Arrange section
+      customer = Customer("John")
+      product = Product("Laptop", 1000)
+      
+      # Act section
+      order = OrderService.create_order(customer, product)
+      
+      # Assert section
+      assert order.customer == customer
+      assert order.total == 1000
+      assert order.status == "pending"
+  
+  # Example 2: Simple two-section structure
+  def test_calculation():
+      calculator = Calculator()
+      
+      result = calculator.multiply(5, 4)
+      
+      assert result == 20
+  ```
+- **Bad Examples** (would not trigger this rule):
+  ```python
+  # Bad: No structural separation
+  def test_no_separation():
+      user = User("John")
+      result = user.get_name()
+      assert result == "John"
+  
+  # Bad: Mixed code without clear sections
+  def test_mixed_code():
+      user = User("John")
+      other_user = User("Jane")
+      result1 = user.get_name()
+      assert result1 == "John"
+      result2 = other_user.get_name()
+      assert result2 == "Jane"
+  ```
+
+#### PTST002: AAA/GWT Pattern Not Clearly Detected
+- **Severity**: WARNING
+- **Description**: 明確なパターン構造が見つからない場合、テスト構成の改善を検討してください
+- **修正方法**: コメント、空行を追加するか、テストロジックを再構築してください
+- **Example**:
+  ```python
+  # Bad - no clear structure
+  def test_example():
+      data = "test"
+      result = process(data)
+      assert result == expected
+      more_data = "test2"
+      result2 = process(more_data)
+      assert result2 == expected2
+  ```
+
+### PTLG: Logical Pattern Rules
+
+#### PTLG001: AAA Pattern Detected Through Code Flow Analysis
+- **Severity**: INFO
+- **Description**: コード構造のAST解析によってAAAパターンが検出された場合
+- **良い例**: コードが自然にarrange → act → assertの流れに従っている場合
+- **Example**:
+  ```python
+  def test_example():
+      data = "test"        # Arrange (assignments)
+      result = process(data)  # Act (function calls)
+      assert result == expected  # Assert (assertions)
+  ```
+
+### PTAS: Assertion Rules
+
+#### PTAS001: Too Few Assertions
+- **Severity**: WARNING  
+- **Description**: テスト関数のアサーション数が推奨される最小値より少ない場合
+- **設定**: `min_asserts`（デフォルト: 1）
+- **Good Examples**:
+  ```python
+  # Good: Has at least minimum assertions
+  def test_user_creation():
+      user = User("John", "john@example.com")
+      
+      assert user.name == "John"
+      assert user.email == "john@example.com"
+  
+  # Good: Single meaningful assertion
+  def test_calculation():
+      result = Calculator().add(2, 3)
+      assert result == 5
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: No assertions at all
+  def test_without_assertions():
+      user = User("John")
+      user.save()
+      # Missing assertions to verify behavior!
+  
+  # Bad: Only side effects, no verification
+  def test_side_effects_only():
+      logger = Logger()
+      logger.info("Test message")
+      # Should assert log was written, state changed, etc.
+  ```
+
+#### PTAS002: Too Many Assertions
+- **Severity**: WARNING
+- **Description**: テスト関数のアサーション数が推奨される最大値より多い場合  
+- **設定**: `max_asserts`（デフォルト: 3）
+- **Good Examples**:
+  ```python
+  # Good: Focused test with appropriate assertions
+  def test_user_validation():
+      user = User("john@example.com", "password123")
+      
+      assert user.email == "john@example.com"
+      assert user.is_valid() is True
+      assert user.password_hash is not None
+  
+  # Good: Split complex test into multiple focused tests
+  def test_user_creation():
+      user = User("John", "john@example.com")
+      assert user.name == "John"
+      assert user.email == "john@example.com"
+  
+  def test_user_validation_rules():
+      user = User("john@example.com", "weak")
+      assert user.is_password_strong() is False
+      assert len(user.validation_errors) > 0
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: Too many assertions in single test
+  def test_user_everything():
+      user = User("John", "john@example.com", "password123")
+      assert user.name == "John"
+      assert user.email == "john@example.com"
+      assert user.password_hash is not None
+      assert user.is_valid() is True
+      assert user.created_at is not None  # Too many!
+      assert user.updated_at is not None
+      assert user.is_active is True
+  ```
+
+#### PTAS003: High Assertion Density
+- **Severity**: INFO
+- **Description**: コード行数に対するアサーションの割合が高い場合
+- **設定**: `max_density`（デフォルト: 0.5）
+- **注意**: 通常は集中度の高いテストを示しています
+- **Example**:
+  ```python
+  def test_example():
+      result = get_user()
+      assert result.name == "John"
+      assert result.age == 30
+      assert result.active == True
+      # High density but acceptable
+  ```
+
+#### PTAS004: No Assertions Found
+- **Severity**: ERROR
+- **Description**: テスト関数にアサーションが全く含まれていない場合
+- **修正方法**: 期待される動作を検証するアサーションを追加してください
+- **Example**:
+  ```python
+  # Bad - no verification
+  def test_example():
+      user = create_user("test")
+      user.save()
+      # Missing assertions!
+  ```
+
+#### PTAS005: Assertion Count OK
+- **Severity**: INFO
+- **Description**: テスト関数が適切な数のアサーションを持っている場合
+- **良い例**: アサーション数が推奨範囲内にある場合
+- **Example**:
+  ```python
+  def test_example():
+      result = process("test")
+      assert result == expected
+      # Good - appropriate assertion count
+  ```
+
+## System Errors
+
+System errors are handled through standard Python exceptions and do not use rule IDs:
+
+- **ParseError**: Raised when test files cannot be parsed (exit code 2)
+- **CheckerError**: Raised when a checker fails to execute (exit code 3)  
+- **ConfigurationError**: Raised for invalid configuration (exit code 4)
+
+## Future Rule Categories
+
+### PTNM: Naming Rules (Planned)
+- Test function naming conventions
+- Variable naming in tests
+- File naming patterns
+
+### PTPR: Performance Rules (Planned)
+- Test execution time warnings
+- Resource usage optimization
+- Fixture efficiency
+
+### PTDP: Dependency Rules (Planned)
+- Mock usage patterns
+- Test isolation issues
+- Setup/teardown optimization
+
+### PTDC: Documentation Rules (Planned)
+- Docstring requirements
+- Inline comment quality
+- Test description clarity
+
+## Rule ID Format
+
+```
+PT[CATEGORY][NUMBER]
+│  │        │
+│  │        └── 3-digit number (001-999)
+│  └── 2-letter category code
+└── Pytestee prefix
+```
+
+**Categories:**
+- **CM**: Comment-based patterns
+- **ST**: Structural patterns  
+- **LG**: Logical flow patterns
+- **AS**: Assertion rules
+- **NM**: Naming conventions (planned)
+- **PR**: Performance rules (planned)
+- **DP**: Dependencies (planned)
+- **DC**: Documentation (planned)
+
+## Configuration
+
+`pyproject.toml`でルールの動作を設定してください：
+
+```toml
+[tool.pytestee]
+max_asserts = 5          # PTAS002 threshold
+min_asserts = 1          # PTAS001 threshold
+require_aaa_comments = true  # Prefer PTCM001/PTCM002 over other patterns
+max_density = 0.6        # PTAS003 threshold
+```
+
+## Rule Selection (Future Feature)
+
+ruffのように、カテゴリまたは個別のルールで特定のルールを選択または無視できます：
+
+```bash
+# コメントとアサーションのルールのみをチェック
+pytestee check --select PTCM,PTAS
+
+# 特定のルールのみをチェック
+pytestee check --select PTCM001,PTAS001,PTAS002
+
+# 構造的警告を無視
+pytestee check --ignore PTST002
+
+# カテゴリ全体を無視
+pytestee check --ignore PTLG,PTAS003
+```
+
+## Rule Priority and Conflicts
+
+### Pattern Detection Priority
+複数のパターン検出ルールがマッチした場合：
+1. **PTCM001/PTCM002**（コメント）- 最高優先度、最も明示的
+2. **PTST001**（構造的）- 良好な視覚的分離
+3. **PTLG001**（論理的）- 基本的なパターン検出
+4. **PTST002**（警告）- パターンが検出されない場合のフォールバック
+
+### Conflicting Rules
+一部のルールは相互排他的で、同時に有効にすることはできません：
+
+**パターン検出の競合：**
+- PTCM001, PTCM002, PTST001, PTLG001, PTST002は優先順位に従います（真の競合ではありません）
+
+**アサーション数の競合：**
+- PTAS001（不足）はPTAS005（適切）と競合
+- PTAS002（過多）はPTAS005（適切）と競合
+- PTAS004（なし）はPTAS001, PTAS002, PTAS005と競合
+
+**設定の競合：**
+- `min_asserts` > `max_asserts`は無効
+- `max_density`は0.0から1.0の間である必要があります
+
+## Adding New Rules
+
+新しいルールを貢献する場合：
+1. 適切なカテゴリを選択するか、新しいカテゴリを作成
+2. カテゴリ内で次に利用可能な番号を使用（001-999）
+3. ここに包括的なドキュメントを追加
+4. 良いコードと悪いコードの例を含める
+5. 閾値の設定オプションを検討
+6. CLIヘルプとエラーメッセージを更新
+
+### Category Guidelines
+- **PTCM**: コメントによる明示的な開発者の意図
+- **PTST**: コード構造と整理
+- **PTLG**: コードフローの暗黙のパターン
+- **PTAS**: アサーションの量と質

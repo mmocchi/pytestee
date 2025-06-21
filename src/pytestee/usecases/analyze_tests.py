@@ -1,10 +1,11 @@
 """Use case for analyzing test files."""
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..domain.interfaces import ICheckerRegistry, IConfigManager, ITestRepository
 from ..domain.models import AnalysisResult, CheckResult, CheckSeverity, TestFile
+from ..infrastructure.errors import CheckerError, ParseError
 
 
 class AnalyzeTestsUseCase:
@@ -20,7 +21,7 @@ class AnalyzeTestsUseCase:
         self._checker_registry = checker_registry
         self._config_manager = config_manager
 
-    def execute(self, target_path: Path, config_overrides: Dict[str, Any] = None) -> AnalysisResult:
+    def execute(self, target_path: Path, config_overrides: Optional[Dict[str, Any]] = None) -> AnalysisResult:
         """Execute the test analysis."""
         if config_overrides is None:
             config_overrides = {}
@@ -53,14 +54,8 @@ class AnalyzeTestsUseCase:
                 file_results = self._analyze_test_file(test_file, config)
                 all_results.extend(file_results)
             except Exception as e:
-                # Create error result for files that couldn't be parsed
-                error_result = CheckResult(
-                    checker_name="file_parser",
-                    severity=CheckSeverity.ERROR,
-                    message=f"Failed to parse file: {str(e)}",
-                    file_path=file_path
-                )
-                all_results.append(error_result)
+                # Log parse error and continue with other files
+                raise ParseError(file_path, e) from e
 
         # Count passed and failed checks
         passed_checks, failed_checks = self._count_results(all_results)
@@ -87,18 +82,12 @@ class AnalyzeTestsUseCase:
                 checker_results = checker.check(test_file, checker_config)
                 results.extend(checker_results)
             except Exception as e:
-                # Create error result for checker failures
-                error_result = CheckResult(
-                    checker_name=checker.name,
-                    severity=CheckSeverity.ERROR,
-                    message=f"Checker failed: {str(e)}",
-                    file_path=test_file.path
-                )
-                results.append(error_result)
+                # Log checker error and continue with other checkers
+                raise CheckerError(checker.name, e) from e
 
         return results
 
-    def _count_results(self, results: List[CheckResult]) -> tuple[int, int]:
+    def _count_results(self, results: List[CheckResult]) -> Tuple[int, int]:
         """Count passed and failed checks."""
         passed = 0
         failed = 0

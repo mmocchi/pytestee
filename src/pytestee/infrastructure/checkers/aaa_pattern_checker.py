@@ -2,9 +2,10 @@
 
 import ast
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from ...domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from ...infrastructure.ast_parser import ASTParser
 from .base_checker import BaseChecker
 
 
@@ -36,6 +37,7 @@ class AAAPatternChecker(BaseChecker):
         # If no pattern is detected, create a warning
         if not results:
             results.append(self._create_result(
+                "PTST002",
                 "warning",
                 "AAA/GWT pattern not clearly detected. Consider using comments or structural separation.",
                 test_file,
@@ -46,8 +48,6 @@ class AAAPatternChecker(BaseChecker):
 
     def _check_comment_pattern(self, test_function: TestFunction, test_file: TestFile) -> Optional[CheckResult]:
         """Check for AAA/GWT pattern in comments."""
-        from ...infrastructure.ast_parser import ASTParser
-
         parser = ASTParser()
         comments = parser.find_comments(test_function, test_file.content)
 
@@ -63,12 +63,37 @@ class AAAPatternChecker(BaseChecker):
             r'#\s*then'
         ]
 
+        # Combined patterns (count as multiple matches)
+        aaa_combined_patterns = [
+            r'#\s*act\s*[&/,]\s*assert',  # Act & Assert, Act/Assert, Act, Assert
+            r'#\s*act\s+and\s+assert',    # Act and Assert
+            r'#\s*arrange\s*[&/,]\s*act\s*[&/,]\s*assert',  # Arrange & Act & Assert
+            r'#\s*arrange\s+and\s+act\s+and\s+assert'       # Arrange and Act and Assert
+        ]
+
+        gwt_combined_patterns = [
+            r'#\s*when\s*[&/,]\s*then',  # When & Then, When/Then, When, Then
+            r'#\s*when\s+and\s+then',    # When and Then
+            r'#\s*given\s*[&/,]\s*when\s*[&/,]\s*then',  # Given & When & Then
+            r'#\s*given\s+and\s+when\s+and\s+then'       # Given and When and Then
+        ]
+
         aaa_found = self._check_patterns_in_comments(comments, aaa_patterns)
         gwt_found = self._check_patterns_in_comments(comments, gwt_patterns)
 
-        if aaa_found >= 2 or gwt_found >= 2:
-            pattern_type = "AAA" if aaa_found >= gwt_found else "GWT"
+        # Check for combined patterns (these count as 2 points each)
+        aaa_combined_found = self._check_combined_patterns_in_comments(comments, aaa_combined_patterns)
+        gwt_combined_found = self._check_combined_patterns_in_comments(comments, gwt_combined_patterns)
+
+        # Calculate total scores (combined patterns count as 2)
+        total_aaa_score = aaa_found + (aaa_combined_found * 2)
+        total_gwt_score = gwt_found + (gwt_combined_found * 2)
+
+        if total_aaa_score >= 2 or total_gwt_score >= 2:
+            pattern_type = "AAA" if total_aaa_score >= total_gwt_score else "GWT"
+            rule_id = "PTCM001" if pattern_type == "AAA" else "PTCM002"
             return self._create_result(
+                rule_id,
                 "info",
                 f"{pattern_type} pattern detected in comments",
                 test_file,
@@ -77,7 +102,7 @@ class AAAPatternChecker(BaseChecker):
 
         return None
 
-    def _check_patterns_in_comments(self, comments: List[tuple[int, str]], patterns: List[str]) -> int:
+    def _check_patterns_in_comments(self, comments: List[Tuple[int, str]], patterns: List[str]) -> int:
         """Check how many patterns are found in comments."""
         found = 0
 
@@ -86,6 +111,18 @@ class AAAPatternChecker(BaseChecker):
                 if re.search(pattern, comment.lower()):
                     found += 1
                     break
+
+        return found
+
+    def _check_combined_patterns_in_comments(self, comments: List[Tuple[int, str]], patterns: List[str]) -> int:
+        """Check how many combined patterns are found in comments."""
+        found = 0
+
+        for _, comment in comments:
+            for pattern in patterns:
+                if re.search(pattern, comment.lower()):
+                    found += 1
+                    # Don't break here - one comment could match multiple combined patterns
 
         return found
 
@@ -108,6 +145,7 @@ class AAAPatternChecker(BaseChecker):
             sections = self._analyze_sections(function_lines, empty_line_indices)
             if self._looks_like_aaa_structure(sections):
                 return self._create_result(
+                    "PTST001",
                     "info",
                     "AAA pattern detected through structural separation",
                     test_file,
@@ -158,6 +196,7 @@ class AAAPatternChecker(BaseChecker):
 
         if self._has_logical_aaa_flow(sections):
             return self._create_result(
+                "PTLG001",
                 "info",
                 "AAA pattern detected through code flow analysis",
                 test_file,
@@ -168,7 +207,7 @@ class AAAPatternChecker(BaseChecker):
 
     def _categorize_statements(self, statements: List[ast.stmt]) -> Dict[str, List[ast.stmt]]:
         """Categorize statements into arrange, act, assert groups."""
-        sections = {
+        sections: Dict[str, List[ast.stmt]] = {
             "arrange": [],
             "act": [],
             "assert": []
@@ -197,7 +236,6 @@ class AAAPatternChecker(BaseChecker):
 
     def _has_logical_aaa_flow(self, sections: Dict[str, List[ast.stmt]]) -> bool:
         """Check if sections represent a good AAA flow."""
-        has_arrange = len(sections["arrange"]) > 0
         has_act = len(sections["act"]) > 0
         has_assert = len(sections["assert"]) > 0
 

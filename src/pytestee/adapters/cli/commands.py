@@ -1,5 +1,6 @@
 """CLI commands for pytestee."""
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -20,7 +21,7 @@ console = Console()
 @click.group()
 @click.version_option(version="0.1.0", prog_name="pytestee")
 def cli() -> None:
-    """pytestee - pytest test quality checker CLI tool."""
+    """Pytestee - pytest test quality checker CLI tool."""
     pass
 
 
@@ -42,7 +43,6 @@ def check(
     verbose: bool
 ) -> None:
     """Check test files for quality issues."""
-
     # Build configuration overrides
     config_overrides = {}
     if max_asserts is not None:
@@ -78,18 +78,17 @@ def check(
 
         # Exit with error code if there are errors
         if result.has_errors:
-            raise click.ClickException("Quality checks failed")
+            raise click.ClickException("Quality checks failed") from None
 
     except Exception as e:
-        console.print(f"[red]Error: {str(e)}[/red]")
-        raise click.ClickException(str(e))
+        console.print(f"[red]Error: {e!s}[/red]")
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command()
 @click.argument("target", type=click.Path(exists=True, path_type=Path))
 def info(target: Path) -> None:
     """Show information about test files."""
-
     test_repository = FileRepository()
 
     try:
@@ -127,14 +126,13 @@ def info(target: Path) -> None:
         console.print(table)
 
     except Exception as e:
-        console.print(f"[red]Error: {str(e)}[/red]")
-        raise click.ClickException(str(e))
+        console.print(f"[red]Error: {e!s}[/red]")
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command()
 def list_checkers() -> None:
     """List available checkers."""
-
     checker_registry = CheckerRegistry()
     checkers = checker_registry.get_all_checkers()
 
@@ -156,16 +154,14 @@ def list_checkers() -> None:
 def _get_checker_description(checker_name: str) -> str:
     """Get description for a checker."""
     descriptions = {
-        "aaa_pattern": "Checks for AAA (Arrange, Act, Assert) or GWT (Given, When, Then) patterns",
-        "assert_density": "Checks assertion density and count per test function"
+        "pattern_checker": "Checks for AAA (Arrange, Act, Assert) or GWT (Given, When, Then) patterns",
+        "assertion_checker": "Checks assertion density and count per test function"
     }
     return descriptions.get(checker_name, "No description available")
 
 
 def _present_json(result: AnalysisResult) -> None:
     """Present results in JSON format."""
-    import json
-
     json_result = {
         "summary": {
             "total_files": result.total_files,
@@ -177,6 +173,7 @@ def _present_json(result: AnalysisResult) -> None:
         "results": [
             {
                 "checker": check_result.checker_name,
+                "rule_id": check_result.rule_id,
                 "severity": check_result.severity.value,
                 "message": check_result.message,
                 "file": str(check_result.file_path),

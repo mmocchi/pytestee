@@ -1,4 +1,4 @@
-"""Domain interfaces for pytestee."""
+"""pytesteeのドメインインターフェース。"""
 
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -8,86 +8,86 @@ from .models import AnalysisResult, CheckerConfig, CheckResult, TestFile, TestFu
 
 
 class ITestRepository(ABC):
-    """Interface for test file repository."""
+    """テストファイルリポジトリのインターフェース。"""
 
     @abstractmethod
     def find_test_files(self, path: Path) -> List[Path]:
-        """Find all test files in the given path."""
+        """指定されたパス内のすべてのテストファイルを検索。"""
         pass
 
     @abstractmethod
     def load_test_file(self, file_path: Path) -> TestFile:
-        """Load and parse a test file."""
+        """テストファイルを読み込み、解析。"""
         pass
 
 
 class IChecker(ABC):
-    """Interface for test quality checkers."""
+    """テスト品質チェッカーのインターフェース。"""
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Get the name of this checker."""
+        """このチェッカーの名前を取得。"""
         pass
 
     @abstractmethod
     def check(self, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
-        """Check a test file and return results."""
+        """テストファイルをチェックし、結果を返す。"""
         pass
 
     @abstractmethod
     def check_function(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
-        """Check a specific test function and return results."""
+        """特定のテスト関数をチェックし、結果を返す。"""
         pass
 
 
 class IPresenter(ABC):
-    """Interface for presenting analysis results."""
+    """解析結果を表示するインターフェース。"""
 
     @abstractmethod
     def present(self, result: AnalysisResult) -> None:
-        """Present the analysis result."""
+        """解析結果を表示。"""
         pass
 
 
 class IConfigManager(ABC):
-    """Interface for configuration management."""
+    """設定管理のインターフェース。"""
 
     @abstractmethod
     def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
-        """Load configuration from file or defaults."""
+        """ファイルまたはデフォルトから設定を読み込み。"""
         pass
 
     @abstractmethod
     def get_checker_config(self, checker_name: str) -> CheckerConfig:
-        """Get configuration for a specific checker."""
+        """特定のチェッカーの設定を取得。"""
         pass
 
     @abstractmethod
     def get_global_config(self) -> Dict[str, Any]:
-        """Get global configuration."""
+        """グローバル設定を取得。"""
         pass
 
 
 class ICheckerRegistry(ABC):
-    """Interface for checker registry."""
+    """チェッカーレジストリのインターフェース。"""
 
     @abstractmethod
     def register(self, checker: IChecker) -> None:
-        """Register a checker."""
+        """チェッカーを登録。"""
         pass
 
     @abstractmethod
     def get_checker(self, name: str) -> Optional[IChecker]:
-        """Get a checker by name."""
+        """名前でチェッカーを取得。"""
         pass
 
     @abstractmethod
     def get_all_checkers(self) -> List[IChecker]:
-        """Get all registered checkers."""
+        """登録されたすべてのチェッカーを取得。"""
         pass
 
     @abstractmethod
     def get_enabled_checkers(self, config: Dict[str, Any]) -> List[IChecker]:
-        """Get all enabled checkers based on configuration."""
+        """設定に基づいて有効なすべてのチェッカーを取得。"""
         pass

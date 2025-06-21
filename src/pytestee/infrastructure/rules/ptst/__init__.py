@@ -1,0 +1,1 @@
+"""Structural pattern rules (PTST)."""

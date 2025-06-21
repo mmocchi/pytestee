@@ -4,7 +4,13 @@ from abc import abstractmethod
 from typing import List, Optional
 
 from ...domain.interfaces import IChecker
-from ...domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from ...domain.models import (
+    CheckerConfig,
+    CheckResult,
+    CheckSeverity,
+    TestFile,
+    TestFunction,
+)
 
 
 class BaseChecker(IChecker):
@@ -35,6 +41,7 @@ class BaseChecker(IChecker):
 
     def _create_result(
         self,
+        rule_id: str,
         severity: str,
         message: str,
         test_file: TestFile,
@@ -42,11 +49,10 @@ class BaseChecker(IChecker):
         line_number: Optional[int] = None,
         column: Optional[int] = None
     ) -> CheckResult:
-        """Helper method to create a CheckResult."""
-        from ...domain.models import CheckSeverity
-
+        """Create a CheckResult."""
         return CheckResult(
             checker_name=self.name,
+            rule_id=rule_id,
             severity=CheckSeverity(severity),
             message=message,
             file_path=test_file.path,

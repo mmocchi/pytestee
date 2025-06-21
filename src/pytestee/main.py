@@ -4,7 +4,7 @@ from .adapters.cli.commands import cli
 
 
 def main() -> None:
-    """Main entry point."""
+    """Run the main CLI."""
     cli()
 
 

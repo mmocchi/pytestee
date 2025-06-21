@@ -1,13 +1,20 @@
 """Configuration management for pytestee."""
 
+import contextlib
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
-import tomllib
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    import tomli as tomllib  # Python < 3.11
 
 from ...domain.interfaces import IConfigManager
 from ...domain.models import CheckerConfig
+
+# Define type alias for configuration values
+ConfigValue = Union[str, int, float, bool, Dict[str, Any], list]
 
 
 class ConfigManager(IConfigManager):
@@ -76,13 +83,12 @@ class ConfigManager(IConfigManager):
             return None
 
         try:
-            with open(file_path, "rb") as f:
+            with Path(file_path).open("rb") as f:
                 data = tomllib.load(f)
 
             # Handle pyproject.toml format
             if file_path.name == "pyproject.toml":
                 return data.get("tool", {}).get("pytestee", {})
-
             return data
 
         except Exception:
@@ -102,7 +108,7 @@ class ConfigManager(IConfigManager):
 
     def _load_from_env(self) -> None:
         """Load configuration from environment variables."""
-        env_mappings = {
+        env_mappings: Dict[str, Tuple[str, Callable[[str], Any]]] = {
             "PYTESTEE_MAX_ASSERTS": ("max_asserts", int),
             "PYTESTEE_MIN_ASSERTS": ("min_asserts", int),
             "PYTESTEE_REQUIRE_AAA_COMMENTS": ("require_aaa_comments", lambda x: x.lower() == "true")
@@ -111,10 +117,8 @@ class ConfigManager(IConfigManager):
         for env_var, (config_key, converter) in env_mappings.items():
             value = os.getenv(env_var)
             if value is not None:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     self._config[config_key] = converter(value)
-                except (ValueError, TypeError):
-                    pass  # Ignore invalid values
 
     def get_checker_config(self, checker_name: str) -> CheckerConfig:
         """Get configuration for a specific checker."""
@@ -130,10 +134,10 @@ class ConfigManager(IConfigManager):
         """Get global configuration."""
         return self._config.copy()
 
-    def set_config(self, key: str, value: Any) -> None:
+    def set_config(self, key: str, value: ConfigValue) -> None:
         """Set a configuration value."""
         self._config[key] = value
 
-    def get_config(self, key: str, default: Any = None) -> Any:
+    def get_config(self, key: str, default: Optional[ConfigValue] = None) -> Optional[ConfigValue]:
         """Get a configuration value."""
         return self._config.get(key, default)

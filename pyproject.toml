@@ -30,6 +30,7 @@ dependencies = [
     "click>=8.0.0",
     "colorama>=0.4.6",
     "rich>=13.0.0",
+    "tomli>=1.2.0;python_version<'3.11'",
 ]
 
 [project.optional-dependencies]
@@ -50,19 +51,58 @@ Documentation = "https://github.com/example/pytestee"
 Repository = "https://github.com/example/pytestee"
 Issues = "https://github.com/example/pytestee/issues"
 
-[tool.ruff]
-target-version = "py38"
-line-length = 88
+[tool.ruff.lint]
+exclude = [".venv"]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "TCH",    # flake8-type-checking
+    # Phase 1: Security and Code Quality
+    "S",   # bandit (security)
+    "A",   # flake8-builtins (builtin shadowing)
+    "RET", # flake8-return (return optimization)
+    "SIM", # flake8-simplify (code simplification)
+    "ARG", # flake8-unused-arguments (unused arguments)
+    "PTH", # flake8-use-pathlib (pathlib usage)
+    "RUF", # Ruff-specific rules
+    # Phase 2: Type Hints and Documentation
+    "ANN", # flake8-annotations (type annotations)
+    "TCH", # flake8-type-checking (TYPE_CHECKING blocks)
+    "D",   # pydocstyle (docstring style)
+    # Phase 3: Advanced Static Analysis
+    "ERA", # eradicate (commented-out code)
+    "TRY", # tryceratops (exception handling best practices)
+    "PERF", # perflint (performance improvements)
+    "PL",  # pylint (advanced static analysis)
+    "PT",  # flake8-pytest-style (pytest best practices)
 ]
-ignore = []
+
+ignore = [
+    "E501",  # line too long, handled by formatter
+    "D203",  # Insert 1 blank line before class docstring
+    "D213",  # multi-line-summary-second-line
+    "D107",   # missing docstring in __init__
+    "D105",   # missing docstring in magic methods (__post_init__)
+    "D400",   # first line should end with period (conflicts with Click)
+    "D415",   # first line should end with punctuation (conflicts with Click)
+    "PLR0913",  # too many arguments in function definition (CLI needs many options)
+    "S101",   # use of assert in tests (pytest requires assert statements)
+    "PLR2004", # magic values in tests (test constants are acceptable)
+    "RUF001", # ambiguous unicode characters (emojis are intentional)
+    "TRY003", # avoid long messages outside exception class (helpful for users)
+    "TRY301", # abstract raise to inner function (not needed for simple CLI)
+    "TRY300", # move statement to else block (not always clearer)
+    "PERF203", # try-except in loop (error handling required)
+    "ARG002", # unused method argument (config parameter for future use)
+]
+
+# Per-file ignores for fixtures
+[tool.ruff.lint.per-file-ignores]
+"tests/fixtures/*.py" = ["ANN401"]  # Allow Any in test fixtures
 
 [tool.ruff.format]
 quote-style = "double"
@@ -70,7 +110,7 @@ indent-style = "space"
 
 [tool.mypy]
 python_version = "3.8"
-warn_return_any = true
+warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -82,6 +122,20 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "tomli"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tomllib"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_missing_imports = true
+check_untyped_defs = false
+disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -127,4 +181,5 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.12.0",
     "types-colorama>=0.4.15.20240311",
+    "types-toml>=0.10.8.20240310",
 ]

@@ -1,6 +1,6 @@
 """Console presenter for displaying analysis results."""
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from rich.console import Console
 from rich.panel import Panel
@@ -21,7 +21,6 @@ class ConsolePresenter(IPresenter):
 
     def present(self, result: AnalysisResult) -> None:
         """Present the analysis results to console."""
-
         if not self.quiet:
             self._show_header()
             self._show_summary(result)
@@ -75,7 +74,7 @@ class ConsolePresenter(IPresenter):
 
     def _group_results_by_file(self, results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
         """Group check results by file path."""
-        grouped = {}
+        grouped: Dict[str, List[CheckResult]] = {}
 
         for result in results:
             file_key = str(result.file_path)
@@ -91,7 +90,7 @@ class ConsolePresenter(IPresenter):
         tree = Tree(f"📁 [bold]{file_path}[/bold]")
 
         # Group by function
-        results_by_function = {}
+        results_by_function: Dict[str, List[CheckResult]] = {}
         file_level_results = []
 
         for result in results:
@@ -105,7 +104,8 @@ class ConsolePresenter(IPresenter):
         # Add file-level results
         for result in file_level_results:
             icon, color = self._get_severity_style(result.severity)
-            tree.add(f"{icon} [{color}]{result.message}[/{color}]")
+            rule_id = f"[dim]{result.rule_id}[/dim] " if result.rule_id else ""
+            tree.add(f"{icon} {rule_id}[{color}]{result.message}[/{color}]")
 
         # Add function-level results
         for function_name, function_results in results_by_function.items():
@@ -114,7 +114,8 @@ class ConsolePresenter(IPresenter):
             for result in function_results:
                 icon, color = self._get_severity_style(result.severity)
                 location = f" (line {result.line_number})" if result.line_number else ""
-                message = f"{icon} [{color}]{result.message}{location}[/{color}]"
+                rule_id = f"[dim]{result.rule_id}[/dim] " if result.rule_id else ""
+                message = f"{icon} {rule_id}[{color}]{result.message}{location}[/{color}]"
 
                 if self.verbose and result.context:
                     message += f"\n   [dim]{result.context}[/dim]"
@@ -124,14 +125,13 @@ class ConsolePresenter(IPresenter):
         self.console.print(tree)
         self.console.print()
 
-    def _get_severity_style(self, severity: CheckSeverity) -> tuple[str, str]:
+    def _get_severity_style(self, severity: CheckSeverity) -> Tuple[str, str]:
         """Get icon and color for severity level."""
         if severity == CheckSeverity.ERROR:
             return "❌", "red"
-        elif severity == CheckSeverity.WARNING:
+        if severity == CheckSeverity.WARNING:
             return "⚠️", "yellow"
-        else:
-            return "ℹ️", "blue"
+        return "ℹ️", "blue"
 
     def _show_footer(self, result: AnalysisResult) -> None:
         """Show footer with overall status."""

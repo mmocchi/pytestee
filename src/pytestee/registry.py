@@ -3,8 +3,8 @@
 from typing import Any, Dict, List, Optional
 
 from .domain.interfaces import IChecker, ICheckerRegistry
-from .infrastructure.checkers.aaa_pattern_checker import AAAPatternChecker
-from .infrastructure.checkers.assert_density_checker import AssertDensityChecker
+from .infrastructure.checkers.assertion_checker import AssertionChecker
+from .infrastructure.checkers.pattern_checker import PatternChecker
 
 
 class CheckerRegistry(ICheckerRegistry):
@@ -16,8 +16,8 @@ class CheckerRegistry(ICheckerRegistry):
 
     def _initialize_default_checkers(self) -> None:
         """Initialize default checkers."""
-        self.register(AAAPatternChecker())
-        self.register(AssertDensityChecker())
+        self.register(PatternChecker())
+        self.register(AssertionChecker())
 
     def register(self, checker: IChecker) -> None:
         """Register a checker."""
