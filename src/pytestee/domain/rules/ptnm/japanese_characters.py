@@ -1,7 +1,7 @@
 """テストメソッド名に日本語文字が含まれているかをチェックするルール。"""
 
 import re
-from typing import List, Optional
+from typing import Optional
 
 from ....domain.models import (
     CheckerConfig,
@@ -25,15 +25,15 @@ class PTNM001(BaseRule):
         super().__init__(
             rule_id="PTNM001",
             name="japanese_characters_in_name",
-            description="テストメソッド名に日本語文字が含まれているかをチェック"
+            description="テストメソッド名に日本語文字が含まれているかをチェック",
         )
 
     def check(
         self,
         test_function: TestFunction,
         test_file: TestFile,
-        config: Optional[CheckerConfig] = None
-    ) -> List[CheckResult]:
+        config: Optional[CheckerConfig] = None,
+    ) -> CheckResult:
         """テストメソッド名に日本語文字が含まれているかをチェック。
 
         Args:
@@ -45,26 +45,28 @@ class PTNM001(BaseRule):
             チェック結果のリスト
 
         """
-        if not test_function.name.startswith('test_'):
-            return []
-
-        if self._contains_japanese_characters(test_function.name):
-            return [
-                self._create_result(
-                    f"テストメソッド名 '{test_function.name}' に日本語文字が含まれています。可読性が良好です。",
-                    test_file,
-                    test_function,
-                    severity=CheckSeverity.INFO
-                )
-            ]
-        return [
-            self._create_result(
-                f"テストメソッド名 '{test_function.name}' に日本語文字が含まれていません。可読性向上のため日本語での命名を検討してください。",
+        if not test_function.name.startswith("test_"):
+            # Skip non-test functions but still return a result
+            return self._create_result(
+                f"関数 '{test_function.name}' はテスト関数ではありません",
                 test_file,
                 test_function,
-                severity=CheckSeverity.WARNING
+                severity=CheckSeverity.INFO,
             )
-        ]
+
+        if self._contains_japanese_characters(test_function.name):
+            return self._create_result(
+                f"テストメソッド名 '{test_function.name}' に日本語文字が含まれています。可読性が良好です。",
+                test_file,
+                test_function,
+                severity=CheckSeverity.INFO,
+            )
+        return self._create_result(
+            f"テストメソッド名 '{test_function.name}' に日本語文字が含まれていません。可読性向上のため日本語での命名を検討してください。",
+            test_file,
+            test_function,
+            severity=CheckSeverity.WARNING,
+        )
 
     def _contains_japanese_characters(self, text: str) -> bool:
         """テキストに日本語文字(ひらがな、カタカナ、漢字)が含まれているかチェック。
@@ -76,5 +78,5 @@ class PTNM001(BaseRule):
             日本語文字が含まれている場合True
 
         """
-        japanese_pattern = r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]'
+        japanese_pattern = r"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]"
         return bool(re.search(japanese_pattern, text))

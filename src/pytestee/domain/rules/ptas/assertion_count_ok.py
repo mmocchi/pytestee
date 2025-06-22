@@ -1,6 +1,6 @@
 """PTAS005: Assertion Count OK."""
 
-from typing import List, Optional, Set, Union
+from typing import Optional, Set, Union
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -14,26 +14,44 @@ class PTAS005(BaseRule):
         super().__init__(
             rule_id="PTAS005",
             name="assertion_count_ok",
-            description="Test function has appropriate number of assertions"
+            description="Test function has appropriate number of assertions",
         )
         self._parser = ASTParser()
 
-    def check(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
+    def check(
+        self,
+        test_function: TestFunction,
+        test_file: TestFile,
+        config: Optional[CheckerConfig] = None,
+    ) -> CheckResult:
         """Check if assertion count is appropriate."""
         min_asserts = self._get_config_value(config, "min_asserts", 1)
         max_asserts = self._get_config_value(config, "max_asserts", 3)
         assert_count = self._parser.count_assert_statements(test_function)
 
         if min_asserts <= assert_count <= max_asserts:
-            return [self._create_success_result(
+            return self._create_success_result(
                 f"Assertion count OK: {assert_count} assertions",
                 test_file,
-                test_function
-            )]
+                test_function,
+            )
+        # Always return a result - indicate why assertion count is not OK
+        if assert_count < min_asserts:
+            return self._create_failure_result(
+                f"Too few assertions: {assert_count} assertions (minimum: {min_asserts})",
+                test_file,
+                test_function,
+            )
+        # assert_count > max_asserts
+        return self._create_failure_result(
+            f"Too many assertions: {assert_count} assertions (maximum: {max_asserts})",
+            test_file,
+            test_function,
+        )
 
-        return []
-
-    def _get_config_value(self, config: Optional[CheckerConfig], key: str, default: Union[int, float]) -> Union[int, float]:
+    def _get_config_value(
+        self, config: Optional[CheckerConfig], key: str, default: Union[int, float]
+    ) -> Union[int, float]:
         """Get configuration value with fallback to default."""
         if config and config.config:
             return config.config.get(key, default)

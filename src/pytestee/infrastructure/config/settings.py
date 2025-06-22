@@ -29,24 +29,23 @@ class ConfigManager(IConfigManager):
             "require_aaa_comments": False,
             "aaa_pattern": {
                 "enabled": True,
-                "config": {
-                    "require_comments": False,
-                    "allow_gwt": True
-                }
+                "config": {"require_comments": False, "allow_gwt": True},
             },
             "assert_density": {
                 "enabled": True,
-                "config": {
-                    "max_asserts": 3,
-                    "min_asserts": 1,
-                    "max_density": 0.5
-                }
+                "config": {"max_asserts": 3, "min_asserts": 1, "max_density": 0.5},
             },
             # Rule selection configuration (ruff-like)
-            "select": ["PTCM003", "PTST001", "PTLG001", "PTAS", "PTNM001"],  # Default selection (PTCM003 instead of PTCM001/PTCM002 to avoid conflicts)
+            "select": [
+                "PTCM003",
+                "PTST001",
+                "PTLG001",
+                "PTAS",
+                "PTNM001",
+            ],  # Default selection (PTCM003 instead of PTCM001/PTCM002 to avoid conflicts)
             "ignore": [],  # Rules to ignore
             # Rule severity configuration
-            "severity": {}
+            "severity": {},
         }
 
     def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
@@ -61,11 +60,13 @@ class ConfigManager(IConfigManager):
             config_sources.append(config_path)
         else:
             # Look for config files in common locations
-            config_sources.extend([
-                Path.cwd() / ".pytestee.toml",
-                Path.cwd() / "pyproject.toml",
-                Path.home() / ".config" / "pytestee" / "config.toml"
-            ])
+            config_sources.extend(
+                [
+                    Path.cwd() / ".pytestee.toml",
+                    Path.cwd() / "pyproject.toml",
+                    Path.home() / ".config" / "pytestee" / "config.toml",
+                ]
+            )
 
         for source in config_sources:
             if source.exists():
@@ -105,9 +106,14 @@ class ConfigManager(IConfigManager):
 
     def _merge_config(self, new_config: Dict[str, Any]) -> None:
         """Merge new configuration with existing."""
+
         def deep_merge(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
             for key, value in update.items():
-                if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                if (
+                    key in base
+                    and isinstance(base[key], dict)
+                    and isinstance(value, dict)
+                ):
                     deep_merge(base[key], value)
                 else:
                     base[key] = value
@@ -120,7 +126,10 @@ class ConfigManager(IConfigManager):
         env_mappings: Dict[str, Tuple[str, Callable[[str], Any]]] = {
             "PYTESTEE_MAX_ASSERTS": ("max_asserts", int),
             "PYTESTEE_MIN_ASSERTS": ("min_asserts", int),
-            "PYTESTEE_REQUIRE_AAA_COMMENTS": ("require_aaa_comments", lambda x: x.lower() == "true")
+            "PYTESTEE_REQUIRE_AAA_COMMENTS": (
+                "require_aaa_comments",
+                lambda x: x.lower() == "true",
+            ),
         }
 
         for env_var, (config_key, converter) in env_mappings.items():
@@ -136,7 +145,7 @@ class ConfigManager(IConfigManager):
         return CheckerConfig(
             name=checker_name,
             enabled=checker_config.get("enabled", True),
-            config=checker_config.get("config", {})
+            config=checker_config.get("config", {}),
         )
 
     def get_global_config(self) -> Dict[str, Any]:
@@ -147,7 +156,9 @@ class ConfigManager(IConfigManager):
         """Set a configuration value."""
         self._config[key] = value
 
-    def get_config(self, key: str, default: Optional[ConfigValue] = None) -> Optional[ConfigValue]:
+    def get_config(
+        self, key: str, default: Optional[ConfigValue] = None
+    ) -> Optional[ConfigValue]:
         """Get a configuration value."""
         return self._config.get(key, default)
 
@@ -188,7 +199,9 @@ class ConfigManager(IConfigManager):
         severity_config = self._config.get("severity", {})
         return severity_config.get(rule_id, "error")  # Default to error
 
-    def _validate_rule_selection(self, rule_instances: Optional[Dict[str, Any]] = None) -> None:
+    def _validate_rule_selection(
+        self, rule_instances: Optional[Dict[str, Any]] = None
+    ) -> None:
         """Validate that selected rules don't conflict with each other.
 
         Args:
@@ -220,9 +233,17 @@ class ConfigManager(IConfigManager):
     def _expand_rule_patterns(self, patterns: List[str]) -> Set[str]:
         """Expand rule patterns like 'PTCM' to actual rule IDs like 'PTCM001', 'PTCM002'."""
         all_rules = {
-            "PTCM001", "PTCM002", "PTCM003", "PTST001", "PTLG001",
-            "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
-            "PTNM001"
+            "PTCM001",
+            "PTCM002",
+            "PTCM003",
+            "PTST001",
+            "PTLG001",
+            "PTAS001",
+            "PTAS002",
+            "PTAS003",
+            "PTAS004",
+            "PTAS005",
+            "PTNM001",
         }
 
         expanded_rules = set()
@@ -238,7 +259,9 @@ class ConfigManager(IConfigManager):
 
         return expanded_rules
 
-    def validate_rule_selection_with_instances(self, rule_instances: Dict[str, Any]) -> None:
+    def validate_rule_selection_with_instances(
+        self, rule_instances: Dict[str, Any]
+    ) -> None:
         """外部から呼び出し可能なルール選択検証メソッド.
 
         Args:

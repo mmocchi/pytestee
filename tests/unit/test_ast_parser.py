@@ -35,11 +35,13 @@ class TestASTParser:
         function_names = [func.name for func in result.test_functions]
         assert "test_user_creation_with_aaa_comments" in function_names
         assert "test_user_creation_with_structural_separation" in function_names
-        assert "create_user" not in function_names  # Helper function should not be included
+        assert (
+            "create_user" not in function_names
+        )  # Helper function should not be included
 
     def test_is_test_function_detection(self) -> None:
         """Test detection of test functions."""
-        code = '''
+        code = """
 def test_something():
     pass
 
@@ -49,9 +51,11 @@ def not_a_test():
 @pytest.mark.parametrize("param", [1, 2])
 def test_parametrized():
     pass
-'''
+"""
         tree = ast.parse(code)
-        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        functions = [
+            node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+        ]
 
         assert self.parser._is_test_function(functions[0])  # test_something
         assert not self.parser._is_test_function(functions[1])  # not_a_test

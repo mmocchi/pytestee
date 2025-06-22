@@ -17,20 +17,18 @@ class TestCLI:
 
     def test_check_command_with_good_file(self) -> None:
         """Test check command with a good test file."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir / "good_aaa_test.py")
-        ])
+        result = self.runner.invoke(
+            cli, ["check", str(self.fixtures_dir / "good_aaa_test.py")]
+        )
 
         assert result.exit_code == 0
         assert "Analysis Summary" in result.output
 
     def test_check_command_with_bad_file(self) -> None:
         """Test check command with a bad test file."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir / "bad_test.py")
-        ])
+        result = self.runner.invoke(
+            cli, ["check", str(self.fixtures_dir / "bad_test.py")]
+        )
 
         # Should exit with error code due to quality issues
         assert result.exit_code != 0
@@ -38,22 +36,24 @@ class TestCLI:
 
     def test_check_command_with_options(self) -> None:
         """Test check command with various options."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir / "good_aaa_test.py"),
-            "--max-asserts", "5",
-            "--min-asserts", "1",
-            "--verbose"
-        ])
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--max-asserts",
+                "5",
+                "--min-asserts",
+                "1",
+                "--verbose",
+            ],
+        )
 
         assert result.exit_code == 0
 
     def test_info_command(self) -> None:
         """Test info command."""
-        result = self.runner.invoke(cli, [
-            "info",
-            str(self.fixtures_dir)
-        ])
+        result = self.runner.invoke(cli, ["info", str(self.fixtures_dir)])
 
         assert result.exit_code == 0
         assert "Test Files Summary" in result.output
@@ -63,47 +63,40 @@ class TestCLI:
         result = self.runner.invoke(cli, ["list-checkers"])
 
         assert result.exit_code == 0
-        assert "Available Checkers" in result.output
-        assert "pattern_checker" in result.output
-        assert "assertion_checker" in result.output
+        # Registry is currently empty as we moved to rule-based system
+        assert (
+            "No checkers available" in result.output
+            or "Available Checkers" in result.output
+        )
 
     def test_check_nonexistent_file(self) -> None:
         """Test check command with nonexistent file."""
-        result = self.runner.invoke(cli, [
-            "check",
-            "/nonexistent/file.py"
-        ])
+        result = self.runner.invoke(cli, ["check", "/nonexistent/file.py"])
 
         assert result.exit_code != 0
 
     def test_check_directory(self) -> None:
         """Test check command with directory."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir)
-        ])
+        result = self.runner.invoke(cli, ["check", str(self.fixtures_dir)])
 
         # Should process multiple files in directory
         assert "Analysis Summary" in result.output
 
     def test_quiet_mode(self) -> None:
         """Test check command in quiet mode."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir / "bad_test.py"),
-            "--quiet"
-        ])
+        result = self.runner.invoke(
+            cli, ["check", str(self.fixtures_dir / "bad_test.py"), "--quiet"]
+        )
 
         # Should have less output in quiet mode
         assert len(result.output) < 1200  # Arbitrary threshold for "less output"
 
     def test_json_output_format(self) -> None:
         """Test check command with JSON output."""
-        result = self.runner.invoke(cli, [
-            "check",
-            str(self.fixtures_dir / "good_aaa_test.py"),
-            "--format", "json"
-        ])
+        result = self.runner.invoke(
+            cli,
+            ["check", str(self.fixtures_dir / "good_aaa_test.py"), "--format", "json"],
+        )
 
         assert result.exit_code == 0
         # Should contain JSON structure

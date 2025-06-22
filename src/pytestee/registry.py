@@ -1,12 +1,11 @@
 """Dependency injection container and checker registry."""
 
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from pytestee.domain.checkers.assertion_checker import AssertionChecker
-from pytestee.domain.checkers.naming_checker import NamingChecker
-from pytestee.domain.checkers.pattern_checker import PatternChecker
 from pytestee.domain.interfaces import IChecker, ICheckerRegistry
-from pytestee.domain.rules.base_rule import BaseRule
+
+if TYPE_CHECKING:
+    from pytestee.domain.rules.base_rule import BaseRule
 
 
 class CheckerRegistry(ICheckerRegistry):
@@ -20,10 +19,6 @@ class CheckerRegistry(ICheckerRegistry):
 
     def _initialize_default_checkers(self) -> None:
         """デフォルトチェッカーを初期化します。"""
-        self.register(PatternChecker(self.config_manager))
-        self.register(AssertionChecker(self.config_manager))
-        self.register(NamingChecker(self.config_manager))
-
         # ルール競合検証を実行
         self._validate_rule_conflicts()
 
@@ -106,25 +101,85 @@ class CheckerRegistry(ICheckerRegistry):
         """
         return list(self._checkers.keys())
 
-    def get_all_rule_instances(self) -> Dict[str, BaseRule]:
-        """すべてのチェッカーからルールインスタンスを収集します。
+    def get_all_rule_instances(self) -> Dict[str, "BaseRule"]:
+        """設定で選択されたルールのインスタンスを作成して返します。
 
         Returns:
             ルールID -> ルールインスタンスのマッピング
 
         """
-        rule_instances = {}
+        # Import rules here to avoid circular imports
+        from pytestee.domain.rules.ptas.assertion_count_ok import (  # noqa: PLC0415
+            PTAS005,
+        )
+        from pytestee.domain.rules.ptas.high_assertion_density import (  # noqa: PLC0415
+            PTAS003,
+        )
+        from pytestee.domain.rules.ptas.no_assertions import PTAS004  # noqa: PLC0415
+        from pytestee.domain.rules.ptas.too_few_assertions import (  # noqa: PLC0415
+            PTAS001,
+        )
+        from pytestee.domain.rules.ptas.too_many_assertions import (  # noqa: PLC0415
+            PTAS002,
+        )
+        from pytestee.domain.rules.ptcm.aaa_comment_pattern import (  # noqa: PLC0415
+            PTCM001,
+        )
+        from pytestee.domain.rules.ptcm.aaa_or_gwt_pattern import (  # noqa: PLC0415
+            PTCM003,
+        )
+        from pytestee.domain.rules.ptcm.gwt_comment_pattern import (  # noqa: PLC0415
+            PTCM002,
+        )
+        from pytestee.domain.rules.ptlg.logical_flow_pattern import (  # noqa: PLC0415
+            PTLG001,
+        )
+        from pytestee.domain.rules.ptnm.japanese_characters import (  # noqa: PLC0415
+            PTNM001,
+        )
+        from pytestee.domain.rules.ptst.structural_pattern import (  # noqa: PLC0415
+            PTST001,
+        )
 
-        for checker in self._checkers.values():
-            # チェッカーからルールインスタンスを取得
-            if hasattr(checker, 'get_rule_instances'):
-                checker_rules = checker.get_rule_instances()
-                rule_instances.update(checker_rules)
+        # Create all available rule instances
+        rule_classes = {
+            "PTCM001": PTCM001,
+            "PTCM002": PTCM002,
+            "PTCM003": PTCM003,
+            "PTST001": PTST001,
+            "PTLG001": PTLG001,
+            "PTAS001": PTAS001,
+            "PTAS002": PTAS002,
+            "PTAS003": PTAS003,
+            "PTAS004": PTAS004,
+            "PTAS005": PTAS005,
+            "PTNM001": PTNM001,
+        }
+
+        rule_instances = {}
+        for rule_id, rule_class in rule_classes.items():
+            instance = rule_class()  # type: ignore[abstract]
+            instance.set_config_manager(self.config_manager)
+            rule_instances[rule_id] = instance
 
         return rule_instances
 
     def _validate_rule_conflicts(self) -> None:
         """ルール競合を検証します。"""
-        if self.config_manager and hasattr(self.config_manager, 'validate_rule_selection_with_instances'):
-            rule_instances = self.get_all_rule_instances()
-            self.config_manager.validate_rule_selection_with_instances(rule_instances)
+        if self.config_manager and hasattr(
+            self.config_manager, "validate_rule_selection_with_instances"
+        ):
+            all_rule_instances = self.get_all_rule_instances()
+            # Only validate conflicts for enabled rules
+            enabled_rule_ids = {
+                rule_id
+                for rule_id in all_rule_instances
+                if hasattr(self.config_manager, "is_rule_enabled")
+                and self.config_manager.is_rule_enabled(rule_id)
+            }
+            enabled_rule_instances = {
+                rule_id: all_rule_instances[rule_id] for rule_id in enabled_rule_ids
+            }
+            self.config_manager.validate_rule_selection_with_instances(
+                enabled_rule_instances
+            )

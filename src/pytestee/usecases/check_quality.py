@@ -23,7 +23,7 @@ class CheckQualityUseCase:
         self,
         file_path: Path,
         checkers: List[IChecker],
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
     ) -> List[CheckResult]:
         """指定されたチェッカーで単一のテストファイルをチェックします。
 
@@ -56,7 +56,7 @@ class CheckQualityUseCase:
         file_path: Path,
         function_name: str,
         checkers: List[IChecker],
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
     ) -> List[CheckResult]:
         """指定されたチェッカーで特定のテスト関数をチェックします。
 
@@ -87,18 +87,24 @@ class CheckQualityUseCase:
                 break
 
         if not target_function:
-            raise ValueError(f"Test function '{function_name}' not found in {file_path}")
+            raise ValueError(
+                f"Test function '{function_name}' not found in {file_path}"
+            )
 
         # Run all checkers on the specific function
         results = []
         for checker in checkers:
             checker_config = self._create_checker_config(checker.name, config)
-            checker_results = checker.check_function(target_function, test_file, checker_config)
+            checker_results = checker.check_function(
+                target_function, test_file, checker_config
+            )
             results.extend(checker_results)
 
         return results
 
-    def _create_checker_config(self, checker_name: str, config: Dict[str, Any]) -> CheckerConfig:
+    def _create_checker_config(
+        self, checker_name: str, config: Dict[str, Any]
+    ) -> CheckerConfig:
         """グローバル設定からチェッカー設定を作成します。
 
         Args:
@@ -114,5 +120,5 @@ class CheckQualityUseCase:
         return CheckerConfig(
             name=checker_name,
             enabled=checker_config.get("enabled", True),
-            config=checker_config.get("config", {})
+            config=checker_config.get("config", {}),
         )

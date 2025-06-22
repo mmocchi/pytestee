@@ -18,7 +18,11 @@ class RuleValidator:
     # This provides better encapsulation and maintainability
 
     @classmethod
-    def validate_rule_selection(cls, selected_rules: Set[str], rule_instances: Optional[Dict[str, BaseRule]] = None) -> None:
+    def validate_rule_selection(
+        cls,
+        selected_rules: Set[str],
+        rule_instances: Optional[Dict[str, BaseRule]] = None,
+    ) -> None:
         """Validate that selected rules don't conflict with each other.
 
         Args:
@@ -37,7 +41,9 @@ class RuleValidator:
             conflict_descriptions = []
             for conflict_group in conflicts:
                 rules_str = ", ".join(sorted(conflict_group))
-                conflict_descriptions.append(f"Rules {rules_str} are mutually exclusive")
+                conflict_descriptions.append(
+                    f"Rules {rules_str} are mutually exclusive"
+                )
 
             raise RuleConflictError(
                 "Conflicting rules detected:\n" + "\n".join(conflict_descriptions)
@@ -65,7 +71,9 @@ class RuleValidator:
             raise RuleConflictError("max_density must be between 0.0 and 1.0")
 
     @classmethod
-    def _find_dynamic_conflicts(cls, selected_rules: Set[str], rule_instances: Dict[str, BaseRule]) -> List[Set[str]]:
+    def _find_dynamic_conflicts(
+        cls, selected_rules: Set[str], rule_instances: Dict[str, BaseRule]
+    ) -> List[Set[str]]:
         """Find conflicting rule groups using dynamic conflicts from rule instances."""
         conflicts = []
         checked_pairs = set()
@@ -80,7 +88,7 @@ class RuleValidator:
             conflicting_rules = rule_instance.get_conflicting_rules()
 
             # Check remaining rules for conflicts
-            for other_rule_id in selected_list[i+1:]:
+            for other_rule_id in selected_list[i + 1 :]:
                 if other_rule_id in conflicting_rules:
                     # Found a conflict between two selected rules
                     conflict_pair = {rule_id, other_rule_id}
@@ -93,7 +101,9 @@ class RuleValidator:
         return conflicts
 
     @classmethod
-    def get_compatible_rules(cls, base_rule: str, rule_instances: Dict[str, BaseRule]) -> Set[str]:
+    def get_compatible_rules(
+        cls, base_rule: str, rule_instances: Dict[str, BaseRule]
+    ) -> Set[str]:
         """Get rules that are compatible with the given base rule using dynamic conflicts."""
         if base_rule not in rule_instances:
             return set()

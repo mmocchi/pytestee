@@ -17,7 +17,7 @@ class TestPTNM001:
             path=Path("/test/dummy.py"),
             content="",
             ast_tree=ast.parse(""),
-            test_functions=[]
+            test_functions=[],
         )
 
     def test_rule_properties(self) -> None:
@@ -36,15 +36,15 @@ class TestPTNM001:
             end_col_offset=None,
             body=[],
             decorators=[],
-            docstring=None
+            docstring=None,
         )
 
-        results = self.rule.check(test_function, self.test_file)
+        result = self.rule.check(test_function, self.test_file)
 
-        assert len(results) == 1
-        assert results[0].severity == CheckSeverity.INFO
-        assert "日本語文字が含まれています" in results[0].message
-        assert "可読性が良好です" in results[0].message
+        # Single result (not a list)
+        assert result.severity == CheckSeverity.INFO
+        assert "日本語文字が含まれています" in result.message
+        assert "可読性が良好です" in result.message
 
     def test_english_test_method_returns_warning(self) -> None:
         """Test that test method without Japanese characters returns warning."""
@@ -56,15 +56,14 @@ class TestPTNM001:
             end_col_offset=None,
             body=[],
             decorators=[],
-            docstring=None
+            docstring=None,
         )
 
-        results = self.rule.check(test_function, self.test_file)
+        result = self.rule.check(test_function, self.test_file)
 
-        assert len(results) == 1
-        assert results[0].severity == CheckSeverity.WARNING
-        assert "日本語文字が含まれていません" in results[0].message
-        assert "日本語での命名を検討してください" in results[0].message
+        assert result.severity == CheckSeverity.WARNING
+        assert "日本語文字が含まれていません" in result.message
+        assert "日本語での命名を検討してください" in result.message
 
     def test_mixed_japanese_english_returns_info(self) -> None:
         """Test that test method with mixed Japanese and English returns info."""
@@ -76,13 +75,12 @@ class TestPTNM001:
             end_col_offset=None,
             body=[],
             decorators=[],
-            docstring=None
+            docstring=None,
         )
 
-        results = self.rule.check(test_function, self.test_file)
+        result = self.rule.check(test_function, self.test_file)
 
-        assert len(results) == 1
-        assert results[0].severity == CheckSeverity.INFO
+        assert result.severity == CheckSeverity.INFO
 
     def test_hiragana_katakana_kanji_all_detected(self) -> None:
         """Test that hiragana, katakana, and kanji are all detected."""
@@ -90,7 +88,7 @@ class TestPTNM001:
             ("test_ひらがな", "hiragana"),
             ("test_カタカナ", "katakana"),
             ("test_漢字", "kanji"),
-            ("test_すべて混在", "mixed")
+            ("test_すべて混在", "mixed"),
         ]
 
         for method_name, case_type in test_cases:
@@ -102,13 +100,14 @@ class TestPTNM001:
                 end_col_offset=None,
                 body=[],
                 decorators=[],
-                docstring=None
+                docstring=None,
             )
 
-            results = self.rule.check(test_function, self.test_file)
+            result = self.rule.check(test_function, self.test_file)
 
-            assert len(results) == 1, f"Failed for {case_type}: {method_name}"
-            assert results[0].severity == CheckSeverity.INFO, f"Failed for {case_type}: {method_name}"
+            assert result.severity == CheckSeverity.INFO, (
+                f"Failed for {case_type}: {method_name}"
+            )
 
     def test_non_test_method_ignored(self) -> None:
         """Test that non-test methods are ignored."""
@@ -120,12 +119,12 @@ class TestPTNM001:
             end_col_offset=None,
             body=[],
             decorators=[],
-            docstring=None
+            docstring=None,
         )
 
-        results = self.rule.check(test_function, self.test_file)
+        result = self.rule.check(test_function, self.test_file)
 
-        assert len(results) == 0
+        assert result is not None
 
     def test_contains_japanese_characters_method(self) -> None:
         """Test the _contains_japanese_characters method directly."""
@@ -143,7 +142,9 @@ class TestPTNM001:
 
         for text, expected in test_cases:
             result = self.rule._contains_japanese_characters(text)
-            assert result == expected, f"Failed for '{text}': expected {expected}, got {result}"
+            assert result == expected, (
+                f"Failed for '{text}': expected {expected}, got {result}"
+            )
 
     def test_result_contains_correct_metadata(self) -> None:
         """Test that results contain correct metadata."""
@@ -155,13 +156,11 @@ class TestPTNM001:
             end_col_offset=None,
             body=[],
             decorators=[],
-            docstring=None
+            docstring=None,
         )
 
-        results = self.rule.check(test_function, self.test_file)
+        result = self.rule.check(test_function, self.test_file)
 
-        assert len(results) == 1
-        result = results[0]
         assert result.rule_id == "PTNM001"
         assert result.checker_name == "japanese_characters_in_name"
         assert result.function_name == "test_ユーザー作成"

@@ -1,7 +1,9 @@
 """Test fixtures containing good and bad examples for each rule."""
+
 from typing import Union
 
 # PTCM001: AAA Pattern Detected in Comments - Good Examples
+
 
 def test_aaa_standard_pattern() -> None:
     """Good example: Standard AAA pattern with comments."""
@@ -28,6 +30,7 @@ def test_aaa_combined_act_assert() -> None:
 
 # PTCM001: Bad Examples (should not trigger)
 
+
 def test_without_comments() -> None:
     """Bad example: No pattern comments."""
     user = User("John")
@@ -46,6 +49,7 @@ def test_mixed_pattern_terminology() -> None:
 
 
 # PTCM002: GWT Pattern Detected in Comments - Good Examples
+
 
 def test_gwt_standard_pattern() -> None:
     """Good example: Standard GWT pattern."""
@@ -71,6 +75,7 @@ def test_gwt_combined_when_then() -> None:
 
 # PTST001: Structural Pattern - Good Examples
 
+
 def test_structural_three_sections() -> None:
     """Good example: Clear three-section structure."""
     customer = Customer("John")
@@ -94,6 +99,7 @@ def test_structural_two_sections() -> None:
 
 # PTST001: Bad Examples (no structural separation)
 
+
 def test_no_structural_separation() -> None:
     """Bad example: No structural separation."""
     user = User("John")
@@ -107,6 +113,7 @@ def test_mixed_code_no_sections() -> None:
 
 
 # PTAS001: Too Few Assertions - Good Examples
+
 
 def test_sufficient_assertions() -> None:
     """Good example: Has sufficient assertions."""
@@ -124,6 +131,7 @@ def test_single_meaningful_assertion() -> None:
 
 # PTAS001: Bad Examples (would trigger this rule)
 
+
 def test_no_assertions() -> None:
     """Bad example: No assertions at all."""
     user = User("John")
@@ -140,6 +148,7 @@ def test_side_effects_only() -> None:
 
 # PTAS002: Too Many Assertions - Good Examples
 
+
 def test_focused_user_validation() -> None:
     """Good example: Focused test with appropriate assertions."""
     user = User("John", "john@example.com", "password123")
@@ -150,6 +159,7 @@ def test_focused_user_validation() -> None:
 
 
 # PTAS002: Bad Examples (would trigger this rule)
+
 
 def test_too_many_assertions() -> None:
     """Bad example: Too many assertions in single test."""
@@ -165,6 +175,7 @@ def test_too_many_assertions() -> None:
 
 # PTAS003: High Assertion Density - Good Examples
 
+
 def test_high_density_focused() -> None:
     """Good example: High density but well-focused."""
     result = get_user()
@@ -175,6 +186,7 @@ def test_high_density_focused() -> None:
 
 # PTAS004: No Assertions - Bad Examples (would trigger this rule)
 
+
 def test_completely_empty() -> None:
     """Bad example: No assertions found."""
     user = create_user("test")
@@ -182,6 +194,7 @@ def test_completely_empty() -> None:
 
 
 # PTAS005: Assertion Count OK - Good Examples
+
 
 def test_appropriate_assertion_count() -> None:
     """Good example: Appropriate assertion count."""
@@ -193,7 +206,12 @@ def test_appropriate_assertion_count() -> None:
 class User:
     """Mock User class for testing."""
 
-    def __init__(self, name_or_email: str, email_or_password: Union[str, None] = None, password: Union[str, None] = None) -> None:
+    def __init__(
+        self,
+        name_or_email: str,
+        email_or_password: Union[str, None] = None,
+        password: Union[str, None] = None,
+    ) -> None:
         self.name: str = name_or_email
         self.username: str = name_or_email
         self.email: Union[str, None] = None
@@ -216,7 +234,7 @@ class User:
         self.is_active: bool = True
 
     @classmethod
-    def create(cls, name: str, email: str) -> 'User':
+    def create(cls, name: str, email: str) -> "User":
         """Create user with name and email."""
         return cls(name, email)
 
@@ -286,11 +304,11 @@ class OrderService:
     @staticmethod
     def create_order(customer: Customer, product: Product) -> object:
         """Create order."""
-        return type('Order', (), {
-            'customer': customer,
-            'total': product.price,
-            'status': 'pending'
-        })()
+        return type(
+            "Order",
+            (),
+            {"customer": customer, "total": product.price, "status": "pending"},
+        )()
 
 
 class Logger:
@@ -303,11 +321,7 @@ class Logger:
 
 def get_user() -> object:
     """Get mock user object."""
-    return type('User', (), {
-        'name': 'John',
-        'age': 30,
-        'active': True
-    })()
+    return type("User", (), {"name": "John", "age": 30, "active": True})()
 
 
 def create_user(name: str) -> User:

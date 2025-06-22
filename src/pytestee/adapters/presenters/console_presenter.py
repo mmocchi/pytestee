@@ -35,7 +35,7 @@ class ConsolePresenter(IPresenter):
         """Show header information."""
         header = Panel(
             "[bold blue]pytestee[/bold blue] - pytest test quality checker",
-            style="blue"
+            style="blue",
         )
         self.console.print(header)
         self.console.print()
@@ -57,19 +57,28 @@ class ConsolePresenter(IPresenter):
 
     def _show_results(self, results: List[CheckResult]) -> None:
         """Show detailed check results."""
-        # Show all results from enabled rules (filtered by select/ignore at rule level)
-        if not results:
+        # Filter results based on verbosity
+        if self.verbose:
+            # Show all results (success and failure) in verbose mode
+            filtered_results = results
+        else:
+            # Show only failures and warnings in normal mode
+            filtered_results = [r for r in results if r.severity != CheckSeverity.INFO]
+
+        if not filtered_results:
             if not self.quiet:
                 self.console.print("[green]✅ All checks passed![/green]")
             return
 
         # Group results by file
-        results_by_file = self._group_results_by_file(results)
+        results_by_file = self._group_results_by_file(filtered_results)
 
         for file_path, file_results in results_by_file.items():
             self._show_file_results(file_path, file_results)
 
-    def _group_results_by_file(self, results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
+    def _group_results_by_file(
+        self, results: List[CheckResult]
+    ) -> Dict[str, List[CheckResult]]:
         """Group check results by file path."""
         grouped: Dict[str, List[CheckResult]] = {}
 
@@ -112,7 +121,9 @@ class ConsolePresenter(IPresenter):
                 icon, color = self._get_severity_style(result.severity)
                 location = f" (line {result.line_number})" if result.line_number else ""
                 rule_id = f"[dim]{result.rule_id}[/dim] " if result.rule_id else ""
-                message = f"{icon} {rule_id}[{color}]{result.message}{location}[/{color}]"
+                message = (
+                    f"{icon} {rule_id}[{color}]{result.message}{location}[/{color}]"
+                )
 
                 if self.verbose and result.context:
                     message += f"\n   [dim]{result.context}[/dim]"
@@ -135,17 +146,16 @@ class ConsolePresenter(IPresenter):
         if result.has_errors:
             status = Panel(
                 "[red]❌ Quality checks failed - please fix the errors above[/red]",
-                style="red"
+                style="red",
             )
         elif result.has_warnings:
             status = Panel(
                 "[yellow]⚠️ Quality checks completed with warnings[/yellow]",
-                style="yellow"
+                style="yellow",
             )
         else:
             status = Panel(
-                "[green]✅ All quality checks passed![/green]",
-                style="green"
+                "[green]✅ All quality checks passed![/green]", style="green"
             )
 
         self.console.print(status)

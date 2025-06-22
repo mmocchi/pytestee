@@ -14,10 +14,15 @@ class PTLG001(BaseRule):
         super().__init__(
             rule_id="PTLG001",
             name="aaa_pattern_logical",
-            description="AAA pattern detected through AST analysis of code structure"
+            description="AAA pattern detected through AST analysis of code structure",
         )
 
-    def check(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
+    def check(
+        self,
+        test_function: TestFunction,
+        test_file: TestFile,
+        config: Optional[CheckerConfig] = None,
+    ) -> CheckResult:
         """Check for logical AAA pattern in code flow."""
         # Analyze the AST to detect typical patterns
         body_statements = test_function.body
@@ -26,25 +31,23 @@ class PTLG001(BaseRule):
 
         if self._has_logical_aaa_flow(sections):
             # Pattern found - return success (INFO)
-            return [self._create_success_result(
+            return self._create_success_result(
                 "AAA pattern detected through code flow analysis",
                 test_file,
-                test_function
-            )]
+                test_function,
+            )
         # Pattern not found - return failure (ERROR/WARNING based on config)
-        return [self._create_failure_result(
+        return self._create_failure_result(
             "AAA pattern not detected through code flow analysis. Consider organizing code with clear Arrange, Act, Assert sections.",
             test_file,
-            test_function
-        )]
+            test_function,
+        )
 
-    def _categorize_statements(self, statements: List[ast.stmt]) -> Dict[str, List[ast.stmt]]:
+    def _categorize_statements(
+        self, statements: List[ast.stmt]
+    ) -> Dict[str, List[ast.stmt]]:
         """Categorize statements into arrange, act, assert groups."""
-        sections: Dict[str, List[ast.stmt]] = {
-            "arrange": [],
-            "act": [],
-            "assert": []
-        }
+        sections: Dict[str, List[ast.stmt]] = {"arrange": [], "act": [], "assert": []}
 
         current_section = "arrange"
 

@@ -1,4 +1,5 @@
 """Test fixture with quality issues."""
+
 from typing import Any
 
 
@@ -33,6 +34,7 @@ def test_no_clear_pattern() -> None:
 
 def create_user(username: str, email: str) -> Any:
     """Mock user creation function."""
+
     class User:
         def __init__(self, username: str, email: str) -> None:
             self.username = username

@@ -24,7 +24,7 @@ class AnalyzeTestsUseCase:
         self,
         test_repository: ITestRepository,
         checker_registry: ICheckerRegistry,
-        config_manager: IConfigManager
+        config_manager: IConfigManager,
     ) -> None:
         """テスト分析ユースケースを初期化します。
 
@@ -38,7 +38,9 @@ class AnalyzeTestsUseCase:
         self._checker_registry = checker_registry
         self._config_manager = config_manager
 
-    def execute(self, target_path: Path, config_overrides: Optional[Dict[str, Any]] = None) -> AnalysisResult:
+    def execute(
+        self, target_path: Path, config_overrides: Optional[Dict[str, Any]] = None
+    ) -> AnalysisResult:
         """テスト分析を実行します。
 
         Args:
@@ -68,7 +70,7 @@ class AnalyzeTestsUseCase:
                 total_tests=0,
                 passed_checks=0,
                 failed_checks=0,
-                check_results=[]
+                check_results=[],
             )
 
         # Load and analyze test files
@@ -94,10 +96,12 @@ class AnalyzeTestsUseCase:
             total_tests=total_tests,
             passed_checks=passed_checks,
             failed_checks=failed_checks,
-            check_results=all_results
+            check_results=all_results,
         )
 
-    def _analyze_test_file(self, test_file: TestFile, config: Dict[str, Any]) -> List[CheckResult]:
+    def _analyze_test_file(
+        self, test_file: TestFile, config: Dict[str, Any]
+    ) -> List[CheckResult]:
         """単一のテストファイルを有効なチェッカーで分析します。
 
         Args:
@@ -113,18 +117,27 @@ class AnalyzeTestsUseCase:
         """
         results = []
 
-        # Get enabled checkers
-        enabled_checkers = self._checker_registry.get_enabled_checkers(config)
+        # Get all rule instances from registry
+        all_rule_instances = self._checker_registry.get_all_rule_instances()
 
-        for checker in enabled_checkers:
-            checker_config = self._config_manager.get_checker_config(checker.name)
+        # Filter to enabled rules only
+        enabled_rules = {
+            rule_id: rule
+            for rule_id, rule in all_rule_instances.items()
+            if self._config_manager.is_rule_enabled(rule_id)
+        }
 
-            try:
-                checker_results = checker.check(test_file, checker_config)
-                results.extend(checker_results)
-            except Exception as e:
-                # Log checker error and continue with other checkers
-                raise CheckerError(checker.name, e) from e
+        # Run enabled rules on each test function
+        for test_function in test_file.test_functions:
+            for rule_id, rule in enabled_rules.items():
+                try:
+                    # Create checker config for the rule
+                    checker_config = self._config_manager.get_checker_config(rule.name)
+                    rule_result = rule.check(test_function, test_file, checker_config)
+                    results.append(rule_result)
+                except Exception as e:
+                    # Log rule error and continue with other rules
+                    raise CheckerError(rule_id, e) from e
 
         return results
 

@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from pytestee.domain.checkers.naming_checker import NamingChecker
 from pytestee.domain.models import CheckSeverity
+from pytestee.domain.rules.ptnm.japanese_characters import PTNM001
 from pytestee.infrastructure.ast_parser import ASTParser
 
 
@@ -13,7 +13,7 @@ class TestJapaneseNamingIntegration:
     def setup_method(self) -> None:
         """Set up test fixtures."""
         self.parser = ASTParser()
-        self.checker = NamingChecker()
+        self.checker = PTNM001()
         self.fixtures_dir = Path(__file__).parent.parent / "fixtures"
 
     def test_japanese_naming_rule_with_real_file(self) -> None:
@@ -21,7 +21,11 @@ class TestJapaneseNamingIntegration:
         test_file_path = self.fixtures_dir / "japanese_naming_test.py"
         test_file = self.parser.parse_file(test_file_path)
 
-        results = self.checker.check(test_file)
+        # Collect results for all test functions
+        results = []
+        for test_function in test_file.test_functions:
+            function_result = self.checker.check(test_function, test_file)
+            results.append(function_result)
 
         # Should have results for all test methods (6 test methods total)
         assert len(results) == 6
@@ -37,7 +41,13 @@ class TestJapaneseNamingIntegration:
         assert len(warning_results) == 1  # 1 English only
 
         # Verify specific methods
-        japanese_methods = ["test_日本語メソッド名", "test_ひらがなでのテスト", "test_カタカナでのテスト", "test_漢字を含むテスト", "test_mixed_japanese_englishテスト"]
+        japanese_methods = [
+            "test_日本語メソッド名",
+            "test_ひらがなでのテスト",
+            "test_カタカナでのテスト",
+            "test_漢字を含むテスト",
+            "test_mixed_japanese_englishテスト",
+        ]
         english_methods = ["test_english_only_method"]
 
         info_function_names = {r.function_name for r in info_results}
@@ -51,7 +61,11 @@ class TestJapaneseNamingIntegration:
         test_file_path = self.fixtures_dir / "japanese_naming_test.py"
         test_file = self.parser.parse_file(test_file_path)
 
-        results = self.checker.check(test_file)
+        # Collect results for all test functions
+        results = []
+        for test_function in test_file.test_functions:
+            function_result = self.checker.check(test_function, test_file)
+            results.append(function_result)
 
         # All results should have PTNM001 rule ID
         for result in results:
@@ -63,7 +77,11 @@ class TestJapaneseNamingIntegration:
         test_file_path = self.fixtures_dir / "japanese_naming_test.py"
         test_file = self.parser.parse_file(test_file_path)
 
-        results = self.checker.check(test_file)
+        # Collect results for all test functions
+        results = []
+        for test_function in test_file.test_functions:
+            function_result = self.checker.check(test_function, test_file)
+            results.append(function_result)
 
         # All results should have valid line numbers
         for result in results:
@@ -76,7 +94,11 @@ class TestJapaneseNamingIntegration:
         test_file_path = self.fixtures_dir / "japanese_naming_test.py"
         test_file = self.parser.parse_file(test_file_path)
 
-        results = self.checker.check(test_file)
+        # Collect results for all test functions
+        results = []
+        for test_function in test_file.test_functions:
+            function_result = self.checker.check(test_function, test_file)
+            results.append(function_result)
 
         info_results = [r for r in results if r.severity == CheckSeverity.INFO]
         warning_results = [r for r in results if r.severity == CheckSeverity.WARNING]

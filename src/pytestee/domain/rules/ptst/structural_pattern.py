@@ -13,12 +13,17 @@ class PTST001(BaseRule):
         super().__init__(
             rule_id="PTST001",
             name="aaa_pattern_structural",
-            description="AAA pattern detected through empty lines separating code sections"
+            description="AAA pattern detected through empty lines separating code sections",
         )
 
-    def check(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
+    def check(
+        self,
+        test_function: TestFunction,
+        test_file: TestFile,
+        config: Optional[CheckerConfig] = None,
+    ) -> CheckResult:
         """Check for structural AAA pattern using empty lines."""
-        lines = test_file.content.split('\n')
+        lines = test_file.content.split("\n")
         start_line = test_function.lineno - 1
         end_line = test_function.end_lineno or start_line + len(test_function.body)
 
@@ -26,7 +31,9 @@ class PTST001(BaseRule):
 
         # Find empty lines within the function
         empty_line_indices = []
-        for i, line in enumerate(function_lines[1:], 1):  # Skip function definition line
+        for i, line in enumerate(
+            function_lines[1:], 1
+        ):  # Skip function definition line
             if line.strip() == "":
                 empty_line_indices.append(i)
 
@@ -35,20 +42,22 @@ class PTST001(BaseRule):
             sections = self._analyze_sections(function_lines, empty_line_indices)
             if self._looks_like_aaa_structure(sections):
                 # Pattern found - return success (INFO)
-                return [self._create_success_result(
+                return self._create_success_result(
                     "AAA pattern detected through structural separation",
                     test_file,
-                    test_function
-                )]
+                    test_function,
+                )
 
         # Pattern not found - return failure (ERROR/WARNING based on config)
-        return [self._create_failure_result(
+        return self._create_failure_result(
             "AAA pattern not detected through structural separation. Consider using empty lines to separate Arrange, Act, Assert sections.",
             test_file,
-            test_function
-        )]
+            test_function,
+        )
 
-    def _analyze_sections(self, function_lines: List[str], empty_line_indices: List[int]) -> List[List[str]]:
+    def _analyze_sections(
+        self, function_lines: List[str], empty_line_indices: List[int]
+    ) -> List[List[str]]:
         """Analyze sections separated by empty lines."""
         sections = []
         start = 1  # Skip function definition

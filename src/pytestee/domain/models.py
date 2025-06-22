@@ -179,7 +179,9 @@ class AnalysisResult:
             エラーレベルの問題が存在する場合True
 
         """
-        return any(result.severity == CheckSeverity.ERROR for result in self.check_results)
+        return any(
+            result.severity == CheckSeverity.ERROR for result in self.check_results
+        )
 
     @property
     def has_warnings(self) -> bool:
@@ -189,7 +191,9 @@ class AnalysisResult:
             警告レベルの問題が存在する場合True
 
         """
-        return any(result.severity == CheckSeverity.WARNING for result in self.check_results)
+        return any(
+            result.severity == CheckSeverity.WARNING for result in self.check_results
+        )
 
 
 @dataclass

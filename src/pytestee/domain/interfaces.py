@@ -7,7 +7,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from pytestee.domain.models import (
     AnalysisResult,
@@ -16,6 +16,9 @@ from pytestee.domain.models import (
     TestFile,
     TestFunction,
 )
+
+if TYPE_CHECKING:
+    from pytestee.domain.rules.base_rule import BaseRule
 
 
 class ITestRepository(ABC):
@@ -72,7 +75,9 @@ class IChecker(ABC):
         pass
 
     @abstractmethod
-    def check(self, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
+    def check(
+        self, test_file: TestFile, config: Optional[CheckerConfig] = None
+    ) -> List[CheckResult]:
         """テストファイルをチェックし、結果を返します。
 
         Args:
@@ -86,7 +91,12 @@ class IChecker(ABC):
         pass
 
     @abstractmethod
-    def check_function(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
+    def check_function(
+        self,
+        test_function: TestFunction,
+        test_file: TestFile,
+        config: Optional[CheckerConfig] = None,
+    ) -> List[CheckResult]:
         """特定のテスト関数をチェックし、結果を返します。
 
         Args:
@@ -160,6 +170,19 @@ class IConfigManager(ABC):
         """
         pass
 
+    @abstractmethod
+    def is_rule_enabled(self, rule_id: str) -> bool:
+        """特定のルールが有効かどうかをチェックします。
+
+        Args:
+            rule_id: ルールID
+
+        Returns:
+            ルールが有効な場合True
+
+        """
+        pass
+
 
 class ICheckerRegistry(ABC):
     """チェッカーレジストリのインターフェース。
@@ -209,6 +232,16 @@ class ICheckerRegistry(ABC):
 
         Returns:
             有効なチェッカーのリスト
+
+        """
+        pass
+
+    @abstractmethod
+    def get_all_rule_instances(self) -> Dict[str, "BaseRule"]:
+        """すべてのルールインスタンスを取得します。
+
+        Returns:
+            ルールID -> ルールインスタンスのマッピング
 
         """
         pass

@@ -21,7 +21,7 @@ class ASTParser:
             path=file_path,
             content=content,
             ast_tree=tree,
-            test_functions=test_functions
+            test_functions=test_functions,
         )
 
     def _extract_test_functions(self, tree: ast.AST) -> List[TestFunction]:
@@ -53,9 +53,11 @@ class ASTParser:
         if isinstance(decorator, ast.Attribute):
             if isinstance(decorator.value, ast.Attribute):
                 # pytest.mark.something
-                if (isinstance(decorator.value.value, ast.Name) and
-                    decorator.value.value.id == "pytest" and
-                    decorator.value.attr == "mark"):
+                if (
+                    isinstance(decorator.value.value, ast.Name)
+                    and decorator.value.value.id == "pytest"
+                    and decorator.value.attr == "mark"
+                ):
                     return True
             elif isinstance(decorator.value, ast.Name) and decorator.value.id == "mark":
                 # mark.something (if mark is imported)
@@ -74,11 +76,11 @@ class ASTParser:
             name=node.name,
             lineno=node.lineno,
             col_offset=node.col_offset,
-            end_lineno=getattr(node, 'end_lineno', None),
-            end_col_offset=getattr(node, 'end_col_offset', None),
+            end_lineno=getattr(node, "end_lineno", None),
+            end_col_offset=getattr(node, "end_col_offset", None),
             body=node.body,
             docstring=docstring,
-            decorators=decorators
+            decorators=decorators,
         )
 
     def _extract_decorators(self, node: ast.FunctionDef) -> List[str]:
@@ -133,17 +135,19 @@ class ASTParser:
             return test_function.end_lineno - test_function.lineno + 1
         return len(test_function.body)
 
-    def find_comments(self, test_function: TestFunction, file_content: str) -> List[Tuple[int, str]]:
+    def find_comments(
+        self, test_function: TestFunction, file_content: str
+    ) -> List[Tuple[int, str]]:
         """Find comments in a test function."""
         comments = []
-        lines = file_content.split('\n')
+        lines = file_content.split("\n")
 
         start_line = test_function.lineno - 1  # Convert to 0-based index
         end_line = test_function.end_lineno or start_line + len(test_function.body)
 
         for i in range(start_line, min(end_line, len(lines))):
             line = lines[i].strip()
-            if line.startswith('#'):
+            if line.startswith("#"):
                 comments.append((i + 1, line))  # Convert back to 1-based line numbers
 
         return comments

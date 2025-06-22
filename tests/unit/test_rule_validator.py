@@ -73,11 +73,7 @@ class TestRuleValidator:
 
     def test_validate_config_parameters_valid(self) -> None:
         """Test validation with valid configuration parameters."""
-        config = {
-            "min_asserts": 1,
-            "max_asserts": 5,
-            "max_density": 0.7
-        }
+        config = {"min_asserts": 1, "max_asserts": 5, "max_density": 0.7}
 
         # Should not raise any exception
         RuleValidator.validate_config_parameters(config)
@@ -86,19 +82,19 @@ class TestRuleValidator:
         """Test validation detects min > max conflict."""
         config = {
             "min_asserts": 5,
-            "max_asserts": 3  # Invalid: min > max
+            "max_asserts": 3,  # Invalid: min > max
         }
 
         with pytest.raises(RuleConflictError) as exc_info:
             RuleValidator.validate_config_parameters(config)
 
-        assert "min_asserts (5) cannot be greater than max_asserts (3)" in str(exc_info.value)
+        assert "min_asserts (5) cannot be greater than max_asserts (3)" in str(
+            exc_info.value
+        )
 
     def test_validate_config_parameters_negative_min(self) -> None:
         """Test validation detects negative min_asserts."""
-        config = {
-            "min_asserts": -1
-        }
+        config = {"min_asserts": -1}
 
         with pytest.raises(RuleConflictError) as exc_info:
             RuleValidator.validate_config_parameters(config)
@@ -109,14 +105,16 @@ class TestRuleValidator:
         """Test validation detects invalid max_asserts."""
         config = {
             "min_asserts": 1,
-            "max_asserts": 0  # Invalid: must be at least 1
+            "max_asserts": 0,  # Invalid: must be at least 1
         }
 
         with pytest.raises(RuleConflictError) as exc_info:
             RuleValidator.validate_config_parameters(config)
 
         # Will trigger min > max error first
-        assert "min_asserts (1) cannot be greater than max_asserts (0)" in str(exc_info.value)
+        assert "min_asserts (1) cannot be greater than max_asserts (0)" in str(
+            exc_info.value
+        )
 
     def test_validate_config_parameters_invalid_density(self) -> None:
         """Test validation detects invalid density range."""
