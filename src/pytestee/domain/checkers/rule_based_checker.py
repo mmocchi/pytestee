@@ -3,7 +3,7 @@
 from typing import List, Optional
 
 from ...domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ..errors import CheckerError
+from ...infrastructure.errors import CheckerError
 from ..rules.base_rule import BaseRule
 from .base_checker import BaseChecker
 

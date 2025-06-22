@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 from pytestee.domain.models import CheckSeverity, TestFile, TestFunction
-from pytestee.infrastructure.rules.ptnm.japanese_characters import PTNM001
+from pytestee.domain.rules.ptnm.japanese_characters import PTNM001
 
 
 class TestPTNM001:

@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
+from pytestee.domain.checkers.naming_checker import NamingChecker
 from pytestee.domain.models import CheckSeverity
 from pytestee.infrastructure.ast_parser import ASTParser
-from pytestee.infrastructure.checkers.naming_checker import NamingChecker
 
 
 class TestJapaneseNamingIntegration:

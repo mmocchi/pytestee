@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
+from pytestee.domain.checkers.aaa_pattern_checker import AAAPatternChecker
 from pytestee.domain.models import CheckSeverity
 from pytestee.infrastructure.ast_parser import ASTParser
-from pytestee.infrastructure.checkers.aaa_pattern_checker import AAAPatternChecker
 
 
 class TestAAAPatternChecker:

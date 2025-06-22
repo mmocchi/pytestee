@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
+from pytestee.domain.checkers.assert_density_checker import AssertDensityChecker
 from pytestee.domain.models import CheckerConfig, CheckSeverity
 from pytestee.infrastructure.ast_parser import ASTParser
-from pytestee.infrastructure.checkers.assert_density_checker import AssertDensityChecker
 
 
 class TestAssertDensityChecker:

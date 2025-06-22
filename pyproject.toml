@@ -175,7 +175,7 @@ max_asserts = 5
 min_asserts = 1
 require_aaa_comments = true
 
-# select = ["PTST003", "PTAS"]  # Use structural patterns + assertion rules
+select = ["PTST001", "PTAS"]  # Use structural patterns + assertion rules
 
 
 [dependency-groups]

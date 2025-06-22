@@ -3,12 +3,12 @@
 from pathlib import Path
 
 from pytestee.adapters.repositories.file_repository import FileRepository
+from pytestee.domain.checkers.assertion_checker import AssertionChecker
+from pytestee.domain.checkers.pattern_checker import PatternChecker
 from pytestee.domain.models import CheckerConfig
-from pytestee.infrastructure.checkers.assertion_checker import AssertionChecker
-from pytestee.infrastructure.checkers.pattern_checker import PatternChecker
-from pytestee.infrastructure.rules.ptcm.aaa_comment_pattern import PTCM001
-from pytestee.infrastructure.rules.ptcm.gwt_comment_pattern import PTCM002
-from pytestee.infrastructure.rules.ptst.structural_pattern import PTST001
+from pytestee.domain.rules.ptcm.aaa_comment_pattern import PTCM001
+from pytestee.domain.rules.ptcm.gwt_comment_pattern import PTCM002
+from pytestee.domain.rules.ptst.structural_pattern import PTST001
 
 
 class TestRuleExamples:

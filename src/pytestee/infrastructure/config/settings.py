@@ -12,7 +12,7 @@ except ImportError:
 
 from ...domain.interfaces import IConfigManager
 from ...domain.models import CheckerConfig
-from ..rules.rule_validator import RuleValidator
+from ...domain.rules.rule_validator import RuleValidator
 
 # Define type alias for configuration values
 ConfigValue = Union[str, int, float, bool, Dict[str, Any], list]

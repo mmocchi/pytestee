@@ -2,11 +2,11 @@
 
 from typing import Any, Dict, List, Optional
 
+from pytestee.domain.checkers.assertion_checker import AssertionChecker
+from pytestee.domain.checkers.naming_checker import NamingChecker
+from pytestee.domain.checkers.pattern_checker import PatternChecker
 from pytestee.domain.interfaces import IChecker, ICheckerRegistry
-from pytestee.infrastructure.checkers.assertion_checker import AssertionChecker
-from pytestee.infrastructure.checkers.naming_checker import NamingChecker
-from pytestee.infrastructure.checkers.pattern_checker import PatternChecker
-from pytestee.infrastructure.rules.base_rule import BaseRule
+from pytestee.domain.rules.base_rule import BaseRule
 
 
 class CheckerRegistry(ICheckerRegistry):

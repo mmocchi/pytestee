@@ -3,8 +3,8 @@
 import ast
 from pathlib import Path
 
+from pytestee.domain.checkers.naming_checker import NamingChecker
 from pytestee.domain.models import CheckSeverity, TestFile, TestFunction
-from pytestee.infrastructure.checkers.naming_checker import NamingChecker
 
 
 class TestNamingChecker:

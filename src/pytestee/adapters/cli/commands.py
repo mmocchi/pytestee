@@ -11,12 +11,12 @@ from rich.table import Table
 
 from ...adapters.presenters.console_presenter import ConsolePresenter
 from ...adapters.repositories.file_repository import FileRepository
+from ...domain.checkers.assertion_checker import AssertionChecker
+from ...domain.checkers.naming_checker import NamingChecker
+from ...domain.checkers.pattern_checker import PatternChecker
 from ...domain.models import AnalysisResult
-from ...infrastructure.checkers.assertion_checker import AssertionChecker
-from ...infrastructure.checkers.naming_checker import NamingChecker
-from ...infrastructure.checkers.pattern_checker import PatternChecker
+from ...domain.rules.rule_validator import RuleConflictError, RuleValidator
 from ...infrastructure.config.settings import ConfigManager
-from ...infrastructure.rules.rule_validator import RuleConflictError, RuleValidator
 from ...registry import CheckerRegistry
 from ...usecases.analyze_tests import AnalyzeTestsUseCase
 
