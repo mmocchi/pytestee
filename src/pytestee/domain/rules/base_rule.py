@@ -1,7 +1,7 @@
 """ルール実装の基底クラス。"""
 
 from abc import ABC, abstractmethod
-from typing import Optional, Set
+from typing import Optional
 
 from pytestee.domain.models import (
     CheckerConfig,
@@ -84,7 +84,7 @@ class BaseRule(ABC):
         """設定管理を設定する。"""
         self.config_manager = config_manager
 
-    def get_conflicting_rules(self) -> Set[str]:
+    def get_conflicting_rules(self) -> set[str]:
         """このルールと競合するルールIDのセットを返す。
 
         サブクラスでオーバーライドして競合ルールを定義。

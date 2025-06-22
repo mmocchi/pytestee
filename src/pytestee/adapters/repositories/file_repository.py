@@ -2,7 +2,7 @@
 
 import fnmatch
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from pytestee.domain.interfaces import ITestRepository
 from pytestee.domain.models import TestFile
@@ -14,7 +14,7 @@ class FileRepository(ITestRepository):
 
     def __init__(
         self,
-        exclude_patterns: Optional[List[str]] = None,
+        exclude_patterns: Optional[list[str]] = None,
     ) -> None:
         """ファイルリポジトリを初期化します。
 
@@ -25,7 +25,7 @@ class FileRepository(ITestRepository):
         self._parser = ASTParser()
         self._exclude_patterns = exclude_patterns or []
 
-    def find_test_files(self, path: Path) -> List[Path]:
+    def find_test_files(self, path: Path) -> list[Path]:
         """指定されたパス内のすべてのテストファイルを検索します。
 
         Args:

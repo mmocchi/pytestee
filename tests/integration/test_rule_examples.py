@@ -3,6 +3,8 @@
 from pathlib import Path
 
 from pytestee.adapters.repositories.file_repository import FileRepository
+from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
 from pytestee.domain.models import CheckerConfig, CheckFailure, CheckSuccess
 from pytestee.domain.rules.assertion.assertion_count_ok import PTAS005
 from pytestee.domain.rules.assertion.high_assertion_density import PTAS003
@@ -20,14 +22,16 @@ class TestRuleExamples:
     def setup_method(self) -> None:
         """Set up test fixtures."""
         self.repo = FileRepository()
-        self.ptcm001 = PTCM001()
-        self.ptcm002 = PTCM002()
+        assertion_analyzer = AssertionAnalyzer()
+        pattern_analyzer = PatternAnalyzer()
+        self.ptcm001 = PTCM001(pattern_analyzer)
+        self.ptcm002 = PTCM002(pattern_analyzer)
         self.ptst001 = PTST001()
-        self.ptas001 = PTAS001()
-        self.ptas002 = PTAS002()
-        self.ptas003 = PTAS003()
-        self.ptas004 = PTAS004()
-        self.ptas005 = PTAS005()
+        self.ptas001 = PTAS001(assertion_analyzer)
+        self.ptas002 = PTAS002(assertion_analyzer)
+        self.ptas003 = PTAS003(assertion_analyzer)
+        self.ptas004 = PTAS004(assertion_analyzer)
+        self.ptas005 = PTAS005(assertion_analyzer)
         self.example_file_path = Path("tests/fixtures/test_example_patterns.py")
 
     def test_ptcm001_good_examples(self) -> None:

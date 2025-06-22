@@ -1,7 +1,6 @@
 """テストメソッド名に日本語文字が含まれているかをチェックするルール。"""
 
-import re
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from pytestee.domain.models import (
     CheckerConfig,
@@ -12,6 +11,9 @@ from pytestee.domain.models import (
 )
 from pytestee.domain.rules.base_rule import BaseRule
 
+if TYPE_CHECKING:
+    from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+
 
 class PTNM001(BaseRule):
     """テストメソッド名に日本語文字が含まれているかをチェック。
@@ -21,12 +23,13 @@ class PTNM001(BaseRule):
     含まれていない場合は、日本語での命名を推奨するWARNINGレベルのメッセージを返す。
     """
 
-    def __init__(self) -> None:
+    def __init__(self, pattern_analyzer: "PatternAnalyzer") -> None:
         super().__init__(
             rule_id="PTNM001",
             name="japanese_characters_in_name",
             description="テストメソッド名に日本語文字が含まれているかをチェック",
         )
+        self._analyzer = pattern_analyzer
 
     def check(
         self,
@@ -53,7 +56,7 @@ class PTNM001(BaseRule):
                 test_function
             )
 
-        if self._contains_japanese_characters(test_function.name):
+        if self._analyzer.has_japanese_characters(test_function):
             return self._create_success_result(
                 f"テストメソッド名 '{test_function.name}' に日本語文字が含まれています。可読性が良好です。",
                 test_file,
@@ -66,15 +69,3 @@ class PTNM001(BaseRule):
             severity=CheckSeverity.WARNING
         )
 
-    def _contains_japanese_characters(self, text: str) -> bool:
-        """テキストに日本語文字(ひらがな、カタカナ、漢字)が含まれているかチェック。
-
-        Args:
-            text: チェック対象のテキスト
-
-        Returns:
-            日本語文字が含まれている場合True
-
-        """
-        japanese_pattern = r"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]"
-        return bool(re.search(japanese_pattern, text))

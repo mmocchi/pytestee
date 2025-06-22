@@ -1,6 +1,6 @@
 """PTAS005: Assertion Count OK."""
 
-from typing import TYPE_CHECKING, Optional, Set, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
@@ -12,16 +12,12 @@ if TYPE_CHECKING:
 class PTAS005(BaseRule):
     """Rule for indicating appropriate assertion count."""
 
-    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
+    def __init__(self, assertion_analyzer: "AssertionAnalyzer") -> None:
         super().__init__(
             rule_id="PTAS005",
             name="assertion_count_ok",
             description="Test function has appropriate number of assertions",
         )
-        # Analyzer will be injected, but import here for backward compatibility
-        if assertion_analyzer is None:
-            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
-            assertion_analyzer = AssertionAnalyzer()
         self._analyzer = assertion_analyzer
 
     def check(
@@ -63,6 +59,6 @@ class PTAS005(BaseRule):
             return config.config.get(key, default)
         return default
 
-    def get_conflicting_rules(self) -> Set[str]:
+    def get_conflicting_rules(self) -> set[str]:
         """PTAS005 conflicts with other assertion count rules."""
         return {"PTAS001", "PTAS004"}  # Conflicts with too few and no assertions

@@ -109,8 +109,8 @@ Only the highest priority pattern found is reported to avoid noise.
 ## Development Guidelines
 
 ### Python Version Support
-- Minimum Python 3.8
-- Use `Union[X, None]` instead of `X | None` for type hints (3.8 compatibility)
+- Minimum Python 3.9
+- Use modern Python type hints: `X | None`, `dict[str, int]`, `list[str]`
 
 ### Code Quality Standards
 - All functions must have type annotations (ANN201 rule enforced)

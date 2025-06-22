@@ -2,6 +2,8 @@
 
 import pytest
 
+from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
 from pytestee.domain.rules.assertion.assertion_count_ok import PTAS005
 from pytestee.domain.rules.assertion.high_assertion_density import PTAS003
 from pytestee.domain.rules.assertion.no_assertions import PTAS004
@@ -21,15 +23,17 @@ class TestRuleValidator:
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
+        assertion_analyzer = AssertionAnalyzer()
+        pattern_analyzer = PatternAnalyzer()
         self.rule_instances = {
-            "PTCM001": PTCM001(),
-            "PTCM002": PTCM002(),
+            "PTCM001": PTCM001(pattern_analyzer),
+            "PTCM002": PTCM002(pattern_analyzer),
             "PTST001": PTST001(),
-            "PTAS001": PTAS001(),
-            "PTAS002": PTAS002(),
-            "PTAS003": PTAS003(),
-            "PTAS004": PTAS004(),
-            "PTAS005": PTAS005(),
+            "PTAS001": PTAS001(assertion_analyzer),
+            "PTAS002": PTAS002(assertion_analyzer),
+            "PTAS003": PTAS003(assertion_analyzer),
+            "PTAS004": PTAS004(assertion_analyzer),
+            "PTAS005": PTAS005(assertion_analyzer),
         }
 
     def test_validate_rule_selection_no_conflicts(self) -> None:

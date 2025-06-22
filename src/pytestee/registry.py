@@ -1,6 +1,6 @@
 """Dependency injection container and checker registry."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pytestee.domain.interfaces import IChecker, ICheckerRegistry
 
@@ -13,7 +13,7 @@ class CheckerRegistry(ICheckerRegistry):
 
     def __init__(self, config_manager: Optional[object] = None) -> None:
         """チェッカーレジストリを初期化します。"""
-        self._checkers: Dict[str, IChecker] = {}
+        self._checkers: dict[str, IChecker] = {}
         self.config_manager = config_manager
         self._initialize_default_checkers()
 
@@ -43,7 +43,7 @@ class CheckerRegistry(ICheckerRegistry):
         """
         return self._checkers.get(name)
 
-    def get_all_checkers(self) -> List[IChecker]:
+    def get_all_checkers(self) -> list[IChecker]:
         """登録されているすべてのチェッカーを取得します。
 
         Returns:
@@ -52,7 +52,7 @@ class CheckerRegistry(ICheckerRegistry):
         """
         return list(self._checkers.values())
 
-    def get_enabled_checkers(self, config: Dict[str, Any]) -> List[IChecker]:
+    def get_enabled_checkers(self, config: dict[str, Any]) -> list[IChecker]:
         """設定に基づいて有効なチェッカーを取得します。
 
         Args:
@@ -92,7 +92,7 @@ class CheckerRegistry(ICheckerRegistry):
         """登録されているすべてのチェッカーをクリアします。"""
         self._checkers.clear()
 
-    def list_checker_names(self) -> List[str]:
+    def list_checker_names(self) -> list[str]:
         """登録されているチェッカー名のリストを取得します。
 
         Returns:
@@ -101,70 +101,134 @@ class CheckerRegistry(ICheckerRegistry):
         """
         return list(self._checkers.keys())
 
-    def get_all_rule_instances(self) -> Dict[str, "BaseRule"]:
-        """設定で選択されたルールのインスタンスを作成して返します。
+    def get_all_rule_instances(self) -> dict[str, "BaseRule"]:
+        """設定で有効化されたルールのインスタンスのみを作成して返します。
 
         Returns:
             ルールID -> ルールインスタンスのマッピング
 
         """
-        # Import rules here to avoid circular imports
-        from pytestee.domain.rules.assertion.assertion_count_ok import (
-            PTAS005,
-        )
-        from pytestee.domain.rules.assertion.high_assertion_density import (
-            PTAS003,
-        )
-        from pytestee.domain.rules.assertion.no_assertions import (
-            PTAS004,
-        )
-        from pytestee.domain.rules.assertion.too_few_assertions import (
-            PTAS001,
-        )
-        from pytestee.domain.rules.assertion.too_many_assertions import (
-            PTAS002,
-        )
-        from pytestee.domain.rules.comment.aaa_comment_pattern import (
-            PTCM001,
-        )
-        from pytestee.domain.rules.comment.aaa_or_gwt_pattern import (
-            PTCM003,
-        )
-        from pytestee.domain.rules.comment.gwt_comment_pattern import (
-            PTCM002,
-        )
-        from pytestee.domain.rules.logic.logical_flow_pattern import (
-            PTLG001,
-        )
-        from pytestee.domain.rules.naming.japanese_characters import (
-            PTNM001,
-        )
-        from pytestee.domain.rules.structure.structural_pattern import (
-            PTST001,
-        )
-
-        # Create all available rule instances
-        rule_classes = {
-            "PTCM001": PTCM001,
-            "PTCM002": PTCM002,
-            "PTCM003": PTCM003,
-            "PTST001": PTST001,
-            "PTLG001": PTLG001,
-            "PTAS001": PTAS001,
-            "PTAS002": PTAS002,
-            "PTAS003": PTAS003,
-            "PTAS004": PTAS004,
-            "PTAS005": PTAS005,
-            "PTNM001": PTNM001,
-        }
-
         rule_instances = {}
-        for rule_id, rule_class in rule_classes.items():
-            instance = rule_class()
-            instance.set_config_manager(self.config_manager)
-            rule_instances[rule_id] = instance
+
+        # Get enabled rule IDs from config
+        enabled_rule_ids = self._get_enabled_rule_ids()
+
+        # Create only enabled rule instances
+        for rule_id in enabled_rule_ids:
+            rule_instance = self._create_rule_instance(rule_id)
+            if rule_instance:
+                rule_instance.set_config_manager(self.config_manager)
+                rule_instances[rule_id] = rule_instance
 
         return rule_instances
+
+    def _get_enabled_rule_ids(self) -> list[str]:
+        """設定に基づいて有効化されたルールIDのリストを取得します。"""
+        if not self.config_manager or not hasattr(self.config_manager, "is_rule_enabled"):
+            # No config manager or no rule filtering - return default rules
+            return ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001"]
+
+        all_possible_rules = [
+            "PTCM001", "PTCM002", "PTCM003",
+            "PTST001",
+            "PTLG001",
+            "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
+            "PTNM001"
+        ]
+
+        return [
+            rule_id for rule_id in all_possible_rules
+            if self.config_manager.is_rule_enabled(rule_id)
+        ]
+
+    def _create_rule_instance(self, rule_id: str) -> Optional["BaseRule"]:
+        """指定されたルールIDのインスタンスを作成します。"""
+        # Rule factory mapping to avoid too many return statements
+        rule_factories = {
+            # Assertion rules
+            "PTAS001": self._create_ptas001,
+            "PTAS002": self._create_ptas002,
+            "PTAS003": self._create_ptas003,
+            "PTAS004": self._create_ptas004,
+            "PTAS005": self._create_ptas005,
+            # Comment pattern rules
+            "PTCM001": self._create_ptcm001,
+            "PTCM002": self._create_ptcm002,
+            "PTCM003": self._create_ptcm003,
+            # Naming rules
+            "PTNM001": self._create_ptnm001,
+            # Structure rules
+            "PTST001": self._create_ptst001,
+            # Logic rules
+            "PTLG001": self._create_ptlg001,
+        }
+
+        factory = rule_factories.get(rule_id)
+        return factory() if factory else None
+
+    def _create_ptas001(self) -> "BaseRule":
+        """Create PTAS001 rule instance."""
+        from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+        from pytestee.domain.rules.assertion.too_few_assertions import PTAS001
+        return PTAS001(AssertionAnalyzer())
+
+    def _create_ptas002(self) -> "BaseRule":
+        """Create PTAS002 rule instance."""
+        from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+        from pytestee.domain.rules.assertion.too_many_assertions import PTAS002
+        return PTAS002(AssertionAnalyzer())
+
+    def _create_ptas003(self) -> "BaseRule":
+        """Create PTAS003 rule instance."""
+        from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+        from pytestee.domain.rules.assertion.high_assertion_density import PTAS003
+        return PTAS003(AssertionAnalyzer())
+
+    def _create_ptas004(self) -> "BaseRule":
+        """Create PTAS004 rule instance."""
+        from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+        from pytestee.domain.rules.assertion.no_assertions import PTAS004
+        return PTAS004(AssertionAnalyzer())
+
+    def _create_ptas005(self) -> "BaseRule":
+        """Create PTAS005 rule instance."""
+        from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+        from pytestee.domain.rules.assertion.assertion_count_ok import PTAS005
+        return PTAS005(AssertionAnalyzer())
+
+    def _create_ptcm001(self) -> "BaseRule":
+        """Create PTCM001 rule instance."""
+        from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+        from pytestee.domain.rules.comment.aaa_comment_pattern import PTCM001
+        return PTCM001(PatternAnalyzer())
+
+    def _create_ptcm002(self) -> "BaseRule":
+        """Create PTCM002 rule instance."""
+        from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+        from pytestee.domain.rules.comment.gwt_comment_pattern import PTCM002
+        return PTCM002(PatternAnalyzer())
+
+    def _create_ptcm003(self) -> "BaseRule":
+        """Create PTCM003 rule instance."""
+        from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+        from pytestee.domain.rules.comment.aaa_or_gwt_pattern import PTCM003
+        return PTCM003(PatternAnalyzer())
+
+    def _create_ptnm001(self) -> "BaseRule":
+        """Create PTNM001 rule instance."""
+        from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+        from pytestee.domain.rules.naming.japanese_characters import PTNM001
+        return PTNM001(PatternAnalyzer())
+
+    def _create_ptst001(self) -> "BaseRule":
+        """Create PTST001 rule instance."""
+        from pytestee.domain.rules.structure.structural_pattern import PTST001
+        return PTST001()
+
+    def _create_ptlg001(self) -> "BaseRule":
+        """Create PTLG001 rule instance."""
+        from pytestee.domain.rules.logic.logical_flow_pattern import PTLG001
+        return PTLG001()
 
     def _validate_rule_conflicts(self) -> None:
         """ルール競合を検証します。"""

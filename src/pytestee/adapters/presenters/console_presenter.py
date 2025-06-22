@@ -1,6 +1,5 @@
 """Console presenter for displaying analysis results."""
 
-from typing import Dict, List, Tuple
 
 from rich.console import Console
 from rich.panel import Panel
@@ -61,7 +60,7 @@ class ConsolePresenter(IPresenter):
         self.console.print(table)
         self.console.print()
 
-    def _show_results(self, results: List[CheckResult]) -> None:
+    def _show_results(self, results: list[CheckResult]) -> None:
         """Show detailed check results."""
         # Filter results based on verbosity
         if self.verbose:
@@ -83,10 +82,10 @@ class ConsolePresenter(IPresenter):
             self._show_file_results(file_path, file_results)
 
     def _group_results_by_file(
-        self, results: List[CheckResult]
-    ) -> Dict[str, List[CheckResult]]:
+        self, results: list[CheckResult]
+    ) -> dict[str, list[CheckResult]]:
         """Group check results by file path."""
-        grouped: Dict[str, List[CheckResult]] = {}
+        grouped: dict[str, list[CheckResult]] = {}
 
         for result in results:
             file_key = str(result.file_path)
@@ -96,13 +95,13 @@ class ConsolePresenter(IPresenter):
 
         return grouped
 
-    def _show_file_results(self, file_path: str, results: List[CheckResult]) -> None:
+    def _show_file_results(self, file_path: str, results: list[CheckResult]) -> None:
         """Show results for a specific file."""
         # Create tree structure for file results
         tree = Tree(f"📁 [bold]{file_path}[/bold]")
 
         # Group by function
-        results_by_function: Dict[str, List[CheckResult]] = {}
+        results_by_function: dict[str, list[CheckResult]] = {}
         file_level_results = []
 
         for result in results:
@@ -139,7 +138,7 @@ class ConsolePresenter(IPresenter):
         self.console.print(tree)
         self.console.print()
 
-    def _get_result_style(self, result: CheckResult) -> Tuple[str, str]:
+    def _get_result_style(self, result: CheckResult) -> tuple[str, str]:
         """Get icon and color for check result."""
         if isinstance(result, CheckSuccess):
             return "ℹ️", "blue"
@@ -148,7 +147,7 @@ class ConsolePresenter(IPresenter):
         # This line should be unreachable due to Union type constraint
         return "ℹ️", "blue"  # type: ignore[unreachable]
 
-    def _get_severity_style(self, severity: CheckSeverity) -> Tuple[str, str]:
+    def _get_severity_style(self, severity: CheckSeverity) -> tuple[str, str]:
         """Get icon and color for severity level."""
         if severity == CheckSeverity.ERROR:
             return "❌", "red"

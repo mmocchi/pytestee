@@ -1,6 +1,6 @@
 """PTST001: AAA Pattern Detected Through Structural Separation."""
 
-from typing import List, Optional
+from typing import Optional
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
@@ -56,8 +56,8 @@ class PTST001(BaseRule):
         )
 
     def _analyze_sections(
-        self, function_lines: List[str], empty_line_indices: List[int]
-    ) -> List[List[str]]:
+        self, function_lines: list[str], empty_line_indices: list[int]
+    ) -> list[list[str]]:
         """Analyze sections separated by empty lines."""
         sections = []
         start = 1  # Skip function definition
@@ -79,7 +79,7 @@ class PTST001(BaseRule):
 
         return sections
 
-    def _looks_like_aaa_structure(self, sections: List[List[str]]) -> bool:
+    def _looks_like_aaa_structure(self, sections: list[list[str]]) -> bool:
         """Check if sections look like AAA structure."""
         if len(sections) < 2:
             return False

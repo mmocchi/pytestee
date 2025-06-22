@@ -7,7 +7,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pytestee.domain.models import (
     AnalysisResult,
@@ -28,7 +28,7 @@ class ITestRepository(ABC):
     """
 
     @abstractmethod
-    def find_test_files(self, path: Path) -> List[Path]:
+    def find_test_files(self, path: Path) -> list[Path]:
         """指定されたパス内のすべてのテストファイルを検索します。
 
         Args:
@@ -77,7 +77,7 @@ class IChecker(ABC):
     @abstractmethod
     def check(
         self, test_file: TestFile, config: Optional[CheckerConfig] = None
-    ) -> List[CheckResult]:
+    ) -> list[CheckResult]:
         """テストファイルをチェックし、結果を返します。
 
         Args:
@@ -96,7 +96,7 @@ class IChecker(ABC):
         test_function: TestFunction,
         test_file: TestFile,
         config: Optional[CheckerConfig] = None,
-    ) -> List[CheckResult]:
+    ) -> list[CheckResult]:
         """特定のテスト関数をチェックし、結果を返します。
 
         Args:
@@ -135,7 +135,7 @@ class IConfigManager(ABC):
     """
 
     @abstractmethod
-    def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
+    def load_config(self, config_path: Optional[Path] = None) -> dict[str, Any]:
         """ファイルまたはデフォルトから設定を読み込みます。
 
         Args:
@@ -161,7 +161,7 @@ class IConfigManager(ABC):
         pass
 
     @abstractmethod
-    def get_global_config(self) -> Dict[str, Any]:
+    def get_global_config(self) -> dict[str, Any]:
         """グローバル設定を取得します。
 
         Returns:
@@ -214,7 +214,7 @@ class ICheckerRegistry(ABC):
         pass
 
     @abstractmethod
-    def get_all_checkers(self) -> List[IChecker]:
+    def get_all_checkers(self) -> list[IChecker]:
         """登録されたすべてのチェッカーを取得します。
 
         Returns:
@@ -224,7 +224,7 @@ class ICheckerRegistry(ABC):
         pass
 
     @abstractmethod
-    def get_enabled_checkers(self, config: Dict[str, Any]) -> List[IChecker]:
+    def get_enabled_checkers(self, config: dict[str, Any]) -> list[IChecker]:
         """設定に基づいて有効なすべてのチェッカーを取得します。
 
         Args:
@@ -237,7 +237,7 @@ class ICheckerRegistry(ABC):
         pass
 
     @abstractmethod
-    def get_all_rule_instances(self) -> Dict[str, "BaseRule"]:
+    def get_all_rule_instances(self) -> dict[str, "BaseRule"]:
         """すべてのルールインスタンスを取得します。
 
         Returns:

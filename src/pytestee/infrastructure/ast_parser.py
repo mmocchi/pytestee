@@ -2,7 +2,7 @@
 
 import ast
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from pytestee.domain.models import TestFile, TestFunction
 
@@ -24,7 +24,7 @@ class ASTParser:
             test_functions=test_functions,
         )
 
-    def _extract_test_functions(self, tree: ast.AST) -> List[TestFunction]:
+    def _extract_test_functions(self, tree: ast.AST) -> list[TestFunction]:
         """Extract test functions from AST."""
         test_functions = []
 
@@ -83,7 +83,7 @@ class ASTParser:
             decorators=decorators,
         )
 
-    def _extract_decorators(self, node: ast.FunctionDef) -> List[str]:
+    def _extract_decorators(self, node: ast.FunctionDef) -> list[str]:
         """Extract decorator names from a function."""
         decorators = []
 
@@ -137,7 +137,7 @@ class ASTParser:
 
     def find_comments(
         self, test_function: TestFunction, file_content: str
-    ) -> List[Tuple[int, str]]:
+    ) -> list[tuple[int, str]]:
         """Find comments in a test function."""
         comments = []
         lines = file_content.split("\n")

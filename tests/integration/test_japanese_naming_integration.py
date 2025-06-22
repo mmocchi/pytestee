@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
 from pytestee.domain.models import CheckFailure, CheckSeverity, CheckSuccess
 from pytestee.domain.rules.naming.japanese_characters import PTNM001
 from pytestee.infrastructure.ast_parser import ASTParser
@@ -13,7 +14,7 @@ class TestJapaneseNamingIntegration:
     def setup_method(self) -> None:
         """Set up test fixtures."""
         self.parser = ASTParser()
-        self.checker = PTNM001()
+        self.checker = PTNM001(PatternAnalyzer())
         self.fixtures_dir = Path(__file__).parent.parent / "fixtures"
 
     def test_japanese_naming_rule_with_real_file(self) -> None:

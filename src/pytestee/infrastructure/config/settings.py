@@ -1,7 +1,7 @@
 """Configuration management for pytestee."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional, Union
 
 try:
     import tomllib  # Python 3.11+
@@ -13,14 +13,14 @@ from pytestee.domain.models import CheckerConfig
 from pytestee.domain.rules.rule_validator import RuleValidator
 
 # Define type alias for configuration values
-ConfigValue = Union[str, int, float, bool, Dict[str, Any], list]
+ConfigValue = Union[str, int, float, bool, dict[str, Any], list]
 
 
 class ConfigManager(IConfigManager):
     """Configuration manager for pytestee."""
 
     def __init__(self) -> None:
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
         self._default_config = {
             # File selection configuration
             "exclude": [".venv/**", "venv/**", "**/__pycache__/**"],  # File patterns to exclude
@@ -63,7 +63,7 @@ class ConfigManager(IConfigManager):
             },
         }
 
-    def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
+    def load_config(self, config_path: Optional[Path] = None) -> dict[str, Any]:
         """Load configuration from file or defaults."""
         # Start with defaults
         self._config = self._default_config.copy()
@@ -102,7 +102,7 @@ class ConfigManager(IConfigManager):
 
         return self._config
 
-    def _load_from_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def _load_from_file(self, file_path: Path) -> Optional[dict[str, Any]]:
         """Load configuration from a TOML file."""
         if not file_path.exists():
             return None
@@ -119,10 +119,10 @@ class ConfigManager(IConfigManager):
         except Exception:
             return None
 
-    def _merge_config(self, new_config: Dict[str, Any]) -> None:
+    def _merge_config(self, new_config: dict[str, Any]) -> None:
         """Merge new configuration with existing."""
 
-        def deep_merge(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
+        def deep_merge(base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
             for key, value in update.items():
                 if (
                     key in base
@@ -162,7 +162,7 @@ class ConfigManager(IConfigManager):
             config=merged_config,
         )
 
-    def get_global_config(self) -> Dict[str, Any]:
+    def get_global_config(self) -> dict[str, Any]:
         """Get global configuration."""
         return self._config.copy()
 
@@ -195,7 +195,7 @@ class ConfigManager(IConfigManager):
 
         return True
 
-    def _matches_patterns(self, rule_id: str, patterns: List[str]) -> bool:
+    def _matches_patterns(self, rule_id: str, patterns: list[str]) -> bool:
         """Check if rule_id matches any pattern in the list."""
         return any(self._matches_pattern(rule_id, pattern) for pattern in patterns)
 
@@ -214,7 +214,7 @@ class ConfigManager(IConfigManager):
         return severity_config.get(rule_id, "error")  # Default to error
 
     def _validate_rule_selection(
-        self, rule_instances: Optional[Dict[str, Any]] = None
+        self, rule_instances: Optional[dict[str, Any]] = None
     ) -> None:
         """Validate that selected rules don't conflict with each other.
 
@@ -244,7 +244,7 @@ class ConfigManager(IConfigManager):
         # Validate the final rule selection
         RuleValidator.validate_rule_selection(selected_rules, rule_instances)
 
-    def _expand_rule_patterns(self, patterns: List[str]) -> Set[str]:
+    def _expand_rule_patterns(self, patterns: list[str]) -> set[str]:
         """Expand rule patterns like 'PTCM' to actual rule IDs like 'PTCM001', 'PTCM002'."""
         all_rules = {
             "PTCM001",
@@ -274,7 +274,7 @@ class ConfigManager(IConfigManager):
         return expanded_rules
 
     def validate_rule_selection_with_instances(
-        self, rule_instances: Dict[str, Any]
+        self, rule_instances: dict[str, Any]
     ) -> None:
         """外部から呼び出し可能なルール選択検証メソッド.
 
@@ -284,6 +284,6 @@ class ConfigManager(IConfigManager):
         """
         self._validate_rule_selection(rule_instances)
 
-    def get_exclude_patterns(self) -> List[str]:
+    def get_exclude_patterns(self) -> list[str]:
         """Get file exclude patterns."""
         return self._config.get("exclude", [])

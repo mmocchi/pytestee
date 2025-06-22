@@ -1,7 +1,7 @@
 """Use case for analyzing test files."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from pytestee.domain.interfaces import (
     ICheckerRegistry,
@@ -40,7 +40,7 @@ class AnalyzeTestsUseCase:
         self._config_manager = config_manager
 
     def execute(
-        self, target_path: Path, config_overrides: Optional[Dict[str, Any]] = None
+        self, target_path: Path, config_overrides: Optional[dict[str, Any]] = None
     ) -> AnalysisResult:
         """テスト分析を実行します。
 
@@ -101,8 +101,8 @@ class AnalyzeTestsUseCase:
         )
 
     def _analyze_test_file(
-        self, test_file: TestFile, config: Dict[str, Any]
-    ) -> List[CheckResult]:
+        self, test_file: TestFile, config: dict[str, Any]
+    ) -> list[CheckResult]:
         """単一のテストファイルを有効なチェッカーで分析します。
 
         Args:
@@ -142,7 +142,7 @@ class AnalyzeTestsUseCase:
 
         return results
 
-    def _count_results(self, results: List[CheckResult]) -> Tuple[int, int]:
+    def _count_results(self, results: list[CheckResult]) -> tuple[int, int]:
         """成功と失敗のチェック数をカウントします。
 
         Args:

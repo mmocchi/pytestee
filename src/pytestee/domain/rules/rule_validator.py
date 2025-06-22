@@ -1,6 +1,6 @@
 """Rule validation system to prevent conflicting rule configurations."""
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from pytestee.domain.rules.base_rule import BaseRule
 
@@ -20,8 +20,8 @@ class RuleValidator:
     @classmethod
     def validate_rule_selection(
         cls,
-        selected_rules: Set[str],
-        rule_instances: Optional[Dict[str, BaseRule]] = None,
+        selected_rules: set[str],
+        rule_instances: Optional[dict[str, BaseRule]] = None,
     ) -> None:
         """Validate that selected rules don't conflict with each other.
 
@@ -50,7 +50,7 @@ class RuleValidator:
             )
 
     @classmethod
-    def validate_config_parameters(cls, config: Dict[str, Any]) -> None:
+    def validate_config_parameters(cls, config: dict[str, Any]) -> None:
         """Validate configuration parameters for logical consistency."""
         min_asserts = config.get("min_asserts", 1)
         max_asserts = config.get("max_asserts", 3)
@@ -72,8 +72,8 @@ class RuleValidator:
 
     @classmethod
     def _find_dynamic_conflicts(
-        cls, selected_rules: Set[str], rule_instances: Dict[str, BaseRule]
-    ) -> List[Set[str]]:
+        cls, selected_rules: set[str], rule_instances: dict[str, BaseRule]
+    ) -> list[set[str]]:
         """Find conflicting rule groups using dynamic conflicts from rule instances."""
         conflicts = []
         checked_pairs = set()
@@ -102,8 +102,8 @@ class RuleValidator:
 
     @classmethod
     def get_compatible_rules(
-        cls, base_rule: str, rule_instances: Dict[str, BaseRule]
-    ) -> Set[str]:
+        cls, base_rule: str, rule_instances: dict[str, BaseRule]
+    ) -> set[str]:
         """Get rules that are compatible with the given base rule using dynamic conflicts."""
         if base_rule not in rule_instances:
             return set()

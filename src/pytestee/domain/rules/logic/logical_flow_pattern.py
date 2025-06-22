@@ -1,10 +1,18 @@
 """PTLG001: AAA Pattern Detected Through Code Flow Analysis."""
+from __future__ import annotations
 
 import ast
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
 
-from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
+
+if TYPE_CHECKING:
+    from pytestee.domain.models import (
+        CheckerConfig,
+        CheckResult,
+        TestFile,
+        TestFunction,
+    )
 
 
 class PTLG001(BaseRule):
@@ -21,7 +29,7 @@ class PTLG001(BaseRule):
         self,
         test_function: TestFunction,
         test_file: TestFile,
-        config: Optional[CheckerConfig] = None,
+        config: CheckerConfig | None = None,
     ) -> CheckResult:
         """Check for logical AAA pattern in code flow."""
         # Analyze the AST to detect typical patterns
@@ -44,10 +52,10 @@ class PTLG001(BaseRule):
         )
 
     def _categorize_statements(
-        self, statements: List[ast.stmt]
-    ) -> Dict[str, List[ast.stmt]]:
+        self, statements: list[ast.stmt]
+    ) -> dict[str, list[ast.stmt]]:
         """Categorize statements into arrange, act, assert groups."""
-        sections: Dict[str, List[ast.stmt]] = {"arrange": [], "act": [], "assert": []}
+        sections: dict[str, list[ast.stmt]] = {"arrange": [], "act": [], "assert": []}
 
         current_section = "arrange"
 
@@ -70,7 +78,7 @@ class PTLG001(BaseRule):
 
         return sections
 
-    def _has_logical_aaa_flow(self, sections: Dict[str, List[ast.stmt]]) -> bool:
+    def _has_logical_aaa_flow(self, sections: dict[str, list[ast.stmt]]) -> bool:
         """Check if sections represent a good AAA flow."""
         has_arrange = len(sections["arrange"]) > 0
         has_act = len(sections["act"]) > 0

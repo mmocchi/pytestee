@@ -9,7 +9,7 @@ import ast
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 
 class CheckSeverity(Enum):
@@ -57,9 +57,9 @@ class TestFunction:
     col_offset: int
     end_lineno: Optional[int]
     end_col_offset: Optional[int]
-    body: List[ast.stmt]
+    body: list[ast.stmt]
     docstring: Optional[str] = None
-    decorators: Optional[List[str]] = None
+    decorators: Optional[list[str]] = None
 
     def __post_init__(self) -> None:
         """オブジェクト作成後の初期化処理を実行します。"""
@@ -86,7 +86,7 @@ class TestFile:
     path: Path
     content: str
     ast_tree: ast.AST
-    test_functions: List[TestFunction]
+    test_functions: list[TestFunction]
 
     @property
     def relative_path(self) -> str:
@@ -125,7 +125,7 @@ class CheckResultBase:
     line_number: Optional[int] = None
     column: Optional[int] = None
     function_name: Optional[str] = None
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[dict[str, Any]] = None
 
     def __post_init__(self) -> None:
         """オブジェクト作成後の初期化処理を実行します。"""
@@ -183,7 +183,7 @@ class AnalysisResult:
     total_tests: int
     passed_checks: int
     failed_checks: int
-    check_results: List[CheckResult]
+    check_results: list[CheckResult]
 
     @property
     def success_rate(self) -> float:
@@ -240,7 +240,7 @@ class CheckerConfig:
 
     name: str
     enabled: bool = True
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[dict[str, Any]] = None
 
     def __post_init__(self) -> None:
         """オブジェクト作成後の初期化処理を実行します。"""

@@ -1,52 +1,41 @@
 """PTCM002: GWT Pattern Detected in Comments."""
+from __future__ import annotations
 
-import re
-from typing import List, Optional, Set, Tuple
+from typing import TYPE_CHECKING
 
-from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
-from pytestee.infrastructure.ast_parser import ASTParser
+
+if TYPE_CHECKING:
+    from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+    from pytestee.domain.models import (
+        CheckerConfig,
+        CheckResult,
+        TestFile,
+        TestFunction,
+    )
 
 
 class PTCM002(BaseRule):
     """Rule for detecting GWT pattern in comments."""
 
-    def __init__(self) -> None:
+    def __init__(self, pattern_analyzer: PatternAnalyzer) -> None:
         super().__init__(
             rule_id="PTCM002",
             name="gwt_pattern_comments",
             description="GWT (Given, When, Then) pattern detected through comment analysis",
         )
-        self._parser = ASTParser()
+        self._analyzer = pattern_analyzer
 
     def check(
         self,
         test_function: TestFunction,
         test_file: TestFile,
-        config: Optional[CheckerConfig] = None,
+        config: CheckerConfig | None = None,
     ) -> CheckResult:
         """Check for GWT pattern in comments."""
-        comments = self._parser.find_comments(test_function, test_file.content)
+        has_gwt = self._analyzer.find_gwt_comments(test_function, test_file.content)
 
-        gwt_patterns = [r"#\s*given", r"#\s*when", r"#\s*then"]
-
-        # Combined patterns (count as multiple matches)
-        gwt_combined_patterns = [
-            r"#\s*when\s*[&/,]\s*then",  # When & Then, When/Then, When, Then
-            r"#\s*when\s+and\s+then",  # When and Then
-            r"#\s*given\s*[&/,]\s*when\s*[&/,]\s*then",  # Given & When & Then
-            r"#\s*given\s+and\s+when\s+and\s+then",  # Given and When and Then
-        ]
-
-        gwt_found = self._check_patterns_in_comments(comments, gwt_patterns)
-        gwt_combined_found = self._check_combined_patterns_in_comments(
-            comments, gwt_combined_patterns
-        )
-
-        # Calculate total score (combined patterns count as 2)
-        total_gwt_score = gwt_found + (gwt_combined_found * 2)
-
-        if total_gwt_score >= 2:
+        if has_gwt:
             # Pattern found - return success (INFO)
             return self._create_success_result(
                 "GWT pattern detected in comments", test_file, test_function
@@ -58,34 +47,6 @@ class PTCM002(BaseRule):
             test_function,
         )
 
-    def _check_patterns_in_comments(
-        self, comments: List[Tuple[int, str]], patterns: List[str]
-    ) -> int:
-        """Check how many patterns are found in comments."""
-        found = 0
-
-        for _, comment in comments:
-            for pattern in patterns:
-                if re.search(pattern, comment.lower()):
-                    found += 1
-                    break
-
-        return found
-
-    def _check_combined_patterns_in_comments(
-        self, comments: List[Tuple[int, str]], patterns: List[str]
-    ) -> int:
-        """Check how many combined patterns are found in comments."""
-        found = 0
-
-        for _, comment in comments:
-            for pattern in patterns:
-                if re.search(pattern, comment.lower()):
-                    found += 1
-                    # Don't break here - one comment could match multiple combined patterns
-
-        return found
-
-    def get_conflicting_rules(self) -> Set[str]:
+    def get_conflicting_rules(self) -> set[str]:
         """PTCM002はPTCM003と競合する。"""
         return {"PTCM003"}

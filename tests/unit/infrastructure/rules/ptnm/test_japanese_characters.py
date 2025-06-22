@@ -3,6 +3,7 @@
 import ast
 from pathlib import Path
 
+from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
 from pytestee.domain.models import (
     CheckFailure,
     CheckSeverity,
@@ -18,7 +19,7 @@ class TestPTNM001:
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
-        self.rule = PTNM001()
+        self.rule = PTNM001(PatternAnalyzer())
         self.test_file = TestFile(
             path=Path("/test/dummy.py"),
             content="",
@@ -134,7 +135,7 @@ class TestPTNM001:
         assert result is not None
 
     def test_contains_japanese_characters_method(self) -> None:
-        """Test the _contains_japanese_characters method directly."""
+        """Test Japanese character detection through analyzer."""
         # Test cases with expected results
         test_cases = [
             ("test_ユーザー", True),
@@ -148,7 +149,17 @@ class TestPTNM001:
         ]
 
         for text, expected in test_cases:
-            result = self.rule._contains_japanese_characters(text)
+            test_function = TestFunction(
+                name=text,
+                lineno=1,
+                col_offset=0,
+                end_lineno=None,
+                end_col_offset=None,
+                body=[],
+                decorators=[],
+                docstring=None,
+            )
+            result = self.rule._analyzer.has_japanese_characters(test_function)
             assert result == expected, (
                 f"Failed for '{text}': expected {expected}, got {result}"
             )

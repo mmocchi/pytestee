@@ -1,6 +1,6 @@
 """PTAS002: Too Many Assertions."""
 
-from typing import TYPE_CHECKING, Optional, Set, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
@@ -12,15 +12,12 @@ if TYPE_CHECKING:
 class PTAS002(BaseRule):
     """Rule for detecting too many assertions."""
 
-    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
+    def __init__(self, assertion_analyzer: "AssertionAnalyzer") -> None:
         super().__init__(
             rule_id="PTAS002",
             name="too_many_assertions",
             description="Test function has more assertions than maximum recommended",
         )
-        if assertion_analyzer is None:
-            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
-            assertion_analyzer = AssertionAnalyzer()
         self._analyzer = assertion_analyzer
 
     def check(
@@ -53,6 +50,6 @@ class PTAS002(BaseRule):
             return config.config.get(key, default)
         return default
 
-    def get_conflicting_rules(self) -> Set[str]:
+    def get_conflicting_rules(self) -> set[str]:
         """PTAS002 conflicts with no assertions rule."""
         return {"PTAS004"}  # Conflicts with no assertions

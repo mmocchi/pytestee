@@ -1,7 +1,7 @@
 """Use case for quality checking operations."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pytestee.domain.interfaces import IChecker, ITestRepository
 from pytestee.domain.models import CheckerConfig, CheckResult
@@ -22,9 +22,9 @@ class CheckQualityUseCase:
     def check_single_file(
         self,
         file_path: Path,
-        checkers: List[IChecker],
-        config: Optional[Dict[str, Any]] = None,
-    ) -> List[CheckResult]:
+        checkers: list[IChecker],
+        config: Optional[dict[str, Any]] = None,
+    ) -> list[CheckResult]:
         """指定されたチェッカーで単一のテストファイルをチェックします。
 
         Args:
@@ -55,9 +55,9 @@ class CheckQualityUseCase:
         self,
         file_path: Path,
         function_name: str,
-        checkers: List[IChecker],
-        config: Optional[Dict[str, Any]] = None,
-    ) -> List[CheckResult]:
+        checkers: list[IChecker],
+        config: Optional[dict[str, Any]] = None,
+    ) -> list[CheckResult]:
         """指定されたチェッカーで特定のテスト関数をチェックします。
 
         Args:
@@ -103,7 +103,7 @@ class CheckQualityUseCase:
         return results
 
     def _create_checker_config(
-        self, checker_name: str, config: Dict[str, Any]
+        self, checker_name: str, config: dict[str, Any]
     ) -> CheckerConfig:
         """グローバル設定からチェッカー設定を作成します。
 

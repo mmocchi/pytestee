@@ -12,15 +12,12 @@ if TYPE_CHECKING:
 class PTAS003(BaseRule):
     """Rule for detecting high assertion density."""
 
-    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
+    def __init__(self, assertion_analyzer: "AssertionAnalyzer") -> None:
         super().__init__(
             rule_id="PTAS003",
             name="high_assertion_density",
             description="High ratio of assertions to lines of code",
         )
-        if assertion_analyzer is None:
-            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
-            assertion_analyzer = AssertionAnalyzer()
         self._analyzer = assertion_analyzer
 
     def check(
