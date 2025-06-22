@@ -6,6 +6,9 @@ from pytestee.adapters.repositories.file_repository import FileRepository
 from pytestee.domain.models import CheckerConfig
 from pytestee.infrastructure.checkers.assertion_checker import AssertionChecker
 from pytestee.infrastructure.checkers.pattern_checker import PatternChecker
+from pytestee.infrastructure.rules.ptcm.aaa_comment_pattern import PTCM001
+from pytestee.infrastructure.rules.ptcm.gwt_comment_pattern import PTCM002
+from pytestee.infrastructure.rules.ptst.structural_pattern import PTST001
 
 
 class TestRuleExamples:
@@ -16,6 +19,9 @@ class TestRuleExamples:
         self.repo = FileRepository()
         self.pattern_checker = PatternChecker()
         self.assertion_checker = AssertionChecker()
+        self.ptcm001 = PTCM001()
+        self.ptcm002 = PTCM002()
+        self.ptst001 = PTST001()
         self.example_file_path = Path("tests/fixtures/test_example_patterns.py")
 
     def test_ptcm001_good_examples(self) -> None:
@@ -29,11 +35,11 @@ class TestRuleExamples:
         ]
 
         for func in aaa_functions:
-            results = self.pattern_checker.check_function(func, test_file)
+            results = self.ptcm001.check(func, test_file)
             # Should detect PTCM001 (AAA pattern in comments)
-            ptcm001_results = [r for r in results if r.rule_id == "PTCM001"]
-            assert len(ptcm001_results) == 1
-            assert ptcm001_results[0].severity.value == "info"
+            assert len(results) == 1
+            assert results[0].rule_id == "PTCM001"
+            assert results[0].severity.value == "info"
 
     def test_ptcm001_bad_examples(self) -> None:
         """Test PTCM001 rule with bad examples (should not trigger)."""
@@ -46,10 +52,11 @@ class TestRuleExamples:
         ]
 
         for func in bad_functions:
-            results = self.pattern_checker.check_function(func, test_file)
-            # Should not detect PTCM001
-            ptcm001_results = [r for r in results if r.rule_id == "PTCM001"]
-            assert len(ptcm001_results) == 0
+            results = self.ptcm001.check(func, test_file)
+            # Should not detect PTCM001 (should return failure result)
+            assert len(results) == 1
+            assert results[0].rule_id == "PTCM001"
+            assert results[0].severity.value == "error"  # Pattern not found
 
     def test_ptcm002_good_examples(self) -> None:
         """Test PTCM002 rule with good examples."""
@@ -62,11 +69,11 @@ class TestRuleExamples:
         ]
 
         for func in gwt_functions:
-            results = self.pattern_checker.check_function(func, test_file)
+            results = self.ptcm002.check(func, test_file)
             # Should detect PTCM002 (GWT pattern in comments)
-            ptcm002_results = [r for r in results if r.rule_id == "PTCM002"]
-            assert len(ptcm002_results) == 1
-            assert ptcm002_results[0].severity.value == "info"
+            assert len(results) == 1
+            assert results[0].rule_id == "PTCM002"
+            assert results[0].severity.value == "info"
 
     def test_ptst001_good_examples(self) -> None:
         """Test PTST001 rule with good examples."""
@@ -79,11 +86,11 @@ class TestRuleExamples:
         ]
 
         for func in structural_functions:
-            results = self.pattern_checker.check_function(func, test_file)
+            results = self.ptst001.check(func, test_file)
             # Should detect PTST001 (structural pattern)
-            ptst001_results = [r for r in results if r.rule_id == "PTST001"]
-            assert len(ptst001_results) == 1
-            assert ptst001_results[0].severity.value == "info"
+            assert len(results) == 1
+            assert results[0].rule_id == "PTST001"
+            assert results[0].severity.value == "info"
 
     def test_ptst001_bad_examples(self) -> None:
         """Test PTST001 rule with bad examples (should not trigger)."""
@@ -96,12 +103,11 @@ class TestRuleExamples:
         ]
 
         for func in bad_functions:
-            results = self.pattern_checker.check_function(func, test_file)
-            # Should not detect PTST001, should get PTST002 (pattern not detected)
-            ptst001_results = [r for r in results if r.rule_id == "PTST001"]
-            ptst002_results = [r for r in results if r.rule_id == "PTST002"]
-            assert len(ptst001_results) == 0
-            assert len(ptst002_results) == 1  # Should warn about no pattern
+            results = self.ptst001.check(func, test_file)
+            # Should not detect PTST001 (should return failure result)
+            assert len(results) == 1
+            assert results[0].rule_id == "PTST001"
+            assert results[0].severity.value == "error"  # Pattern not found
 
     def test_ptas001_good_examples(self) -> None:
         """Test PTAS001 rule with good examples (should not trigger)."""
@@ -168,7 +174,7 @@ class TestRuleExamples:
             # Should trigger PTAS002 (too many assertions)
             ptas002_results = [r for r in results if r.rule_id == "PTAS002"]
             assert len(ptas002_results) == 1
-            assert ptas002_results[0].severity.value == "warning"
+            assert ptas002_results[0].severity.value == "error"
 
     def test_ptas003_good_examples(self) -> None:
         """Test PTAS003 rule with good examples."""

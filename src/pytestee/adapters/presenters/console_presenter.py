@@ -57,10 +57,7 @@ class ConsolePresenter(IPresenter):
 
     def _show_results(self, results: List[CheckResult]) -> None:
         """Show detailed check results."""
-        if self.quiet:
-            # In quiet mode, only show errors
-            results = [r for r in results if r.severity == CheckSeverity.ERROR]
-
+        # Show all results from enabled rules (filtered by select/ignore at rule level)
         if not results:
             if not self.quiet:
                 self.console.print("[green]✅ All checks passed![/green]")

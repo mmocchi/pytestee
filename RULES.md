@@ -7,7 +7,7 @@
 ### PTCM: Comment-Based Pattern Rules
 
 #### PTCM001: AAA Pattern Detected in Comments
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: コメント解析によってAAA（Arrange, Act, Assert）パターンが検出された場合
 - **Good Examples**:
   ```python
@@ -51,7 +51,7 @@
   ```
 
 #### PTCM002: GWT Pattern Detected in Comments  
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: コメント解析によってGWT（Given, When, Then）パターンが検出された場合
 - **Good Examples**:
   ```python
@@ -96,7 +96,7 @@
 ### PTST: Structural Pattern Rules
 
 #### PTST001: AAA Pattern Detected Through Structural Separation
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: コードセクションを分離する空行によってAAAパターンが検出された場合
 - **Good Examples**:
   ```python
@@ -141,7 +141,7 @@
   ```
 
 #### PTST002: AAA/GWT Pattern Not Clearly Detected
-- **Severity**: WARNING
+- **Default Severity**: ERROR (configurable)
 - **Description**: 明確なパターン構造が見つからない場合、テスト構成の改善を検討してください
 - **修正方法**: コメント、空行を追加するか、テストロジックを再構築してください
 - **Example**:
@@ -159,7 +159,7 @@
 ### PTLG: Logical Pattern Rules
 
 #### PTLG001: AAA Pattern Detected Through Code Flow Analysis
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: コード構造のAST解析によってAAAパターンが検出された場合
 - **良い例**: コードが自然にarrange → act → assertの流れに従っている場合
 - **Example**:
@@ -170,10 +170,37 @@
       assert result == expected  # Assert (assertions)
   ```
 
+### PTNM: Naming Rules
+
+#### PTNM001: Japanese Characters in Test Method Names
+- **Default Severity**: ERROR (configurable) 
+- **Description**: テストメソッド名に日本語文字が含まれているかどうかをチェック
+- **Good Examples**:
+  ```python
+  # Good: Japanese characters used for readability
+  def test_日本語メソッド名():
+      """日本語でのテストメソッド名の例。"""
+      # Test implementation
+      assert True
+  
+  def test_ユーザー作成():
+      """ユーザー作成機能のテスト。"""
+      # Test implementation
+      assert True
+  ```
+- **Warning Examples** (would suggest using Japanese):
+  ```python
+  # Warning: English-only method name
+  def test_user_creation():
+      """Could be more readable with Japanese."""
+      # Test implementation
+      assert True
+  ```
+
 ### PTAS: Assertion Rules
 
 #### PTAS001: Too Few Assertions
-- **Severity**: WARNING  
+- **Default Severity**: ERROR (configurable)
 - **Description**: テスト関数のアサーション数が推奨される最小値より少ない場合
 - **設定**: `min_asserts`（デフォルト: 1）
 - **Good Examples**:
@@ -206,7 +233,7 @@
   ```
 
 #### PTAS002: Too Many Assertions
-- **Severity**: WARNING
+- **Default Severity**: ERROR (configurable)
 - **Description**: テスト関数のアサーション数が推奨される最大値より多い場合  
 - **設定**: `max_asserts`（デフォルト: 3）
 - **Good Examples**:
@@ -245,7 +272,7 @@
   ```
 
 #### PTAS003: High Assertion Density
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: コード行数に対するアサーションの割合が高い場合
 - **設定**: `max_density`（デフォルト: 0.5）
 - **注意**: 通常は集中度の高いテストを示しています
@@ -260,7 +287,7 @@
   ```
 
 #### PTAS004: No Assertions Found
-- **Severity**: ERROR
+- **Default Severity**: ERROR (configurable)
 - **Description**: テスト関数にアサーションが全く含まれていない場合
 - **修正方法**: 期待される動作を検証するアサーションを追加してください
 - **Example**:
@@ -273,7 +300,7 @@
   ```
 
 #### PTAS005: Assertion Count OK
-- **Severity**: INFO
+- **Default Severity**: ERROR (configurable)
 - **Description**: テスト関数が適切な数のアサーションを持っている場合
 - **良い例**: アサーション数が推奨範囲内にある場合
 - **Example**:
@@ -293,11 +320,6 @@ System errors are handled through standard Python exceptions and do not use rule
 - **ConfigurationError**: Raised for invalid configuration (exit code 4)
 
 ## Future Rule Categories
-
-### PTNM: Naming Rules (Planned)
-- Test function naming conventions
-- Variable naming in tests
-- File naming patterns
 
 ### PTPR: Performance Rules (Planned)
 - Test execution time warnings
@@ -329,40 +351,61 @@ PT[CATEGORY][NUMBER]
 - **ST**: Structural patterns  
 - **LG**: Logical flow patterns
 - **AS**: Assertion rules
-- **NM**: Naming conventions (planned)
+- **NM**: Naming conventions
 - **PR**: Performance rules (planned)
 - **DP**: Dependencies (planned)
 - **DC**: Documentation (planned)
 
 ## Configuration
 
-`pyproject.toml`でルールの動作を設定してください：
+### Rule Selection and Behavior
+
+`pyproject.toml`または`.pytestee.toml`でルールの動作を設定してください：
 
 ```toml
 [tool.pytestee]
+# Rule selection (ruff-like)
+select = ["PTCM", "PTAS"]  # Only check comment patterns and assertions
+ignore = ["PTST002"]       # Ignore pattern not detected warnings
+
+# Rule severity customization
+[tool.pytestee.severity]
+PTCM001 = "info"      # AAA pattern detected - informational
+PTCM002 = "info"      # GWT pattern detected - informational  
+PTST001 = "info"      # Structural pattern - informational
+PTLG001 = "info"      # Logical pattern - informational
+PTAS005 = "info"      # Assertion count OK - informational
+PTST002 = "warning"   # Pattern not detected - warning
+PTNM001 = "warning"   # Japanese characters in method names - warning
+PTAS001 = "warning"   # Too few assertions - warning
+PTAS002 = "warning"   # Too many assertions - warning
+PTAS004 = "error"     # No assertions found - error (default)
+
+# Behavioral thresholds
 max_asserts = 5          # PTAS002 threshold
 min_asserts = 1          # PTAS001 threshold
 require_aaa_comments = true  # Prefer PTCM001/PTCM002 over other patterns
 max_density = 0.6        # PTAS003 threshold
 ```
 
-## Rule Selection (Future Feature)
+### Severity Levels
 
-ruffのように、カテゴリまたは個別のルールで特定のルールを選択または無視できます：
+All rules default to **ERROR** severity, but can be configured to:
+- **"error"**: Critical issues that should fail CI/CD (exit code 1)
+- **"warning"**: Issues that should be addressed but don't fail builds
+- **"info"**: Informational messages for good practices detected
 
-```bash
-# コメントとアサーションのルールのみをチェック
-pytestee check --select PTCM,PTAS
+### Rule Selection
 
-# 特定のルールのみをチェック
-pytestee check --select PTCM001,PTAS001,PTAS002
+Similar to ruff, you can select or ignore rules:
+- **select**: Only run specified rules (if empty, all rules are selected)
+- **ignore**: Never run specified rules (takes precedence over select)
 
-# 構造的警告を無視
-pytestee check --ignore PTST002
+Pattern matching supports:
+- Exact rule IDs: `"PTAS004"`
+- Category prefixes: `"PTCM"` (matches PTCM001, PTCM002, etc.)
+- Multiple categories: `"PT"` (matches all pytestee rules)
 
-# カテゴリ全体を無視
-pytestee check --ignore PTLG,PTAS003
-```
 
 ## Rule Priority and Conflicts
 

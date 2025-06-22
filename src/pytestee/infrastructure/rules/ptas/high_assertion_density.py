@@ -28,7 +28,6 @@ class PTAS003(BaseRule):
             density = assert_count / function_lines
             if density > max_density:
                 return [self._create_result(
-                    "info",
                     f"High assertion density: {density:.2f} ({assert_count} assertions in {function_lines} lines)",
                     test_file,
                     test_function

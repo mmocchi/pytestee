@@ -1,6 +1,8 @@
 """Rule validation system to prevent conflicting rule configurations."""
 
-from typing import Any, ClassVar, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
+
+from .base_rule import BaseRule
 
 
 class RuleConflictError(Exception):
@@ -12,18 +14,24 @@ class RuleConflictError(Exception):
 class RuleValidator:
     """Validates rule configurations to prevent conflicts."""
 
-    # Define mutually exclusive rule groups
-    CONFLICTING_RULE_GROUPS: ClassVar[List[Set[str]]] = [
-        # Assertion count rules that could conflict
-        {"PTAS001", "PTAS005"},  # too_few vs assertion_count_ok
-        {"PTAS002", "PTAS005"},  # too_many vs assertion_count_ok
-        {"PTAS004", "PTAS001", "PTAS002", "PTAS005"},  # no_assertions conflicts with all count rules
-    ]
+    # Note: Conflict definitions have been moved to individual rules via get_conflicting_rules() method
+    # This provides better encapsulation and maintainability
 
     @classmethod
-    def validate_rule_selection(cls, selected_rules: Set[str]) -> None:
-        """Validate that selected rules don't conflict with each other."""
-        conflicts = cls._find_conflicts(selected_rules)
+    def validate_rule_selection(cls, selected_rules: Set[str], rule_instances: Optional[Dict[str, BaseRule]] = None) -> None:
+        """Validate that selected rules don't conflict with each other.
+
+        Args:
+            selected_rules: Set of rule IDs that are selected
+            rule_instances: Optional dict mapping rule IDs to rule instances for dynamic conflict checking
+
+        """
+        if rule_instances:
+            # Use dynamic conflicts from rule instances
+            conflicts = cls._find_dynamic_conflicts(selected_rules, rule_instances)
+        else:
+            # No rule instances provided - cannot perform conflict checking
+            conflicts = []
 
         if conflicts:
             conflict_descriptions = []
@@ -57,33 +65,42 @@ class RuleValidator:
             raise RuleConflictError("max_density must be between 0.0 and 1.0")
 
     @classmethod
-    def _find_conflicts(cls, selected_rules: Set[str]) -> List[Set[str]]:
-        """Find conflicting rule groups in the selected rules."""
+    def _find_dynamic_conflicts(cls, selected_rules: Set[str], rule_instances: Dict[str, BaseRule]) -> List[Set[str]]:
+        """Find conflicting rule groups using dynamic conflicts from rule instances."""
         conflicts = []
+        checked_pairs = set()
 
-        for conflict_group in cls.CONFLICTING_RULE_GROUPS:
-            # Check if multiple rules from the same conflict group are selected
-            intersection = selected_rules.intersection(conflict_group)
-            if len(intersection) > 1:
-                conflicts.append(intersection)
+        # Check all pairs of selected rules for conflicts
+        selected_list = list(selected_rules)
+        for i, rule_id in enumerate(selected_list):
+            if rule_id not in rule_instances:
+                continue
+
+            rule_instance = rule_instances[rule_id]
+            conflicting_rules = rule_instance.get_conflicting_rules()
+
+            # Check remaining rules for conflicts
+            for other_rule_id in selected_list[i+1:]:
+                if other_rule_id in conflicting_rules:
+                    # Found a conflict between two selected rules
+                    conflict_pair = {rule_id, other_rule_id}
+                    conflict_key = tuple(sorted(conflict_pair))
+
+                    if conflict_key not in checked_pairs:
+                        conflicts.append(conflict_pair)
+                        checked_pairs.add(conflict_key)
 
         return conflicts
 
     @classmethod
-    def get_compatible_rules(cls, base_rule: str) -> Set[str]:
-        """Get rules that are compatible with the given base rule."""
-        all_rules = {
-            "PTCM001", "PTCM002", "PTST001", "PTLG001", "PTST002",
-            "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005"
-        }
+    def get_compatible_rules(cls, base_rule: str, rule_instances: Dict[str, BaseRule]) -> Set[str]:
+        """Get rules that are compatible with the given base rule using dynamic conflicts."""
+        if base_rule not in rule_instances:
+            return set()
 
-        # Find which conflict groups the base rule belongs to
-        incompatible_rules = set()
+        all_rules = set(rule_instances.keys())
+        rule_instance = rule_instances[base_rule]
+        conflicting_rules = rule_instance.get_conflicting_rules()
 
-        for conflict_group in cls.CONFLICTING_RULE_GROUPS:
-            if base_rule in conflict_group:
-                # Add all other rules from this conflict group (excluding base rule)
-                incompatible_rules.update(conflict_group - {base_rule})
-
-        # Always exclude the base rule itself
-        return all_rules - incompatible_rules - {base_rule}
+        # Return all rules except the base rule and its conflicting rules
+        return all_rules - conflicting_rules - {base_rule}

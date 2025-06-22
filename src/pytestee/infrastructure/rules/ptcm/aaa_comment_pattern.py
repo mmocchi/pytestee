@@ -1,7 +1,7 @@
 """PTCM001: AAA Pattern Detected in Comments."""
 
 import re
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -44,14 +44,18 @@ class PTCM001(BaseRule):
         total_aaa_score = aaa_found + (aaa_combined_found * 2)
 
         if total_aaa_score >= 2:
-            return [self._create_result(
-                "info",
+            # Pattern found - return success (INFO)
+            return [self._create_success_result(
                 "AAA pattern detected in comments",
                 test_file,
                 test_function
             )]
-
-        return []
+        # Pattern not found - return failure (ERROR/WARNING based on config)
+        return [self._create_failure_result(
+            "AAA pattern not detected in comments. Consider adding # Arrange, # Act, # Assert comments.",
+            test_file,
+            test_function
+        )]
 
     def _check_patterns_in_comments(self, comments: List[Tuple[int, str]], patterns: List[str]) -> int:
         """Check how many patterns are found in comments."""
@@ -76,3 +80,7 @@ class PTCM001(BaseRule):
                     # Don't break here - one comment could match multiple combined patterns
 
         return found
+
+    def get_conflicting_rules(self) -> Set[str]:
+        """PTCM001はPTCM003と競合する。"""
+        return {"PTCM003"}

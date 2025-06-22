@@ -2,6 +2,14 @@
 
 import pytest
 
+from pytestee.infrastructure.rules.ptas.assertion_count_ok import PTAS005
+from pytestee.infrastructure.rules.ptas.high_assertion_density import PTAS003
+from pytestee.infrastructure.rules.ptas.no_assertions import PTAS004
+from pytestee.infrastructure.rules.ptas.too_few_assertions import PTAS001
+from pytestee.infrastructure.rules.ptas.too_many_assertions import PTAS002
+from pytestee.infrastructure.rules.ptcm.aaa_comment_pattern import PTCM001
+from pytestee.infrastructure.rules.ptcm.gwt_comment_pattern import PTCM002
+from pytestee.infrastructure.rules.ptst.structural_pattern import PTST001
 from pytestee.infrastructure.rules.rule_validator import (
     RuleConflictError,
     RuleValidator,
@@ -11,13 +19,26 @@ from pytestee.infrastructure.rules.rule_validator import (
 class TestRuleValidator:
     """Test rule validation functionality."""
 
+    def setup_method(self) -> None:
+        """Set up test fixtures."""
+        self.rule_instances = {
+            "PTCM001": PTCM001(),
+            "PTCM002": PTCM002(),
+            "PTST001": PTST001(),
+            "PTAS001": PTAS001(),
+            "PTAS002": PTAS002(),
+            "PTAS003": PTAS003(),
+            "PTAS004": PTAS004(),
+            "PTAS005": PTAS005(),
+        }
+
     def test_validate_rule_selection_no_conflicts(self) -> None:
         """Test validation with no conflicting rules."""
         # Compatible rules
         selected_rules = {"PTCM001", "PTAS001", "PTAS003"}
 
         # Should not raise any exception
-        RuleValidator.validate_rule_selection(selected_rules)
+        RuleValidator.validate_rule_selection(selected_rules, self.rule_instances)
 
     def test_validate_rule_selection_pattern_no_conflicts(self) -> None:
         """Test validation allows multiple pattern rules (priority-based)."""
@@ -25,7 +46,7 @@ class TestRuleValidator:
         selected_rules = {"PTCM001", "PTCM002"}
 
         # Should not raise any exception
-        RuleValidator.validate_rule_selection(selected_rules)
+        RuleValidator.validate_rule_selection(selected_rules, self.rule_instances)
 
     def test_validate_rule_selection_assertion_conflicts(self) -> None:
         """Test validation detects assertion rule conflicts."""
@@ -33,7 +54,7 @@ class TestRuleValidator:
         selected_rules = {"PTAS001", "PTAS005"}  # too_few vs assertion_count_ok
 
         with pytest.raises(RuleConflictError) as exc_info:
-            RuleValidator.validate_rule_selection(selected_rules)
+            RuleValidator.validate_rule_selection(selected_rules, self.rule_instances)
 
         assert "PTAS001, PTAS005" in str(exc_info.value)
 
@@ -43,9 +64,12 @@ class TestRuleValidator:
         selected_rules = {"PTAS004", "PTAS001", "PTAS002"}
 
         with pytest.raises(RuleConflictError) as exc_info:
-            RuleValidator.validate_rule_selection(selected_rules)
+            RuleValidator.validate_rule_selection(selected_rules, self.rule_instances)
 
-        assert "PTAS001, PTAS002, PTAS004" in str(exc_info.value)
+        # Should detect conflicts between PTAS004 and both PTAS001 and PTAS002
+        error_msg = str(exc_info.value)
+        assert "PTAS001, PTAS004" in error_msg
+        assert "PTAS002, PTAS004" in error_msg
 
     def test_validate_config_parameters_valid(self) -> None:
         """Test validation with valid configuration parameters."""
@@ -107,7 +131,7 @@ class TestRuleValidator:
 
     def test_get_compatible_rules_pattern_rule(self) -> None:
         """Test getting compatible rules for a pattern detection rule."""
-        compatible = RuleValidator.get_compatible_rules("PTCM001")
+        compatible = RuleValidator.get_compatible_rules("PTCM001", self.rule_instances)
 
         # Should include all other rules (pattern rules don't have conflicts)
         assert "PTAS001" in compatible
@@ -118,7 +142,7 @@ class TestRuleValidator:
 
     def test_get_compatible_rules_assertion_rule(self) -> None:
         """Test getting compatible rules for an assertion rule."""
-        compatible = RuleValidator.get_compatible_rules("PTAS001")
+        compatible = RuleValidator.get_compatible_rules("PTAS001", self.rule_instances)
 
         # Should include pattern rules and non-conflicting assertion rules
         assert "PTCM001" in compatible
@@ -130,7 +154,7 @@ class TestRuleValidator:
 
     def test_get_compatible_rules_no_assertion_rule(self) -> None:
         """Test getting compatible rules for PTAS004 (no assertions)."""
-        compatible = RuleValidator.get_compatible_rules("PTAS004")
+        compatible = RuleValidator.get_compatible_rules("PTAS004", self.rule_instances)
 
         # Should include pattern rules but exclude other assertion count rules
         assert "PTCM001" in compatible

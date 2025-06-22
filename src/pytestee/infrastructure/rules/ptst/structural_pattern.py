@@ -34,14 +34,19 @@ class PTST001(BaseRule):
         if len(empty_line_indices) >= 2:
             sections = self._analyze_sections(function_lines, empty_line_indices)
             if self._looks_like_aaa_structure(sections):
-                return [self._create_result(
-                    "info",
+                # Pattern found - return success (INFO)
+                return [self._create_success_result(
                     "AAA pattern detected through structural separation",
                     test_file,
                     test_function
                 )]
 
-        return []
+        # Pattern not found - return failure (ERROR/WARNING based on config)
+        return [self._create_failure_result(
+            "AAA pattern not detected through structural separation. Consider using empty lines to separate Arrange, Act, Assert sections.",
+            test_file,
+            test_function
+        )]
 
     def _analyze_sections(self, function_lines: List[str], empty_line_indices: List[int]) -> List[List[str]]:
         """Analyze sections separated by empty lines."""

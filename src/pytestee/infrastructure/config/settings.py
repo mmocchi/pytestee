@@ -3,7 +3,7 @@
 import contextlib
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 try:
     import tomllib  # Python 3.11+
@@ -12,6 +12,7 @@ except ImportError:
 
 from ...domain.interfaces import IConfigManager
 from ...domain.models import CheckerConfig
+from ..rules.rule_validator import RuleValidator
 
 # Define type alias for configuration values
 ConfigValue = Union[str, int, float, bool, Dict[str, Any], list]
@@ -40,7 +41,12 @@ class ConfigManager(IConfigManager):
                     "min_asserts": 1,
                     "max_density": 0.5
                 }
-            }
+            },
+            # Rule selection configuration (ruff-like)
+            "select": ["PTCM003", "PTST001", "PTLG001", "PTAS", "PTNM001"],  # Default selection (PTCM003 instead of PTCM001/PTCM002 to avoid conflicts)
+            "ignore": [],  # Rules to ignore
+            # Rule severity configuration
+            "severity": {}
         }
 
     def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
@@ -66,14 +72,17 @@ class ConfigManager(IConfigManager):
                 try:
                     loaded_config = self._load_from_file(source)
                     if loaded_config:
+                        # Merge loaded config with defaults (loaded config takes precedence)
                         self._merge_config(loaded_config)
                         break
                 except Exception as e:
                     # Log warning but continue with defaults
                     print(f"Warning: Failed to load config from {source}: {e}")
 
-        # Override with environment variables
+        # Override with environment variables (always apply)
         self._load_from_env()
+
+        # Note: Rule validation will be performed later when checker registry is available
 
         return self._config
 
@@ -141,3 +150,99 @@ class ConfigManager(IConfigManager):
     def get_config(self, key: str, default: Optional[ConfigValue] = None) -> Optional[ConfigValue]:
         """Get a configuration value."""
         return self._config.get(key, default)
+
+    def is_rule_enabled(self, rule_id: str) -> bool:
+        """Check if a specific rule is enabled using select/ignore patterns."""
+        select_patterns = self._config.get("select", [])
+        ignore_patterns = self._config.get("ignore", [])
+
+        # If select is specified and not empty, only selected rules are enabled
+        if select_patterns:
+            is_selected = self._matches_patterns(rule_id, select_patterns)
+            if not is_selected:
+                return False
+
+        # Check if rule is ignored
+        if ignore_patterns:
+            is_ignored = self._matches_patterns(rule_id, ignore_patterns)
+            if is_ignored:
+                return False
+
+        return True
+
+    def _matches_patterns(self, rule_id: str, patterns: List[str]) -> bool:
+        """Check if rule_id matches any pattern in the list."""
+        return any(self._matches_pattern(rule_id, pattern) for pattern in patterns)
+
+    def _matches_pattern(self, rule_id: str, pattern: str) -> bool:
+        """Check if rule_id matches a single pattern."""
+        # Exact match
+        if rule_id == pattern:
+            return True
+
+        # Prefix match (e.g., "PTCM" matches "PTCM001", "PTCM002")
+        return bool(rule_id.startswith(pattern))
+
+    def get_rule_severity(self, rule_id: str) -> str:
+        """Get severity level for a specific rule from configuration."""
+        severity_config = self._config.get("severity", {})
+        return severity_config.get(rule_id, "error")  # Default to error
+
+    def _validate_rule_selection(self, rule_instances: Optional[Dict[str, Any]] = None) -> None:
+        """Validate that selected rules don't conflict with each other.
+
+        Args:
+            rule_instances: Optional mapping of rule IDs to rule instances for dynamic conflict checking
+
+        """
+        select_patterns = self._config.get("select", [])
+
+        if not select_patterns:
+            # If no select patterns, use default rules (avoiding conflicts)
+            selected_rules = set(self._config.get("select", []))
+            if not selected_rules:
+                # If still empty, expand default patterns
+                default_patterns = ["PTCM003", "PTST001", "PTLG001", "PTAS", "PTNM001"]
+                selected_rules = self._expand_rule_patterns(default_patterns)
+        else:
+            # Expand patterns to actual rule IDs
+            selected_rules = self._expand_rule_patterns(select_patterns)
+
+        # Remove ignored rules
+        ignore_patterns = self._config.get("ignore", [])
+        if ignore_patterns:
+            ignored_rules = self._expand_rule_patterns(ignore_patterns)
+            selected_rules = selected_rules - ignored_rules
+
+        # Validate the final rule selection
+        RuleValidator.validate_rule_selection(selected_rules, rule_instances)
+
+    def _expand_rule_patterns(self, patterns: List[str]) -> Set[str]:
+        """Expand rule patterns like 'PTCM' to actual rule IDs like 'PTCM001', 'PTCM002'."""
+        all_rules = {
+            "PTCM001", "PTCM002", "PTCM003", "PTST001", "PTLG001",
+            "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
+            "PTNM001"
+        }
+
+        expanded_rules = set()
+        for pattern in patterns:
+            # Exact matches
+            if pattern in all_rules:
+                expanded_rules.add(pattern)
+            else:
+                # Prefix matches
+                for rule_id in all_rules:
+                    if rule_id.startswith(pattern):
+                        expanded_rules.add(rule_id)
+
+        return expanded_rules
+
+    def validate_rule_selection_with_instances(self, rule_instances: Dict[str, Any]) -> None:
+        """外部から呼び出し可能なルール選択検証メソッド.
+
+        Args:
+            rule_instances: ルールID -> ルールインスタンスのマッピング
+
+        """
+        self._validate_rule_selection(rule_instances)

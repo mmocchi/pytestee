@@ -4,21 +4,28 @@ from typing import Any, Dict, List, Optional
 
 from pytestee.domain.interfaces import IChecker, ICheckerRegistry
 from pytestee.infrastructure.checkers.assertion_checker import AssertionChecker
+from pytestee.infrastructure.checkers.naming_checker import NamingChecker
 from pytestee.infrastructure.checkers.pattern_checker import PatternChecker
+from pytestee.infrastructure.rules.base_rule import BaseRule
 
 
 class CheckerRegistry(ICheckerRegistry):
     """Registry for managing test quality checkers."""
 
-    def __init__(self) -> None:
+    def __init__(self, config_manager: Optional[object] = None) -> None:
         """チェッカーレジストリを初期化します。"""
         self._checkers: Dict[str, IChecker] = {}
+        self.config_manager = config_manager
         self._initialize_default_checkers()
 
     def _initialize_default_checkers(self) -> None:
         """デフォルトチェッカーを初期化します。"""
-        self.register(PatternChecker())
-        self.register(AssertionChecker())
+        self.register(PatternChecker(self.config_manager))
+        self.register(AssertionChecker(self.config_manager))
+        self.register(NamingChecker(self.config_manager))
+
+        # ルール競合検証を実行
+        self._validate_rule_conflicts()
 
     def register(self, checker: IChecker) -> None:
         """チェッカーを登録します。
@@ -98,3 +105,26 @@ class CheckerRegistry(ICheckerRegistry):
 
         """
         return list(self._checkers.keys())
+
+    def get_all_rule_instances(self) -> Dict[str, BaseRule]:
+        """すべてのチェッカーからルールインスタンスを収集します。
+
+        Returns:
+            ルールID -> ルールインスタンスのマッピング
+
+        """
+        rule_instances = {}
+
+        for checker in self._checkers.values():
+            # チェッカーからルールインスタンスを取得
+            if hasattr(checker, 'get_rule_instances'):
+                checker_rules = checker.get_rule_instances()
+                rule_instances.update(checker_rules)
+
+        return rule_instances
+
+    def _validate_rule_conflicts(self) -> None:
+        """ルール競合を検証します。"""
+        if self.config_manager and hasattr(self.config_manager, 'validate_rule_selection_with_instances'):
+            rule_instances = self.get_all_rule_instances()
+            self.config_manager.validate_rule_selection_with_instances(rule_instances)

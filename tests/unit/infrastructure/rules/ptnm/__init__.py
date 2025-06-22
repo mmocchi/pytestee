@@ -1,0 +1,1 @@
+"""PTNM rule tests."""

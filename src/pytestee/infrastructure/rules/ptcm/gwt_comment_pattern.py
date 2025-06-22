@@ -1,7 +1,7 @@
 """PTCM002: GWT Pattern Detected in Comments."""
 
 import re
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -44,14 +44,18 @@ class PTCM002(BaseRule):
         total_gwt_score = gwt_found + (gwt_combined_found * 2)
 
         if total_gwt_score >= 2:
-            return [self._create_result(
-                "info",
+            # Pattern found - return success (INFO)
+            return [self._create_success_result(
                 "GWT pattern detected in comments",
                 test_file,
                 test_function
             )]
-
-        return []
+        # Pattern not found - return failure (ERROR/WARNING based on config)
+        return [self._create_failure_result(
+            "GWT pattern not detected in comments. Consider adding # Given, # When, # Then comments.",
+            test_file,
+            test_function
+        )]
 
     def _check_patterns_in_comments(self, comments: List[Tuple[int, str]], patterns: List[str]) -> int:
         """Check how many patterns are found in comments."""
@@ -76,3 +80,7 @@ class PTCM002(BaseRule):
                     # Don't break here - one comment could match multiple combined patterns
 
         return found
+
+    def get_conflicting_rules(self) -> Set[str]:
+        """PTCM002はPTCM003と競合する。"""
+        return {"PTCM003"}

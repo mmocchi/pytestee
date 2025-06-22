@@ -103,6 +103,7 @@ ignore = [
 # Per-file ignores for fixtures
 [tool.ruff.lint.per-file-ignores]
 "tests/fixtures/*.py" = ["ANN401"]  # Allow Any in test fixtures
+"tests/**/*.py" = ["PLC2401"]  # Allow non-ASCII function names in tests
 
 [tool.ruff.format]
 quote-style = "double"
@@ -170,9 +171,12 @@ exclude_lines = [
 ]
 
 [tool.pytestee]
-max_asserts = 3
+max_asserts = 5
 min_asserts = 1
 require_aaa_comments = true
+
+# select = ["PTST003", "PTAS"]  # Use structural patterns + assertion rules
+
 
 [dependency-groups]
 dev = [

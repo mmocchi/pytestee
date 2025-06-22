@@ -1,6 +1,6 @@
 """PTAS004: No Assertions Found."""
 
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -24,10 +24,13 @@ class PTAS004(BaseRule):
 
         if assert_count == 0:
             return [self._create_result(
-                "error",
                 "No assertions found - test function should verify expected behavior",
                 test_file,
                 test_function
             )]
 
         return []
+
+    def get_conflicting_rules(self) -> Set[str]:
+        """PTAS004 conflicts with all other assertion count rules."""
+        return {"PTAS001", "PTAS002", "PTAS005"}  # Conflicts with all count-based rules

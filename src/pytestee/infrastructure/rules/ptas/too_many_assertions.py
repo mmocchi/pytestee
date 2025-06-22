@@ -1,6 +1,6 @@
 """PTAS002: Too Many Assertions."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Set, Union
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -25,7 +25,6 @@ class PTAS002(BaseRule):
 
         if assert_count > max_asserts:
             return [self._create_result(
-                "warning",
                 f"Too many assertions: {assert_count} (maximum recommended: {max_asserts})",
                 test_file,
                 test_function
@@ -38,3 +37,7 @@ class PTAS002(BaseRule):
         if config and config.config:
             return config.config.get(key, default)
         return default
+
+    def get_conflicting_rules(self) -> Set[str]:
+        """PTAS002 conflicts with no assertions rule."""
+        return {"PTAS004"}  # Conflicts with no assertions

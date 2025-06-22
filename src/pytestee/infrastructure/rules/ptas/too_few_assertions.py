@@ -1,6 +1,6 @@
 """PTAS001: Too Few Assertions."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Set, Union
 
 from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from ....infrastructure.ast_parser import ASTParser
@@ -25,7 +25,6 @@ class PTAS001(BaseRule):
 
         if assert_count < min_asserts:
             return [self._create_result(
-                "warning",
                 f"Too few assertions: {assert_count} (minimum recommended: {min_asserts})",
                 test_file,
                 test_function
@@ -38,3 +37,7 @@ class PTAS001(BaseRule):
         if config and config.config:
             return config.config.get(key, default)
         return default
+
+    def get_conflicting_rules(self) -> Set[str]:
+        """PTAS001 conflicts with other assertion count rules."""
+        return {"PTAS004", "PTAS005"}  # Conflicts with no assertions and assertion count OK

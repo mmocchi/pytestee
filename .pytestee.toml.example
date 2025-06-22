@@ -1,0 +1,57 @@
+# Pytestee Configuration Example
+# Copy this to .pytestee.toml or add to pyproject.toml under [tool.pytestee]
+
+# Global settings
+max_asserts = 3
+min_asserts = 1
+require_aaa_comments = false
+
+# Rule selection (ruff-like configuration)
+# If 'select' is specified, only those rules are enabled
+# 'ignore' rules are always disabled, regardless of 'select'
+
+# Example 1: Select only pattern-related rules
+# select = ["PTCM", "PTST", "PTLG"]
+
+# Example 2: Select specific rules
+# select = ["PTCM001", "PTST001", "PTAS004"]
+
+# Example 3: Ignore specific rules
+# ignore = ["PTST002", "PTAS005"]
+
+# Example 4: Select all pattern rules but ignore warnings
+# select = ["PTCM", "PTST", "PTLG"]
+# ignore = ["PTST002"]
+
+# Example 5: Use prefix patterns
+# select = ["PT"]         # All rules starting with PT
+
+# Available rules:
+# PTCM001 - AAA pattern in comments
+# PTCM002 - GWT pattern in comments  
+# PTST001 - Structural pattern detection
+# PTST002 - Pattern not detected warning
+# PTLG001 - Logical flow pattern
+# PTAS001 - Too few assertions
+# PTAS002 - Too many assertions
+# PTAS003 - High assertion density
+# PTAS004 - No assertions found (error)
+# PTAS005 - Assertion count OK
+
+# Pattern matching examples:
+# "PTCM"     - Matches PTCM001, PTCM002, etc.
+# "PTCM001"  - Matches exactly PTCM001
+# "PT"       - Matches all rules starting with PT
+
+# Severity configuration
+# Override default severity (error) for specific rules
+[severity]
+# PTCM001 = "info"     # AAA pattern detected - informational
+# PTCM002 = "info"     # GWT pattern detected - informational
+# PTST001 = "info"     # Structural pattern - informational
+# PTLG001 = "info"     # Logical pattern - informational
+# PTAS005 = "info"     # Assertion count OK - informational
+# PTST002 = "warning"  # Pattern not detected - warning
+# PTAS001 = "warning"  # Too few assertions - warning  
+# PTAS002 = "warning"  # Too many assertions - warning
+# PTAS004 = "error"    # No assertions found - error (default)
