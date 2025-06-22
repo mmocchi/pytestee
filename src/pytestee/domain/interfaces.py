@@ -1,93 +1,214 @@
-"""pytesteeのドメインインターフェース。"""
+"""pytesteeのドメインインターフェース。
+
+このモジュールでは、アプリケーションの中核となるビジネスロジックの
+インターフェースを定義します。Clean Architectureに従い、外部の実装
+詳細に依存しない抽象的な契約を提供します。
+"""
 
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .models import AnalysisResult, CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.models import (
+    AnalysisResult,
+    CheckerConfig,
+    CheckResult,
+    TestFile,
+    TestFunction,
+)
 
 
 class ITestRepository(ABC):
-    """テストファイルリポジトリのインターフェース。"""
+    """テストファイルリポジトリのインターフェース。
+
+    テストファイルの検索と読み込みを行うリポジトリの抽象定義です。
+    """
 
     @abstractmethod
     def find_test_files(self, path: Path) -> List[Path]:
-        """指定されたパス内のすべてのテストファイルを検索。"""
+        """指定されたパス内のすべてのテストファイルを検索します。
+
+        Args:
+            path: 検索対象のディレクトリパス
+
+        Returns:
+            発見されたテストファイルのパスリスト
+
+        """
         pass
 
     @abstractmethod
     def load_test_file(self, file_path: Path) -> TestFile:
-        """テストファイルを読み込み、解析。"""
+        """テストファイルを読み込み、解析します。
+
+        Args:
+            file_path: 読み込み対象のファイルパス
+
+        Returns:
+            解析されたテストファイル
+
+        Raises:
+            ParseError: ファイル解析に失敗した場合
+
+        """
         pass
 
 
 class IChecker(ABC):
-    """テスト品質チェッカーのインターフェース。"""
+    """テスト品質チェッカーのインターフェース。
+
+    テストコードの品質をチェックするチェッカーの抽象定義です。
+    """
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """このチェッカーの名前を取得。"""
+        """このチェッカーの名前を取得します。
+
+        Returns:
+            チェッカーの一意な名前
+
+        """
         pass
 
     @abstractmethod
     def check(self, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
-        """テストファイルをチェックし、結果を返す。"""
+        """テストファイルをチェックし、結果を返します。
+
+        Args:
+            test_file: チェック対象のテストファイル
+            config: チェッカー設定(オプション)
+
+        Returns:
+            チェック結果のリスト
+
+        """
         pass
 
     @abstractmethod
     def check_function(self, test_function: TestFunction, test_file: TestFile, config: Optional[CheckerConfig] = None) -> List[CheckResult]:
-        """特定のテスト関数をチェックし、結果を返す。"""
+        """特定のテスト関数をチェックし、結果を返します。
+
+        Args:
+            test_function: チェック対象のテスト関数
+            test_file: テスト関数を含むファイル
+            config: チェッカー設定(オプション)
+
+        Returns:
+            チェック結果のリスト
+
+        """
         pass
 
 
 class IPresenter(ABC):
-    """解析結果を表示するインターフェース。"""
+    """解析結果を表示するインターフェース。
+
+    分析結果をユーザーに提示するプレゼンター層の抽象定義です。
+    """
 
     @abstractmethod
     def present(self, result: AnalysisResult) -> None:
-        """解析結果を表示。"""
+        """解析結果を表示します。
+
+        Args:
+            result: 表示する解析結果
+
+        """
         pass
 
 
 class IConfigManager(ABC):
-    """設定管理のインターフェース。"""
+    """設定管理のインターフェース。
+
+    アプリケーション設定の読み込みと管理を行うマネージャーの抽象定義です。
+    """
 
     @abstractmethod
     def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
-        """ファイルまたはデフォルトから設定を読み込み。"""
+        """ファイルまたはデフォルトから設定を読み込みます。
+
+        Args:
+            config_path: 設定ファイルのパス(オプション)
+
+        Returns:
+            読み込まれた設定
+
+        """
         pass
 
     @abstractmethod
     def get_checker_config(self, checker_name: str) -> CheckerConfig:
-        """特定のチェッカーの設定を取得。"""
+        """特定のチェッカーの設定を取得します。
+
+        Args:
+            checker_name: チェッカー名
+
+        Returns:
+            チェッカーの設定
+
+        """
         pass
 
     @abstractmethod
     def get_global_config(self) -> Dict[str, Any]:
-        """グローバル設定を取得。"""
+        """グローバル設定を取得します。
+
+        Returns:
+            グローバル設定
+
+        """
         pass
 
 
 class ICheckerRegistry(ABC):
-    """チェッカーレジストリのインターフェース。"""
+    """チェッカーレジストリのインターフェース。
+
+    利用可能なチェッカーの登録と管理を行うレジストリの抽象定義です。
+    """
 
     @abstractmethod
     def register(self, checker: IChecker) -> None:
-        """チェッカーを登録。"""
+        """チェッカーを登録します。
+
+        Args:
+            checker: 登録するチェッカー
+
+        """
         pass
 
     @abstractmethod
     def get_checker(self, name: str) -> Optional[IChecker]:
-        """名前でチェッカーを取得。"""
+        """名前でチェッカーを取得します。
+
+        Args:
+            name: チェッカー名
+
+        Returns:
+            チェッカーまたはNone
+
+        """
         pass
 
     @abstractmethod
     def get_all_checkers(self) -> List[IChecker]:
-        """登録されたすべてのチェッカーを取得。"""
+        """登録されたすべてのチェッカーを取得します。
+
+        Returns:
+            チェッカーのリスト
+
+        """
         pass
 
     @abstractmethod
     def get_enabled_checkers(self, config: Dict[str, Any]) -> List[IChecker]:
-        """設定に基づいて有効なすべてのチェッカーを取得。"""
+        """設定に基づいて有効なすべてのチェッカーを取得します。
+
+        Args:
+            config: 設定
+
+        Returns:
+            有効なチェッカーのリスト
+
+        """
         pass

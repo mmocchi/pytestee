@@ -3,9 +3,18 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..domain.interfaces import ICheckerRegistry, IConfigManager, ITestRepository
-from ..domain.models import AnalysisResult, CheckResult, CheckSeverity, TestFile
-from ..infrastructure.errors import CheckerError, ParseError
+from pytestee.domain.interfaces import (
+    ICheckerRegistry,
+    IConfigManager,
+    ITestRepository,
+)
+from pytestee.domain.models import (
+    AnalysisResult,
+    CheckResult,
+    CheckSeverity,
+    TestFile,
+)
+from pytestee.infrastructure.errors import CheckerError, ParseError
 
 
 class AnalyzeTestsUseCase:
@@ -17,12 +26,32 @@ class AnalyzeTestsUseCase:
         checker_registry: ICheckerRegistry,
         config_manager: IConfigManager
     ) -> None:
+        """テスト分析ユースケースを初期化します。
+
+        Args:
+            test_repository: テストリポジトリインターフェース
+            checker_registry: チェッカーレジストリインターフェース
+            config_manager: 設定管理インターフェース
+
+        """
         self._test_repository = test_repository
         self._checker_registry = checker_registry
         self._config_manager = config_manager
 
     def execute(self, target_path: Path, config_overrides: Optional[Dict[str, Any]] = None) -> AnalysisResult:
-        """Execute the test analysis."""
+        """テスト分析を実行します。
+
+        Args:
+            target_path: 分析対象のパス
+            config_overrides: 設定オーバーライド
+
+        Returns:
+            分析結果
+
+        Raises:
+            ParseError: ファイル解析エラー
+
+        """
         if config_overrides is None:
             config_overrides = {}
 
@@ -69,7 +98,19 @@ class AnalyzeTestsUseCase:
         )
 
     def _analyze_test_file(self, test_file: TestFile, config: Dict[str, Any]) -> List[CheckResult]:
-        """Analyze a single test file with all enabled checkers."""
+        """単一のテストファイルを有効なチェッカーで分析します。
+
+        Args:
+            test_file: テストファイル
+            config: 設定
+
+        Returns:
+            チェック結果のリスト
+
+        Raises:
+            CheckerError: チェッカーエラー
+
+        """
         results = []
 
         # Get enabled checkers
@@ -88,7 +129,15 @@ class AnalyzeTestsUseCase:
         return results
 
     def _count_results(self, results: List[CheckResult]) -> Tuple[int, int]:
-        """Count passed and failed checks."""
+        """成功と失敗のチェック数をカウントします。
+
+        Args:
+            results: チェック結果のリスト
+
+        Returns:
+            成功数と失敗数のタプル
+
+        """
         passed = 0
         failed = 0
 

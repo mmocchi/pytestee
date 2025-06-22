@@ -3,19 +3,28 @@
 from pathlib import Path
 from typing import List
 
-from ...domain.interfaces import ITestRepository
-from ...domain.models import TestFile
-from ...infrastructure.ast_parser import ASTParser
+from pytestee.domain.interfaces import ITestRepository
+from pytestee.domain.models import TestFile
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class FileRepository(ITestRepository):
     """Repository for accessing test files from filesystem."""
 
     def __init__(self) -> None:
+        """ファイルリポジトリを初期化します。"""
         self._parser = ASTParser()
 
     def find_test_files(self, path: Path) -> List[Path]:
-        """Find all test files in the given path."""
+        """指定されたパス内のすべてのテストファイルを検索します。
+
+        Args:
+            path: 検索対象のディレクトリパス
+
+        Returns:
+            発見されたテストファイルのパスリスト
+
+        """
         test_files = []
 
         if path.is_file():
@@ -29,7 +38,19 @@ class FileRepository(ITestRepository):
         return sorted(test_files)
 
     def load_test_file(self, file_path: Path) -> TestFile:
-        """Load and parse a test file."""
+        """テストファイルを読み込み、解析します。
+
+        Args:
+            file_path: 読み込み対象のファイルパス
+
+        Returns:
+            解析されたテストファイル
+
+        Raises:
+            FileNotFoundError: ファイルが見つからない場合
+            ValueError: テストファイルではない場合
+
+        """
         if not file_path.exists():
             raise FileNotFoundError(f"Test file not found: {file_path}")
 
@@ -39,7 +60,15 @@ class FileRepository(ITestRepository):
         return self._parser.parse_file(file_path)
 
     def _is_test_file(self, file_path: Path) -> bool:
-        """Check if a file is a test file."""
+        """ファイルがテストファイルかどうかを判定します。
+
+        Args:
+            file_path: チェック対象のファイルパス
+
+        Returns:
+            テストファイルの場合True
+
+        """
         if file_path.suffix != ".py":
             return False
 

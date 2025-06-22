@@ -1,10 +1,10 @@
 """Main entry point for pytestee CLI."""
 
-from .adapters.cli.commands import cli
+from pytestee.adapters.cli.commands import cli
 
 
 def main() -> None:
-    """Run the main CLI."""
+    """メインCLIを実行します。"""
     cli()
 
 
