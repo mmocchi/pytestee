@@ -98,6 +98,7 @@ ignore = [
     "TRY300", # move statement to else block (not always clearer)
     "PERF203", # try-except in loop (error handling required)
     "ARG002", # unused method argument (config parameter for future use)
+    "PLC0415", # import should be at the top-level (lazy imports for circular dependencies)
 ]
 
 # Per-file ignores for fixtures

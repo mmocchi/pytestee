@@ -109,37 +109,37 @@ class CheckerRegistry(ICheckerRegistry):
 
         """
         # Import rules here to avoid circular imports
-        from pytestee.domain.rules.assertion.assertion_count_ok import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.assertion_count_ok import (
             PTAS005,
         )
-        from pytestee.domain.rules.assertion.high_assertion_density import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.high_assertion_density import (
             PTAS003,
         )
-        from pytestee.domain.rules.assertion.no_assertions import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.no_assertions import (
             PTAS004,
         )
-        from pytestee.domain.rules.assertion.too_few_assertions import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.too_few_assertions import (
             PTAS001,
         )
-        from pytestee.domain.rules.assertion.too_many_assertions import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.too_many_assertions import (
             PTAS002,
         )
-        from pytestee.domain.rules.comment.aaa_comment_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.aaa_comment_pattern import (
             PTCM001,
         )
-        from pytestee.domain.rules.comment.aaa_or_gwt_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.aaa_or_gwt_pattern import (
             PTCM003,
         )
-        from pytestee.domain.rules.comment.gwt_comment_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.gwt_comment_pattern import (
             PTCM002,
         )
-        from pytestee.domain.rules.logic.logical_flow_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.logic.logical_flow_pattern import (
             PTLG001,
         )
-        from pytestee.domain.rules.naming.japanese_characters import (  # noqa: PLC0415
+        from pytestee.domain.rules.naming.japanese_characters import (
             PTNM001,
         )
-        from pytestee.domain.rules.structure.structural_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.structure.structural_pattern import (
             PTST001,
         )
 
@@ -160,7 +160,7 @@ class CheckerRegistry(ICheckerRegistry):
 
         rule_instances = {}
         for rule_id, rule_class in rule_classes.items():
-            instance = rule_class()  # type: ignore[abstract]
+            instance = rule_class()
             instance.set_config_manager(self.config_manager)
             rule_instances[rule_id] = instance
 

@@ -1,22 +1,27 @@
 """PTAS003: High Assertion Density."""
 
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
-from pytestee.infrastructure.ast_parser import ASTParser
+
+if TYPE_CHECKING:
+    from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 
 
 class PTAS003(BaseRule):
     """Rule for detecting high assertion density."""
 
-    def __init__(self) -> None:
+    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
         super().__init__(
             rule_id="PTAS003",
             name="high_assertion_density",
             description="High ratio of assertions to lines of code",
         )
-        self._parser = ASTParser()
+        if assertion_analyzer is None:
+            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+            assertion_analyzer = AssertionAnalyzer()
+        self._analyzer = assertion_analyzer
 
     def check(
         self,
@@ -26,7 +31,7 @@ class PTAS003(BaseRule):
     ) -> CheckResult:
         """Check for high assertion density."""
         max_density = self._get_config_value(config, "max_density", 0.5)  # 50% of lines
-        assert_count = self._parser.count_assert_statements(test_function)
+        assert_count = self._analyzer.count_assertions(test_function)
         function_lines = self._count_effective_lines(test_function, test_file)
 
         if function_lines > 0:

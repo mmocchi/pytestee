@@ -1,22 +1,28 @@
 """PTAS005: Assertion Count OK."""
 
-from typing import Optional, Set, Union
+from typing import TYPE_CHECKING, Optional, Set, Union
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
-from pytestee.infrastructure.ast_parser import ASTParser
+
+if TYPE_CHECKING:
+    from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 
 
 class PTAS005(BaseRule):
     """Rule for indicating appropriate assertion count."""
 
-    def __init__(self) -> None:
+    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
         super().__init__(
             rule_id="PTAS005",
             name="assertion_count_ok",
             description="Test function has appropriate number of assertions",
         )
-        self._parser = ASTParser()
+        # Analyzer will be injected, but import here for backward compatibility
+        if assertion_analyzer is None:
+            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+            assertion_analyzer = AssertionAnalyzer()
+        self._analyzer = assertion_analyzer
 
     def check(
         self,
@@ -27,7 +33,7 @@ class PTAS005(BaseRule):
         """Check if assertion count is appropriate."""
         min_asserts = self._get_config_value(config, "min_asserts", 1)
         max_asserts = self._get_config_value(config, "max_asserts", 3)
-        assert_count = self._parser.count_assert_statements(test_function)
+        assert_count = self._analyzer.count_assertions(test_function)
 
         if min_asserts <= assert_count <= max_asserts:
             return self._create_success_result(

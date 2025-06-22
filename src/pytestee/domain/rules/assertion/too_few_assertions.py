@@ -1,22 +1,27 @@
 """PTAS001: Too Few Assertions."""
 
-from typing import Optional, Set, Union
+from typing import TYPE_CHECKING, Optional, Set, Union
 
 from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
 from pytestee.domain.rules.base_rule import BaseRule
-from pytestee.infrastructure.ast_parser import ASTParser
+
+if TYPE_CHECKING:
+    from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 
 
 class PTAS001(BaseRule):
     """Rule for detecting too few assertions."""
 
-    def __init__(self) -> None:
+    def __init__(self, assertion_analyzer: Optional["AssertionAnalyzer"] = None) -> None:
         super().__init__(
             rule_id="PTAS001",
             name="too_few_assertions",
             description="Test function has fewer assertions than minimum recommended",
         )
-        self._parser = ASTParser()
+        if assertion_analyzer is None:
+            from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
+            assertion_analyzer = AssertionAnalyzer()
+        self._analyzer = assertion_analyzer
 
     def check(
         self,
@@ -26,7 +31,7 @@ class PTAS001(BaseRule):
     ) -> CheckResult:
         """Check if test function has too few assertions."""
         min_asserts = self._get_config_value(config, "min_asserts", 1)
-        assert_count = self._parser.count_assert_statements(test_function)
+        assert_count = self._analyzer.count_assertions(test_function)
 
         if assert_count < min_asserts:
             return self._create_failure_result(
