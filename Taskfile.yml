@@ -12,6 +12,7 @@ tasks:
       - task: lint
       - task: format:check
       - task: typecheck
+      - task: import-lint
       - task: test
 
   test:
@@ -49,6 +50,11 @@ tasks:
     desc: "Run in development mode"
     cmds:
       - uv run python -m pytestee
+
+  import-lint:
+    desc: "Check import dependencies"
+    cmds:
+      - uv run lint-imports
 
   clean:
     desc: "Clean build artifacts"

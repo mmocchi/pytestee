@@ -1,6 +1,21 @@
 # pytestee configuration example
 # Copy this to .pytestee.toml or add to pyproject.toml under [tool.pytestee]
 
+# File selection patterns
+# Exclude patterns support standard glob patterns
+# By default, all .py files are considered unless excluded
+exclude = [
+    # Default exclusions (automatically applied):
+    ".venv/**",                # Virtual environment
+    "venv/**",                 # Alternative virtual environment
+    "**/__pycache__/**",       # Python cache directories
+    
+    # Additional exclusions you might want:
+    # "**/conftest.py",        # Exclude pytest configuration files
+    # "**/test_fixtures/**",   # Exclude fixture directories
+    # "*_integration_test.py", # Exclude integration tests
+]
+
 # Rule selection (ruff-style patterns)
 # Use "select" to enable specific rules or rule categories
 # Use "ignore" to disable specific rules

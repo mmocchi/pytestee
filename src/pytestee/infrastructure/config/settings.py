@@ -22,6 +22,8 @@ class ConfigManager(IConfigManager):
     def __init__(self) -> None:
         self._config: Dict[str, Any] = {}
         self._default_config = {
+            # File selection configuration
+            "exclude": [".venv/**", "venv/**", "**/__pycache__/**"],  # File patterns to exclude
             # Rule selection configuration (ruff-like)
             "select": [
                 "PTCM003",
@@ -281,3 +283,7 @@ class ConfigManager(IConfigManager):
 
         """
         self._validate_rule_selection(rule_instances)
+
+    def get_exclude_patterns(self) -> List[str]:
+        """Get file exclude patterns."""
+        return self._config.get("exclude", [])

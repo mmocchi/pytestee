@@ -1,7 +1,7 @@
 [tools]
 python = "3.12"
-uv = "latest"
 task = "latest"
+uv = "latest"
 
-[env]
-UV_PYTHON = "python"
+[settings]
+python.uv_venv_auto = true

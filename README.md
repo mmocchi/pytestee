@@ -25,20 +25,20 @@ uv sync
 ## Quick Start
 
 ```bash
-# カレントディレクトリの全テストファイルをチェック
+# カレントディレクトリの全.pyファイルをチェック（excludeパターンを除く）
+pytestee check
+
+# 特定のディレクトリをチェック
 pytestee check tests/
 
 # 特定のテストファイルをチェック
 pytestee check test_example.py
 
-# カスタム制限でチェック
-pytestee check tests/ --max-asserts=5 --min-asserts=1
-
 # 詳細情報を表示
-pytestee check tests/ --verbose
+pytestee check --verbose
 
 # JSON出力を取得
-pytestee check tests/ --format=json
+pytestee check --format=json
 ```
 
 ## Usage Examples
@@ -46,25 +46,25 @@ pytestee check tests/ --format=json
 ### Basic Usage
 
 ```bash
-# テスト品質を分析
+# カレントディレクトリのテスト品質を分析
+pytestee check
+
+# 特定ディレクトリのテスト品質を分析
 pytestee check tests/
 
 # 出力例:
 # ❌ test_user.py::test_create_user
-#    - AAAパターンが検出されませんでした (line 15)
-#    - アサーションが多すぎます: 5個 (推奨: ≤3個)
+#    - PTST002: AAAパターンが検出されませんでした (line 15)
+#    - PTAS002: アサーションが多すぎます: 5個 (推奨: ≤3個)
 #
 # ✅ test_auth.py::test_login_success
-#    - AAAパターン: OK
-#    - アサーション密度: OK (2個のアサーション)
+#    - PTCM001: AAAパターンがコメントで明示されています
+#    - PTAS005: アサーション数が適切です (2個)
 ```
 
 ### Configuration Options
 
 ```bash
-# コマンドラインオプション
-pytestee check tests/ --max-asserts=3 --min-asserts=1 --require-aaa-comments
-
 # 静寂モード（エラーのみ表示）
 pytestee check tests/ --quiet
 
@@ -75,7 +75,10 @@ pytestee check tests/ --verbose
 ### File Information
 
 ```bash
-# テストファイルの統計を表示
+# カレントディレクトリのテストファイルの統計を表示
+pytestee info
+
+# 特定ディレクトリのテストファイルの統計を表示
 pytestee info tests/
 
 # 利用可能なチェッカーをリスト表示
@@ -90,49 +93,57 @@ pytestee list-checkers
 
 ```toml
 [tool.pytestee]
+# ファイル選択パターン
+# デフォルトでは全ての.pyファイルが対象
+exclude = ["**/conftest.py", "**/test_fixtures/**"]  # 除外するファイルパターン
+
+# 有効にするルールを選択（デフォルトで全て有効）
+select = ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001"]
+
+# 無視するルール
+ignore = ["PTLG001"]  # 論理フロー解析を無効化
+
+# ルールごとの重要度をカスタマイズ
+[tool.pytestee.severity]
+PTAS002 = "warning"  # アサーション過多を警告レベルに
+PTNM001 = "info"     # 日本語命名チェックを情報レベルに
+
+# ルール固有の設定
+[tool.pytestee.rules.PTAS005]
 max_asserts = 3
 min_asserts = 1
-require_aaa_comments = true
 
-[tool.pytestee.pattern_checker]
-enabled = true
-[tool.pytestee.pattern_checker.config]
+[tool.pytestee.rules.PTCM003]
 require_comments = false
 allow_gwt = true
 
-[tool.pytestee.assertion_checker]
-enabled = true
-[tool.pytestee.assertion_checker.config]
-max_asserts = 3
-min_asserts = 1
+[tool.pytestee.rules.PTAS003]
 max_density = 0.5
 ```
 
-### Environment Variables
 
-```bash
-export PYTESTEE_MAX_ASSERTS=5
-export PYTESTEE_MIN_ASSERTS=1
-export PYTESTEE_REQUIRE_AAA_COMMENTS=true
-```
+## Quality Rules
 
-## Quality Checkers
+### パターン検出ルール
 
-### AAA Pattern Checker
+- **PTCM001**: コメント内のAAAパターン検出 (`# Arrange`, `# Act`, `# Assert`)
+- **PTCM002**: コメント内のGWTパターン検出 (`# Given`, `# When`, `# Then`)
+- **PTCM003**: AAAまたはGWTパターン検出（どちらかが存在すればOK）
+- **PTST001**: 構造的分離による暗黙的なAAAパターン検出（空行での分離）
+- **PTST002**: パターン未検出の警告
+- **PTLG001**: 論理フロー解析によるAAAパターン検出（コードの意味解析）
 
-Arrange-Act-Assert（準備-実行-検証）またはGiven-When-Then（前提-実行-検証）パターンを以下の方法で検出します：
+### アサーションルール
 
-- **コメントベース検出**: `# Arrange`, `# Act`, `# Assert`
-- **構造的分離**: テストセクションを分離する空行
-- **コードフロー解析**: セットアップ、実行、検証の論理的グループ化
+- **PTAS001**: アサーション不足（最小数未満）
+- **PTAS002**: アサーション過多（最大数超過）
+- **PTAS003**: 高いアサーション密度の警告
+- **PTAS004**: アサーション未発見エラー
+- **PTAS005**: アサーション数が適切な範囲内
 
-### Assert Density Checker
+### 命名規則ルール
 
-アサーションの使用状況を分析します：
-
-- **数量検証**: テストあたりの適切なアサーション数を確保
-- **密度分析**: アサーションとコードの比率をチェック
-- **複雑度スコアリング**: 過度に複雑なテスト関数を特定
+- **PTNM001**: テストメソッド名の日本語文字チェック
 
 ## Architecture
 
@@ -152,25 +163,38 @@ src/pytestee/
 1. Implement the `IChecker` interface:
 
 ```python
-from pytestee.domain.interfaces import IChecker
-from pytestee.infrastructure.checkers.base_checker import BaseChecker
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.domain.models import CheckResult, TestFunction, TestFile
+from typing import Optional
 
-class MyCustomChecker(BaseChecker):
+class MyCustomRule(BaseRule):
     def __init__(self):
-        super().__init__("my_custom_checker")
+        super().__init__(
+            rule_id="MYCUST001",
+            name="my_custom_rule",
+            description="カスタムルールの説明"
+        )
     
-    def check_function(self, test_function, test_file, config=None):
+    def check(self, test_function: TestFunction, test_file: TestFile, 
+              config: Optional[CheckerConfig] = None) -> CheckResult:
         # ここにチェックロジックを記述
-        return [CheckResult(...)]
+        if self._check_condition(test_function):
+            return self._create_success_result(
+                "チェック成功", test_file, test_function
+            )
+        return self._create_failure_result(
+            "チェック失敗", test_file, test_function
+        )
 ```
 
-2. Register the checker:
+2. ルールを適切なチェッカーに追加:
 
 ```python
-from pytestee.registry import CheckerRegistry
+# 例: PatternCheckerに追加する場合
+from pytestee.infrastructure.checkers.pattern_checker import PatternChecker
 
-registry = CheckerRegistry()
-registry.register(MyCustomChecker())
+pattern_checker = PatternChecker()
+pattern_checker.add_rule(MyCustomRule())
 ```
 
 ## Development
@@ -206,31 +230,31 @@ task build
 - `task build` - パッケージをビルド
 - `task clean` - ビルド成果物をクリーンアップ
 
-## Architecture
+## Rule-Based Architecture
 
-Pytesteeは、各チェックが個別のルールモジュールとして実装されるルールベースアーキテクチャに従っています：
+Pytesteeは、各品質チェックが個別のルールモジュールとして実装されるルールベースアーキテクチャに従っています。各ルールには一意のIDがあり、Return Object Patternを使用してCheckSuccessまたはCheckFailureを返します：
 
 ### Rule Organization
 
 ```
-src/pytestee/infrastructure/rules/
-├── ptcm/          # コメントベースパターン
-│   ├── ptcm001.py # コメント内のAAAパターン
-│   └── ptcm002.py # コメント内のGWTパターン
-├── ptst/          # 構造的パターン
-│   ├── ptst001.py # AAA構造的分離
-│   └── ptst002.py # パターン未検出警告
-├── ptlg/          # 論理フローパターン
-│   └── ptlg001.py # AAAコードフロー解析
-├── ptas/          # アサーションルール
-│   ├── ptas001.py # アサーション不足
-│   ├── ptas002.py # アサーション過多
-│   ├── ptas003.py # 高いアサーション密度
-│   ├── ptas004.py # アサーション未発見
-│   └── ptas005.py # アサーション数OK
-└── ptsy/          # システムルール
-    ├── ptsy001.py # 解析失敗
-    └── ptsy002.py # チェッカー失敗
+src/pytestee/domain/rules/
+├── comment/        # コメントベースパターン
+│   ├── aaa_comment_pattern.py    # PTCM001: コメント内のAAAパターン
+│   ├── gwt_comment_pattern.py    # PTCM002: コメント内のGWTパターン
+│   └── aaa_or_gwt_pattern.py     # PTCM003: AAAまたはGWTパターン
+├── structure/      # 構造的パターン
+│   ├── structural_pattern.py     # PTST001: AAA構造的分離
+│   └── no_pattern_warning.py     # PTST002: パターン未検出警告
+├── logic/          # 論理フローパターン
+│   └── logical_flow_pattern.py   # PTLG001: AAAコードフロー解析
+├── assertion/      # アサーションルール
+│   ├── too_few_assertions.py     # PTAS001: アサーション不足
+│   ├── too_many_assertions.py    # PTAS002: アサーション過多
+│   ├── high_assertion_density.py # PTAS003: 高いアサーション密度
+│   ├── no_assertions.py          # PTAS004: アサーション未発見
+│   └── assertion_count_ok.py     # PTAS005: アサーション数OK
+└── naming/         # 命名規則
+    └── japanese_characters.py     # PTNM001: 日本語文字チェック
 ```
 
 ### Adding New Rules
@@ -241,13 +265,15 @@ src/pytestee/infrastructure/rules/
 4. RULES.mdドキュメントを更新
 5. 新しいルールのテストを追加
 
-### Rule Priority
+### Pattern Detection Priority
 
 パターン検出は優先順位に従います：
 1. **コメントベース** (PTCM) - 最高優先度
 2. **構造的** (PTST) - 中程度の優先度
 3. **論理的** (PTLG) - 低い優先度
 4. **警告** (PTST002) - パターンが検出されない場合のフォールバック
+
+優先度の高いパターンが検出された場合、低い優先度のパターンは報告されません。
 
 ## Contributing
 
@@ -270,3 +296,4 @@ MIT License - see LICENSE file for details.
 - [ ] テストカバレッジ分析
 - [ ] パフォーマンスベンチマーク
 - [ ] カスタムルール設定DSL
+- [ ] より多くの言語固有命名ルール（中国語、韓国語など）

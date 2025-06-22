@@ -28,7 +28,12 @@ def cli() -> None:
 
 
 @cli.command()
-@click.argument("target", type=click.Path(exists=True, path_type=Path))
+@click.argument(
+    "target",
+    type=click.Path(exists=True, path_type=Path),
+    required=False,
+    default=".",
+)
 @click.option(
     "--format",
     "output_format",
@@ -49,14 +54,22 @@ def check(
     quiet: bool,
     verbose: bool,
 ) -> None:
-    """Check test files for quality issues."""
+    """Check test files for quality issues.
+
+    If no target is specified, checks all Python files in the current directory
+    except those matching exclude patterns from configuration.
+    """
     # No configuration overrides from CLI arguments
     config_overrides: Dict[str, Any] = {}
 
     # Set up dependencies
-    test_repository = FileRepository()
     config_manager = ConfigManager()
     config_manager.load_config()  # Load configuration from files
+
+    # Create repository with exclude patterns from config
+    test_repository = FileRepository(
+        exclude_patterns=config_manager.get_exclude_patterns(),
+    )
 
     # Handle potential rule conflicts during registry creation
     try:
@@ -97,10 +110,25 @@ def check(
 
 
 @cli.command()
-@click.argument("target", type=click.Path(exists=True, path_type=Path))
+@click.argument(
+    "target",
+    type=click.Path(exists=True, path_type=Path),
+    required=False,
+    default=".",
+)
 def info(target: Path) -> None:
-    """Show information about test files."""
-    test_repository = FileRepository()
+    """Show information about test files.
+
+    If no target is specified, shows information about all Python files
+    in the current directory except those matching exclude patterns from configuration.
+    """
+    # Load configuration to get include/exclude patterns
+    config_manager = ConfigManager()
+    config_manager.load_config()
+
+    test_repository = FileRepository(
+        exclude_patterns=config_manager.get_exclude_patterns(),
+    )
 
     try:
         test_files = test_repository.find_test_files(target)

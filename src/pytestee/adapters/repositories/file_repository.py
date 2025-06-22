@@ -1,7 +1,8 @@
 """File repository implementation."""
 
+import fnmatch
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pytestee.domain.interfaces import ITestRepository
 from pytestee.domain.models import TestFile
@@ -11,9 +12,18 @@ from pytestee.infrastructure.ast_parser import ASTParser
 class FileRepository(ITestRepository):
     """Repository for accessing test files from filesystem."""
 
-    def __init__(self) -> None:
-        """ファイルリポジトリを初期化します。"""
+    def __init__(
+        self,
+        exclude_patterns: Optional[List[str]] = None,
+    ) -> None:
+        """ファイルリポジトリを初期化します。
+
+        Args:
+            exclude_patterns: 除外するファイルパターンのリスト
+
+        """
         self._parser = ASTParser()
+        self._exclude_patterns = exclude_patterns or []
 
     def find_test_files(self, path: Path) -> List[Path]:
         """指定されたパス内のすべてのテストファイルを検索します。
@@ -28,12 +38,17 @@ class FileRepository(ITestRepository):
         test_files = []
 
         if path.is_file():
-            if self._is_test_file(path):
+            if path.suffix == ".py" and self._should_include_file(path):
                 test_files.append(path)
         elif path.is_dir():
-            # Recursively find test files
-            for pattern in ["test_*.py", "*_test.py"]:
-                test_files.extend(path.rglob(pattern))
+            # Find all Python files first
+            all_py_files = list(path.rglob("*.py"))
+
+            # Filter based on include/exclude patterns
+            test_files.extend(
+                file_path for file_path in all_py_files
+                if self._should_include_file(file_path)
+            )
 
         return sorted(test_files)
 
@@ -54,7 +69,7 @@ class FileRepository(ITestRepository):
         if not file_path.exists():
             raise FileNotFoundError(f"Test file not found: {file_path}")
 
-        if not self._is_test_file(file_path):
+        if not file_path.suffix == ".py":
             raise ValueError(f"Not a test file: {file_path}")
 
         return self._parser.parse_file(file_path)
@@ -74,3 +89,34 @@ class FileRepository(ITestRepository):
 
         name = file_path.name
         return name.startswith("test_") or name.endswith("_test.py")
+
+    def _should_include_file(self, file_path: Path) -> bool:
+        """ファイルがexcludeパターンに基づいて含まれるべきかを判定します。
+
+        Args:
+            file_path: チェック対象のファイルパス
+
+        Returns:
+            ファイルを含めるべき場合True
+
+        """
+        if not self._exclude_patterns:
+            return True
+
+        file_name = file_path.name
+
+        # Check if file matches any exclude pattern
+        matches_exclude = any(
+            fnmatch.fnmatch(file_name, pattern) for pattern in self._exclude_patterns
+        )
+
+        # Also check full path patterns for exclude (e.g., "**/conftest.py")
+        if not matches_exclude:
+            relative_path = str(file_path)
+            matches_exclude = any(
+                fnmatch.fnmatch(relative_path, pattern) or
+                fnmatch.fnmatch(file_path.as_posix(), pattern)
+                for pattern in self._exclude_patterns
+            )
+
+        return not matches_exclude

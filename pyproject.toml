@@ -177,6 +177,61 @@ require_aaa_comments = true
 
 select = ["PTST001", "PTAS005"]  # Use structural patterns + assertion count OK
 
+# Import Linter Configuration for Clean Architecture
+[tool.importlinter]
+root_package = "pytestee"
+
+[[tool.importlinter.contracts]]
+name = "Domain Core Independence"
+type = "forbidden"
+source_modules = [
+    "pytestee.domain.models",
+    "pytestee.domain.interfaces",
+]
+forbidden_modules = [
+    "pytestee.usecases",
+    "pytestee.adapters", 
+    "pytestee.infrastructure",
+    "pytestee.registry",
+]
+
+[[tool.importlinter.contracts]]
+name = "Use Cases Layer Dependencies" 
+type = "forbidden"
+source_modules = ["pytestee.usecases"]
+forbidden_modules = [
+    "pytestee.adapters",
+    "pytestee.registry",
+]
+
+[[tool.importlinter.contracts]]
+name = "CLI Cannot Import Infrastructure Directly"
+type = "forbidden"
+source_modules = ["pytestee.adapters.cli"]
+forbidden_modules = [
+    "pytestee.infrastructure.checkers",
+    "pytestee.infrastructure.rules",
+]
+
+[[tool.importlinter.contracts]]
+name = "Presenters Cannot Import Infrastructure"
+type = "forbidden"
+source_modules = ["pytestee.adapters.presenters"]
+forbidden_modules = [
+    "pytestee.infrastructure",
+    "pytestee.usecases",
+]
+
+[[tool.importlinter.contracts]]
+name = "Repository Layer Boundaries"
+type = "forbidden"
+source_modules = ["pytestee.adapters.repositories"]
+forbidden_modules = [
+    "pytestee.usecases",
+    "pytestee.adapters.cli",
+    "pytestee.adapters.presenters",
+]
+
 
 [dependency-groups]
 dev = [
@@ -186,4 +241,5 @@ dev = [
     "ruff>=0.12.0",
     "types-colorama>=0.4.15.20240311",
     "types-toml>=0.10.8.20240310",
+    "import-linter>=2.0.0",
 ]
