@@ -41,10 +41,6 @@ class TestCLI:
             [
                 "check",
                 str(self.fixtures_dir / "good_aaa_test.py"),
-                "--max-asserts",
-                "5",
-                "--min-asserts",
-                "1",
                 "--verbose",
             ],
         )

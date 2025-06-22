@@ -2,9 +2,9 @@
 
 from typing import Optional, Union
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ....infrastructure.ast_parser import ASTParser
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class PTAS003(BaseRule):
@@ -32,7 +32,7 @@ class PTAS003(BaseRule):
         if function_lines > 0:
             density = assert_count / function_lines
             if density > max_density:
-                return self._create_result(
+                return self._create_failure_result(
                     f"High assertion density: {density:.2f} ({assert_count} assertions in {function_lines} lines)",
                     test_file,
                     test_function,

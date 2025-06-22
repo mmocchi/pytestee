@@ -9,7 +9,7 @@ import ast
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 class CheckSeverity(Enum):
@@ -100,28 +100,26 @@ class TestFile:
 
 
 @dataclass
-class CheckResult:
-    """品質チェックの結果。
+class CheckResultBase:
+    """品質チェック結果の基底クラス。
 
-    個別のチェッカーが実行した品質チェックの結果を表します。
-    エラーの種類、位置、メッセージなどの詳細情報を含みます。
+    チェック成功・失敗に共通する属性を定義します。
+    Returnオブジェクトパターンに基づいて成功・失敗を明確に区別します。
 
     Attributes:
         checker_name: チェックを実行したチェッカーの名前
-        rule_id: 違反したルールのID
-        severity: 問題の重要度
+        rule_id: 実行したルールのID
         message: ユーザー向けメッセージ
-        file_path: 問題が発生したファイルのパス
-        line_number: 問題が発生した行番号(オプション)
-        column: 問題が発生したカラム位置(オプション)
-        function_name: 問題が発生した関数名(オプション)
+        file_path: チェック対象ファイルのパス
+        line_number: 対象行番号(オプション)
+        column: 対象カラム位置(オプション)
+        function_name: 対象関数名(オプション)
         context: 追加のコンテキスト情報(オプション)
 
     """
 
     checker_name: str
     rule_id: str
-    severity: CheckSeverity
     message: str
     file_path: Path
     line_number: Optional[int] = None
@@ -134,6 +132,35 @@ class CheckResult:
         # コンテキストがNoneの場合は空の辞書で初期化
         if self.context is None:
             self.context = {}
+
+
+@dataclass
+class CheckSuccess(CheckResultBase):
+    """品質チェック成功結果。
+
+    ルールに適合している場合の結果を表します。
+    """
+
+    pass
+
+
+@dataclass
+class CheckFailure(CheckResultBase):
+    """品質チェック失敗結果。
+
+    ルールに違反している場合の結果を表します。
+    severityでエラーレベル(ERROR/WARNING)を指定します。
+
+    Attributes:
+        severity: 問題の重要度(ERRORまたはWARNING)
+
+    """
+
+    severity: CheckSeverity = CheckSeverity.ERROR
+
+
+# チェック結果のUnion型定義 - Returnオブジェクトパターンを実装
+CheckResult = Union[CheckSuccess, CheckFailure]
 
 
 @dataclass
@@ -180,7 +207,8 @@ class AnalysisResult:
 
         """
         return any(
-            result.severity == CheckSeverity.ERROR for result in self.check_results
+            isinstance(result, CheckFailure) and result.severity == CheckSeverity.ERROR
+            for result in self.check_results
         )
 
     @property
@@ -192,7 +220,8 @@ class AnalysisResult:
 
         """
         return any(
-            result.severity == CheckSeverity.WARNING for result in self.check_results
+            isinstance(result, CheckFailure) and result.severity == CheckSeverity.WARNING
+            for result in self.check_results
         )
 
 

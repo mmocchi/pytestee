@@ -1,57 +1,92 @@
-# Pytestee Configuration Example
+# pytestee configuration example
 # Copy this to .pytestee.toml or add to pyproject.toml under [tool.pytestee]
 
-# Global settings
-max_asserts = 3
-min_asserts = 1
-require_aaa_comments = false
+# Rule selection (ruff-style patterns)
+# Use "select" to enable specific rules or rule categories
+# Use "ignore" to disable specific rules
+select = [
+    "PTCM003",  # AAA or GWT comment pattern detection (flexible)
+    "PTST001",  # Structural pattern detection (empty line separation)
+    "PTLG001",  # Logical flow pattern detection (AST analysis)
+    "PTAS005",  # Assertion count validation (balanced approach)
+    "PTNM001",  # Japanese character naming check
+]
+ignore = []
 
-# Rule selection (ruff-like configuration)
-# If 'select' is specified, only those rules are enabled
-# 'ignore' rules are always disabled, regardless of 'select'
+# Alternative: Select entire rule categories
+# select = ["PTCM", "PTST", "PTAS", "PTNM"]  # Enable all rules in these categories
+# ignore = ["PTAS001", "PTAS002"]            # But disable specific conflicting rules
 
-# Example 1: Select only pattern-related rules
-# select = ["PTCM", "PTST", "PTLG"]
+# Rule-specific configurations
+# Each rule can have its own configuration namespace
 
-# Example 2: Select specific rules
-# select = ["PTCM001", "PTST001", "PTAS004"]
+[rules.PTAS005]
+# Assertion count validation (balanced approach)
+max_asserts = 3     # Maximum number of assertions per test
+min_asserts = 1     # Minimum number of assertions per test
 
-# Example 3: Ignore specific rules
-# ignore = ["PTST002", "PTAS005"]
+[rules.PTAS001]
+# Too few assertions rule (if enabled instead of PTAS005)
+min_asserts = 2     # Require at least 2 assertions for thorough testing
 
-# Example 4: Select all pattern rules but ignore warnings
-# select = ["PTCM", "PTST", "PTLG"]
-# ignore = ["PTST002"]
+[rules.PTAS002]
+# Too many assertions rule (if enabled instead of PTAS005)
+max_asserts = 2     # Limit to maximum 2 assertions for focused testing
 
-# Example 5: Use prefix patterns
-# select = ["PT"]         # All rules starting with PT
+[rules.PTAS003]
+# High assertion density rule
+max_density = 0.5   # Maximum ratio of assertions to total lines (0.0-1.0)
+
+[rules.PTCM001]
+# Strict AAA comment pattern
+require_comments = true  # Require explicit # Arrange, # Act, # Assert comments
+
+[rules.PTCM002]
+# Strict GWT comment pattern
+require_comments = true  # Require explicit # Given, # When, # Then comments
+
+[rules.PTCM003]
+# Flexible AAA or GWT comment pattern (recommended)
+require_comments = false  # Allow pattern detection without strict comment requirements
+allow_gwt = true         # Accept both AAA and GWT patterns
+
+# Rule severity overrides
+# Change rule severity levels: "error", "warning", "info"
+[severity]
+PTNM001 = "warning"  # Japanese naming suggestions as warnings instead of errors
+PTLG001 = "info"     # Logical flow pattern as informational
 
 # Available rules:
-# PTCM001 - AAA pattern in comments
-# PTCM002 - GWT pattern in comments  
+# PTCM001 - AAA pattern in comments (strict)
+# PTCM002 - GWT pattern in comments (strict)
+# PTCM003 - AAA or GWT pattern (flexible)
 # PTST001 - Structural pattern detection
-# PTST002 - Pattern not detected warning
 # PTLG001 - Logical flow pattern
 # PTAS001 - Too few assertions
 # PTAS002 - Too many assertions
 # PTAS003 - High assertion density
-# PTAS004 - No assertions found (error)
-# PTAS005 - Assertion count OK
+# PTAS004 - No assertions found
+# PTAS005 - Assertion count validation (balanced)
+# PTNM001 - Japanese character naming
 
-# Pattern matching examples:
-# "PTCM"     - Matches PTCM001, PTCM002, etc.
-# "PTCM001"  - Matches exactly PTCM001
-# "PT"       - Matches all rules starting with PT
+# Common configuration scenarios:
 
-# Severity configuration
-# Override default severity (error) for specific rules
-[severity]
-# PTCM001 = "info"     # AAA pattern detected - informational
-# PTCM002 = "info"     # GWT pattern detected - informational
-# PTST001 = "info"     # Structural pattern - informational
-# PTLG001 = "info"     # Logical pattern - informational
-# PTAS005 = "info"     # Assertion count OK - informational
-# PTST002 = "warning"  # Pattern not detected - warning
-# PTAS001 = "warning"  # Too few assertions - warning  
-# PTAS002 = "warning"  # Too many assertions - warning
-# PTAS004 = "error"    # No assertions found - error (default)
+# Strict testing standards:
+# select = ["PTCM001", "PTAS001", "PTNM001"]
+# [rules.PTCM001]
+# require_comments = true
+# [rules.PTAS001]
+# min_asserts = 2
+
+# Minimal requirements:
+# select = ["PTAS004", "PTST001"]  # Only check for missing assertions and basic structure
+
+# Flexible approach (recommended):
+# select = ["PTCM003", "PTST001", "PTAS005", "PTNM001"]
+# [rules.PTCM003]
+# require_comments = false
+# allow_gwt = true
+# [rules.PTAS005]
+# max_asserts = 3
+# min_asserts = 1
+

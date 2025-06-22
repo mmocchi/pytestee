@@ -2,20 +2,20 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from ...adapters.presenters.console_presenter import ConsolePresenter
-from ...adapters.repositories.file_repository import FileRepository
-from ...domain.models import AnalysisResult
-from ...domain.rules.rule_validator import RuleConflictError, RuleValidator
-from ...infrastructure.config.settings import ConfigManager
-from ...registry import CheckerRegistry
-from ...usecases.analyze_tests import AnalyzeTestsUseCase
+from pytestee.adapters.presenters.console_presenter import ConsolePresenter
+from pytestee.adapters.repositories.file_repository import FileRepository
+from pytestee.domain.models import AnalysisResult, CheckFailure, CheckSuccess
+from pytestee.domain.rules.rule_validator import RuleConflictError, RuleValidator
+from pytestee.infrastructure.config.settings import ConfigManager
+from pytestee.registry import CheckerRegistry
+from pytestee.usecases.analyze_tests import AnalyzeTestsUseCase
 
 console = Console()
 
@@ -29,11 +29,6 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("target", type=click.Path(exists=True, path_type=Path))
-@click.option("--max-asserts", type=int, help="Maximum number of asserts per test")
-@click.option("--min-asserts", type=int, help="Minimum number of asserts per test")
-@click.option(
-    "--require-aaa-comments", is_flag=True, help="Require AAA pattern comments"
-)
 @click.option(
     "--format",
     "output_format",
@@ -50,22 +45,13 @@ def cli() -> None:
 )
 def check(
     target: Path,
-    max_asserts: Optional[int],
-    min_asserts: Optional[int],
-    require_aaa_comments: bool,
     output_format: str,
     quiet: bool,
     verbose: bool,
 ) -> None:
     """Check test files for quality issues."""
-    # Build configuration overrides
-    config_overrides = {}
-    if max_asserts is not None:
-        config_overrides["max_asserts"] = max_asserts
-    if min_asserts is not None:
-        config_overrides["min_asserts"] = min_asserts
-    if require_aaa_comments:
-        config_overrides["require_aaa_comments"] = require_aaa_comments
+    # No configuration overrides from CLI arguments
+    config_overrides: Dict[str, Any] = {}
 
     # Set up dependencies
     test_repository = FileRepository()
@@ -244,9 +230,7 @@ def _show_config_json(
         "configuration": {
             "select": config.get("select", []),
             "ignore": config.get("ignore", []),
-            "max_asserts": config.get("max_asserts", 3),
-            "min_asserts": config.get("min_asserts", 1),
-            "require_aaa_comments": config.get("require_aaa_comments", False),
+            "rules": config.get("rules", {}),
         },
         "rules": {
             "enabled": sorted(enabled_rules),
@@ -266,12 +250,6 @@ def _show_basic_config(config: Dict[str, Any]) -> None:
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="white")
 
-    table.add_row("Max Asserts", str(config.get("max_asserts", 3)))
-    table.add_row("Min Asserts", str(config.get("min_asserts", 1)))
-    table.add_row(
-        "Require AAA Comments", str(config.get("require_aaa_comments", False))
-    )
-
     select_rules = config.get("select", [])
     if select_rules:
         table.add_row("Selected Rules", ", ".join(select_rules))
@@ -286,6 +264,21 @@ def _show_basic_config(config: Dict[str, Any]) -> None:
 
     console.print(table)
     console.print()
+
+    # Show rule-specific configurations
+    rule_configs = config.get("rules", {})
+    if rule_configs:
+        rule_table = Table(title="Rule-Specific Configuration", show_header=True)
+        rule_table.add_column("Rule ID", style="cyan")
+        rule_table.add_column("Settings", style="white")
+
+        for rule_id, settings in sorted(rule_configs.items()):
+            if settings:
+                settings_str = ", ".join(f"{k}={v}" for k, v in settings.items())
+                rule_table.add_row(rule_id, settings_str)
+
+        console.print(rule_table)
+        console.print()
 
 
 def _show_rule_selection(
@@ -402,7 +395,8 @@ def _present_json(result: AnalysisResult) -> None:
             {
                 "checker": check_result.checker_name,
                 "rule_id": check_result.rule_id,
-                "severity": check_result.severity.value,
+                "status": "success" if isinstance(check_result, CheckSuccess) else "failure",
+                "severity": check_result.severity.value if isinstance(check_result, CheckFailure) else None,
                 "message": check_result.message,
                 "file": str(check_result.file_path),
                 "line": check_result.line_number,

@@ -1,18 +1,16 @@
 """Configuration management for pytestee."""
 
-import contextlib
-import os
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 try:
     import tomllib  # Python 3.11+
 except ImportError:
     import tomli as tomllib  # Python < 3.11
 
-from ...domain.interfaces import IConfigManager
-from ...domain.models import CheckerConfig
-from ...domain.rules.rule_validator import RuleValidator
+from pytestee.domain.interfaces import IConfigManager
+from pytestee.domain.models import CheckerConfig
+from pytestee.domain.rules.rule_validator import RuleValidator
 
 # Define type alias for configuration values
 ConfigValue = Union[str, int, float, bool, Dict[str, Any], list]
@@ -24,28 +22,43 @@ class ConfigManager(IConfigManager):
     def __init__(self) -> None:
         self._config: Dict[str, Any] = {}
         self._default_config = {
-            "max_asserts": 3,
-            "min_asserts": 1,
-            "require_aaa_comments": False,
-            "aaa_pattern": {
-                "enabled": True,
-                "config": {"require_comments": False, "allow_gwt": True},
-            },
-            "assert_density": {
-                "enabled": True,
-                "config": {"max_asserts": 3, "min_asserts": 1, "max_density": 0.5},
-            },
             # Rule selection configuration (ruff-like)
             "select": [
                 "PTCM003",
                 "PTST001",
                 "PTLG001",
-                "PTAS",
+                "PTAS005",  # Only PTAS005 to avoid conflicts between assertion rules
                 "PTNM001",
-            ],  # Default selection (PTCM003 instead of PTCM001/PTCM002 to avoid conflicts)
+            ],  # Default selection (PTCM003 and PTAS005 to avoid conflicts)
             "ignore": [],  # Rules to ignore
             # Rule severity configuration
             "severity": {},
+            # Rule-specific configurations
+            "rules": {
+                "PTAS005": {
+                    "max_asserts": 3,
+                    "min_asserts": 1,
+                },
+                "PTAS001": {
+                    "min_asserts": 1,
+                },
+                "PTAS002": {
+                    "max_asserts": 3,
+                },
+                "PTAS003": {
+                    "max_density": 0.5,
+                },
+                "PTCM001": {
+                    "require_comments": False,
+                },
+                "PTCM002": {
+                    "require_comments": False,
+                },
+                "PTCM003": {
+                    "require_comments": False,
+                    "allow_gwt": True,
+                },
+            },
         }
 
     def load_config(self, config_path: Optional[Path] = None) -> Dict[str, Any]:
@@ -123,29 +136,28 @@ class ConfigManager(IConfigManager):
 
     def _load_from_env(self) -> None:
         """Load configuration from environment variables."""
-        env_mappings: Dict[str, Tuple[str, Callable[[str], Any]]] = {
-            "PYTESTEE_MAX_ASSERTS": ("max_asserts", int),
-            "PYTESTEE_MIN_ASSERTS": ("min_asserts", int),
-            "PYTESTEE_REQUIRE_AAA_COMMENTS": (
-                "require_aaa_comments",
-                lambda x: x.lower() == "true",
-            ),
-        }
-
-        for env_var, (config_key, converter) in env_mappings.items():
-            value = os.getenv(env_var)
-            if value is not None:
-                with contextlib.suppress(ValueError, TypeError):
-                    self._config[config_key] = converter(value)
+        # Environment variable support is disabled to keep configuration simple
+        # Use .pytestee.toml or pyproject.toml [tool.pytestee] instead
+        pass
 
     def get_checker_config(self, checker_name: str) -> CheckerConfig:
         """Get configuration for a specific checker."""
-        checker_config = self._config.get(checker_name, {})
+        # For rule-specific config, check under rules namespace
+        rule_config = self._config.get("rules", {}).get(checker_name, {})
+
+        # Legacy support: also check old structure
+        legacy_config = self._config.get(checker_name, {})
+
+        # Merge rule-specific config with legacy config (rule-specific takes precedence)
+        merged_config = {}
+        if legacy_config:
+            merged_config.update(legacy_config.get("config", {}))
+        merged_config.update(rule_config)
 
         return CheckerConfig(
             name=checker_name,
-            enabled=checker_config.get("enabled", True),
-            config=checker_config.get("config", {}),
+            enabled=legacy_config.get("enabled", True),
+            config=merged_config,
         )
 
     def get_global_config(self) -> Dict[str, Any]:
@@ -215,7 +227,7 @@ class ConfigManager(IConfigManager):
             selected_rules = set(self._config.get("select", []))
             if not selected_rules:
                 # If still empty, expand default patterns
-                default_patterns = ["PTCM003", "PTST001", "PTLG001", "PTAS", "PTNM001"]
+                default_patterns = ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001"]
                 selected_rules = self._expand_rule_patterns(default_patterns)
         else:
             # Expand patterns to actual rule IDs

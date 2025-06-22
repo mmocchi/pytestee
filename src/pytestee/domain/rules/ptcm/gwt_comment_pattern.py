@@ -3,9 +3,9 @@
 import re
 from typing import List, Optional, Set, Tuple
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ....infrastructure.ast_parser import ASTParser
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class PTCM002(BaseRule):

@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from pytestee.adapters.repositories.file_repository import FileRepository
-from pytestee.domain.models import CheckerConfig
+from pytestee.domain.models import CheckerConfig, CheckFailure, CheckSuccess
 from pytestee.domain.rules.ptas.assertion_count_ok import PTAS005
 from pytestee.domain.rules.ptas.high_assertion_density import PTAS003
 from pytestee.domain.rules.ptas.no_assertions import PTAS004
@@ -46,7 +46,8 @@ class TestRuleExamples:
             # Should detect PTCM001 (AAA pattern in comments)
             # Single result (not a list anymore)
             assert result.rule_id == "PTCM001"
-            assert result.severity.value == "info"
+            # Should be a CheckSuccess for pattern detection
+            assert isinstance(result, CheckSuccess)
 
     def test_ptcm001_bad_examples(self) -> None:
         """Test PTCM001 rule with bad examples (should not trigger)."""
@@ -64,7 +65,7 @@ class TestRuleExamples:
             # Should not detect PTCM001 (should return failure result)
             # Single result (not a list anymore)
             assert result.rule_id == "PTCM001"
-            assert result.severity.value == "error"  # Pattern not found
+            assert isinstance(result, CheckFailure)  # Pattern not found
 
     def test_ptcm002_good_examples(self) -> None:
         """Test PTCM002 rule with good examples."""
@@ -82,7 +83,7 @@ class TestRuleExamples:
             # Should detect PTCM002 (GWT pattern in comments)
             # Single result (not a list anymore)
             assert result.rule_id == "PTCM002"
-            assert result.severity.value == "info"
+            assert isinstance(result, CheckSuccess)
 
     def test_ptst001_good_examples(self) -> None:
         """Test PTST001 rule with good examples."""
@@ -101,7 +102,7 @@ class TestRuleExamples:
             # Should detect PTST001 (structural pattern)
             # Single result (not a list anymore)
             assert result.rule_id == "PTST001"
-            assert result.severity.value == "info"
+            assert isinstance(result, CheckSuccess)
 
     def test_ptst001_bad_examples(self) -> None:
         """Test PTST001 rule with bad examples (should not trigger)."""
@@ -120,7 +121,7 @@ class TestRuleExamples:
             # Should not detect PTST001 (should return failure result)
             # Single result (not a list anymore)
             assert result.rule_id == "PTST001"
-            assert result.severity.value == "error"  # Pattern not found
+            assert isinstance(result, CheckFailure)  # Pattern not found
 
     def test_ptas001_good_examples(self) -> None:
         """Test PTAS001 rule with good examples (should not trigger)."""
@@ -138,7 +139,7 @@ class TestRuleExamples:
             result = self.ptas001.check(func, test_file)
             # Should not trigger PTAS001 (too few assertions) - should return success
             assert result.rule_id == "PTAS001"
-            assert result.severity.value == "info"  # Success result
+            assert isinstance(result, CheckSuccess)  # Success result
 
     def test_ptas001_bad_examples(self) -> None:
         """Test PTAS001 rule with bad examples (should trigger)."""
@@ -156,7 +157,7 @@ class TestRuleExamples:
             # Should trigger PTAS004 (no assertions)
             # Single result (not a list anymore)
             assert result.rule_id == "PTAS004"
-            assert result.severity.value == "error"
+            assert isinstance(result, CheckFailure)
 
     def test_ptas002_good_examples(self) -> None:
         """Test PTAS002 rule with good examples (should not trigger)."""
@@ -173,7 +174,7 @@ class TestRuleExamples:
             result = self.ptas002.check(func, test_file)
             # Should not trigger PTAS002 (too many assertions) - should return success
             assert result.rule_id == "PTAS002"
-            assert result.severity.value == "info"  # Success result
+            assert isinstance(result, CheckSuccess)  # Success result
 
     def test_ptas002_bad_examples(self) -> None:
         """Test PTAS002 rule with bad examples (should trigger)."""
@@ -190,7 +191,7 @@ class TestRuleExamples:
             # Should trigger PTAS002 (too many assertions)
             # Single result (not a list anymore)
             assert result.rule_id == "PTAS002"
-            assert result.severity.value == "error"
+            assert isinstance(result, CheckFailure)
 
     def test_ptas003_good_examples(self) -> None:
         """Test PTAS003 rule with good examples."""
@@ -221,7 +222,7 @@ class TestRuleExamples:
             # Should trigger PTAS004 (no assertions)
             # Single result (not a list anymore)
             assert result.rule_id == "PTAS004"
-            assert result.severity.value == "error"
+            assert isinstance(result, CheckFailure)
 
     def test_ptas005_good_examples(self) -> None:
         """Test PTAS005 rule with good examples."""
@@ -238,4 +239,4 @@ class TestRuleExamples:
             result = self.ptas005.check(func, test_file)
             # Should trigger PTAS005 (assertion count OK)
             assert result.rule_id == "PTAS005"
-            assert result.severity.value == "info"
+            assert isinstance(result, CheckSuccess)

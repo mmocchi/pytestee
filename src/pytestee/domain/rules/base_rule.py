@@ -3,10 +3,12 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Set
 
-from ...domain.models import (
+from pytestee.domain.models import (
     CheckerConfig,
+    CheckFailure,
     CheckResult,
     CheckSeverity,
+    CheckSuccess,
     TestFile,
     TestFunction,
 )
@@ -37,7 +39,7 @@ class BaseRule(ABC):
             return config_manager.is_rule_enabled(self.rule_id)
         return True
 
-    def _create_result(
+    def _create_failure_result(
         self,
         message: str,
         test_file: TestFile,
@@ -45,13 +47,13 @@ class BaseRule(ABC):
         line_number: Optional[int] = None,
         column: Optional[int] = None,
         severity: Optional[CheckSeverity] = None,
-    ) -> CheckResult:
-        """このルールのIDでCheckResultを作成。"""
-        # デフォルト重要度は設定から取得、なければWARNING
+    ) -> CheckFailure:
+        """ルール違反時のCheckFailureを作成。"""
+        # デフォルト重要度は設定から取得、なければERROR
         if severity is None:
             severity = self._get_severity_from_config()
 
-        return CheckResult(
+        return CheckFailure(
             checker_name=self.name,
             rule_id=self.rule_id,
             severity=severity,
@@ -97,31 +99,15 @@ class BaseRule(ABC):
         test_function: Optional[TestFunction] = None,
         line_number: Optional[int] = None,
         column: Optional[int] = None,
-    ) -> CheckResult:
-        """パターンが見つかった場合の成功結果を作成(常にINFO)。"""
-        return self._create_result(
+    ) -> CheckSuccess:
+        """ルール適合時のCheckSuccessを作成。"""
+        return CheckSuccess(
+            checker_name=self.name,
+            rule_id=self.rule_id,
             message=message,
-            test_file=test_file,
-            test_function=test_function,
-            line_number=line_number,
+            file_path=test_file.path,
+            line_number=line_number
+            or (test_function.lineno if test_function else None),
             column=column,
-            severity=CheckSeverity.INFO,
-        )
-
-    def _create_failure_result(
-        self,
-        message: str,
-        test_file: TestFile,
-        test_function: Optional[TestFunction] = None,
-        line_number: Optional[int] = None,
-        column: Optional[int] = None,
-    ) -> CheckResult:
-        """パターンが見つからなかった場合の失敗結果を作成(設定から重要度を取得)。"""
-        return self._create_result(
-            message=message,
-            test_file=test_file,
-            test_function=test_function,
-            line_number=line_number,
-            column=column,
-            severity=None,  # Will use severity from config
+            function_name=test_function.name if test_function else None,
         )

@@ -2,8 +2,8 @@
 
 from typing import List, Optional
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
 
 
 class PTST001(BaseRule):

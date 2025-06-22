@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from ..domain.models import TestFile, TestFunction
+from pytestee.domain.models import TestFile, TestFunction
 
 
 class ASTParser:

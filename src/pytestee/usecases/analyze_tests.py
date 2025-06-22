@@ -10,8 +10,9 @@ from pytestee.domain.interfaces import (
 )
 from pytestee.domain.models import (
     AnalysisResult,
+    CheckFailure,
     CheckResult,
-    CheckSeverity,
+    CheckSuccess,
     TestFile,
 )
 from pytestee.infrastructure.errors import CheckerError, ParseError
@@ -155,9 +156,9 @@ class AnalyzeTestsUseCase:
         failed = 0
 
         for result in results:
-            if result.severity == CheckSeverity.INFO:
+            if isinstance(result, CheckSuccess):
                 passed += 1
-            else:
+            elif isinstance(result, CheckFailure):
                 failed += 1
 
         return passed, failed

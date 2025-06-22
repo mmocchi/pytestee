@@ -2,9 +2,9 @@
 
 from typing import Optional, Set, Union
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ....infrastructure.ast_parser import ASTParser
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class PTAS005(BaseRule):

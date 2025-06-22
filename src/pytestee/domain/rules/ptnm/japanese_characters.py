@@ -3,14 +3,14 @@
 import re
 from typing import Optional
 
-from ....domain.models import (
+from pytestee.domain.models import (
     CheckerConfig,
     CheckResult,
     CheckSeverity,
     TestFile,
     TestFunction,
 )
-from ..base_rule import BaseRule
+from pytestee.domain.rules.base_rule import BaseRule
 
 
 class PTNM001(BaseRule):
@@ -47,7 +47,7 @@ class PTNM001(BaseRule):
         """
         if not test_function.name.startswith("test_"):
             # Skip non-test functions but still return a result
-            return self._create_result(
+            return self._create_failure_result(
                 f"関数 '{test_function.name}' はテスト関数ではありません",
                 test_file,
                 test_function,
@@ -55,13 +55,13 @@ class PTNM001(BaseRule):
             )
 
         if self._contains_japanese_characters(test_function.name):
-            return self._create_result(
+            return self._create_failure_result(
                 f"テストメソッド名 '{test_function.name}' に日本語文字が含まれています。可読性が良好です。",
                 test_file,
                 test_function,
                 severity=CheckSeverity.INFO,
             )
-        return self._create_result(
+        return self._create_failure_result(
             f"テストメソッド名 '{test_function.name}' に日本語文字が含まれていません。可読性向上のため日本語での命名を検討してください。",
             test_file,
             test_function,

@@ -2,9 +2,9 @@
 
 from typing import Optional, Set
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ....infrastructure.ast_parser import ASTParser
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class PTAS004(BaseRule):
@@ -28,7 +28,7 @@ class PTAS004(BaseRule):
         assert_count = self._parser.count_assert_statements(test_function)
 
         if assert_count == 0:
-            return self._create_result(
+            return self._create_failure_result(
                 "No assertions found - test function should verify expected behavior",
                 test_file,
                 test_function,

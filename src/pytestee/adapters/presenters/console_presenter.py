@@ -7,8 +7,14 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.tree import Tree
 
-from ...domain.interfaces import IPresenter
-from ...domain.models import AnalysisResult, CheckResult, CheckSeverity
+from pytestee.domain.interfaces import IPresenter
+from pytestee.domain.models import (
+    AnalysisResult,
+    CheckFailure,
+    CheckResult,
+    CheckSeverity,
+    CheckSuccess,
+)
 
 
 class ConsolePresenter(IPresenter):
@@ -62,8 +68,8 @@ class ConsolePresenter(IPresenter):
             # Show all results (success and failure) in verbose mode
             filtered_results = results
         else:
-            # Show only failures and warnings in normal mode
-            filtered_results = [r for r in results if r.severity != CheckSeverity.INFO]
+            # Show only failures in normal mode
+            filtered_results = [r for r in results if isinstance(r, CheckFailure)]
 
         if not filtered_results:
             if not self.quiet:
@@ -109,7 +115,7 @@ class ConsolePresenter(IPresenter):
 
         # Add file-level results
         for result in file_level_results:
-            icon, color = self._get_severity_style(result.severity)
+            icon, color = self._get_result_style(result)
             rule_id = f"[dim]{result.rule_id}[/dim] " if result.rule_id else ""
             tree.add(f"{icon} {rule_id}[{color}]{result.message}[/{color}]")
 
@@ -118,7 +124,7 @@ class ConsolePresenter(IPresenter):
             function_branch = tree.add(f"🔧 [bold cyan]{function_name}[/bold cyan]")
 
             for result in function_results:
-                icon, color = self._get_severity_style(result.severity)
+                icon, color = self._get_result_style(result)
                 location = f" (line {result.line_number})" if result.line_number else ""
                 rule_id = f"[dim]{result.rule_id}[/dim] " if result.rule_id else ""
                 message = (
@@ -132,6 +138,15 @@ class ConsolePresenter(IPresenter):
 
         self.console.print(tree)
         self.console.print()
+
+    def _get_result_style(self, result: CheckResult) -> Tuple[str, str]:
+        """Get icon and color for check result."""
+        if isinstance(result, CheckSuccess):
+            return "ℹ️", "blue"
+        if isinstance(result, CheckFailure):
+            return self._get_severity_style(result.severity)
+        # This line should be unreachable due to Union type constraint
+        return "ℹ️", "blue"  # type: ignore[unreachable]
 
     def _get_severity_style(self, severity: CheckSeverity) -> Tuple[str, str]:
         """Get icon and color for severity level."""

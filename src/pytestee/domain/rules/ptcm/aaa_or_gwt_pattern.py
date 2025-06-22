@@ -2,16 +2,16 @@
 
 from typing import Optional, Set
 
-from ....domain.models import (
+from pytestee.domain.models import (
     CheckerConfig,
     CheckResult,
-    CheckSeverity,
+    CheckSuccess,
     TestFile,
     TestFunction,
 )
-from ..base_rule import BaseRule
-from .aaa_comment_pattern import PTCM001
-from .gwt_comment_pattern import PTCM002
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.domain.rules.ptcm.aaa_comment_pattern import PTCM001
+from pytestee.domain.rules.ptcm.gwt_comment_pattern import PTCM002
 
 
 class PTCM003(BaseRule):
@@ -66,9 +66,9 @@ class PTCM003(BaseRule):
 
     def _is_success_result(self, result: CheckResult) -> bool:
         """Check if a result indicates success (pattern found)."""
-        # Success results have INFO severity and contain "detected" in the message
+        # Success results are CheckSuccess instances and contain "detected" in the message
         return (
-            result.severity == CheckSeverity.INFO
+            isinstance(result, CheckSuccess)
             and "detected" in result.message.lower()
         )
 

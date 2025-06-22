@@ -2,9 +2,9 @@
 
 from typing import Optional, Set, Union
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ....infrastructure.ast_parser import ASTParser
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
+from pytestee.infrastructure.ast_parser import ASTParser
 
 
 class PTAS002(BaseRule):
@@ -29,7 +29,7 @@ class PTAS002(BaseRule):
         assert_count = self._parser.count_assert_statements(test_function)
 
         if assert_count > max_asserts:
-            return self._create_result(
+            return self._create_failure_result(
                 f"Too many assertions: {assert_count} (maximum recommended: {max_asserts})",
                 test_file,
                 test_function,

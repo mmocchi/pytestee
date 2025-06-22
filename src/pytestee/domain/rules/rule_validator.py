@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional, Set
 
-from .base_rule import BaseRule
+from pytestee.domain.rules.base_rule import BaseRule
 
 
 class RuleConflictError(Exception):

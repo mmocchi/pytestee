@@ -3,8 +3,8 @@
 import ast
 from typing import Dict, List, Optional
 
-from ....domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
-from ..base_rule import BaseRule
+from pytestee.domain.models import CheckerConfig, CheckResult, TestFile, TestFunction
+from pytestee.domain.rules.base_rule import BaseRule
 
 
 class PTLG001(BaseRule):
