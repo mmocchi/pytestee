@@ -10,8 +10,8 @@ from pytestee.domain.models import (
     TestFunction,
 )
 from pytestee.domain.rules.base_rule import BaseRule
-from pytestee.domain.rules.ptcm.aaa_comment_pattern import PTCM001
-from pytestee.domain.rules.ptcm.gwt_comment_pattern import PTCM002
+from pytestee.domain.rules.comment.aaa_comment_pattern import PTCM001
+from pytestee.domain.rules.comment.gwt_comment_pattern import PTCM002
 
 
 class PTCM003(BaseRule):

@@ -109,35 +109,37 @@ class CheckerRegistry(ICheckerRegistry):
 
         """
         # Import rules here to avoid circular imports
-        from pytestee.domain.rules.ptas.assertion_count_ok import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.assertion_count_ok import (  # noqa: PLC0415
             PTAS005,
         )
-        from pytestee.domain.rules.ptas.high_assertion_density import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.high_assertion_density import (  # noqa: PLC0415
             PTAS003,
         )
-        from pytestee.domain.rules.ptas.no_assertions import PTAS004  # noqa: PLC0415
-        from pytestee.domain.rules.ptas.too_few_assertions import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.no_assertions import (  # noqa: PLC0415
+            PTAS004,
+        )
+        from pytestee.domain.rules.assertion.too_few_assertions import (  # noqa: PLC0415
             PTAS001,
         )
-        from pytestee.domain.rules.ptas.too_many_assertions import (  # noqa: PLC0415
+        from pytestee.domain.rules.assertion.too_many_assertions import (  # noqa: PLC0415
             PTAS002,
         )
-        from pytestee.domain.rules.ptcm.aaa_comment_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.aaa_comment_pattern import (  # noqa: PLC0415
             PTCM001,
         )
-        from pytestee.domain.rules.ptcm.aaa_or_gwt_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.aaa_or_gwt_pattern import (  # noqa: PLC0415
             PTCM003,
         )
-        from pytestee.domain.rules.ptcm.gwt_comment_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.comment.gwt_comment_pattern import (  # noqa: PLC0415
             PTCM002,
         )
-        from pytestee.domain.rules.ptlg.logical_flow_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.logic.logical_flow_pattern import (  # noqa: PLC0415
             PTLG001,
         )
-        from pytestee.domain.rules.ptnm.japanese_characters import (  # noqa: PLC0415
+        from pytestee.domain.rules.naming.japanese_characters import (  # noqa: PLC0415
             PTNM001,
         )
-        from pytestee.domain.rules.ptst.structural_pattern import (  # noqa: PLC0415
+        from pytestee.domain.rules.structure.structural_pattern import (  # noqa: PLC0415
             PTST001,
         )
 

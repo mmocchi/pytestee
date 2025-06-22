@@ -4,14 +4,14 @@ from pathlib import Path
 
 from pytestee.adapters.repositories.file_repository import FileRepository
 from pytestee.domain.models import CheckerConfig, CheckFailure, CheckSuccess
-from pytestee.domain.rules.ptas.assertion_count_ok import PTAS005
-from pytestee.domain.rules.ptas.high_assertion_density import PTAS003
-from pytestee.domain.rules.ptas.no_assertions import PTAS004
-from pytestee.domain.rules.ptas.too_few_assertions import PTAS001
-from pytestee.domain.rules.ptas.too_many_assertions import PTAS002
-from pytestee.domain.rules.ptcm.aaa_comment_pattern import PTCM001
-from pytestee.domain.rules.ptcm.gwt_comment_pattern import PTCM002
-from pytestee.domain.rules.ptst.structural_pattern import PTST001
+from pytestee.domain.rules.assertion.assertion_count_ok import PTAS005
+from pytestee.domain.rules.assertion.high_assertion_density import PTAS003
+from pytestee.domain.rules.assertion.no_assertions import PTAS004
+from pytestee.domain.rules.assertion.too_few_assertions import PTAS001
+from pytestee.domain.rules.assertion.too_many_assertions import PTAS002
+from pytestee.domain.rules.comment.aaa_comment_pattern import PTCM001
+from pytestee.domain.rules.comment.gwt_comment_pattern import PTCM002
+from pytestee.domain.rules.structure.structural_pattern import PTST001
 
 
 class TestRuleExamples:

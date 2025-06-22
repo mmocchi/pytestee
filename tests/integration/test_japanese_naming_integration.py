@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from pytestee.domain.models import CheckSeverity
-from pytestee.domain.rules.ptnm.japanese_characters import PTNM001
+from pytestee.domain.models import CheckFailure, CheckSeverity, CheckSuccess
+from pytestee.domain.rules.naming.japanese_characters import PTNM001
 from pytestee.infrastructure.ast_parser import ASTParser
 
 
@@ -30,15 +30,15 @@ class TestJapaneseNamingIntegration:
         # Should have results for all test methods (6 test methods total)
         assert len(results) == 6
 
-        # Count results by severity
-        info_results = [r for r in results if r.severity == CheckSeverity.INFO]
-        warning_results = [r for r in results if r.severity == CheckSeverity.WARNING]
+        # Count results by type
+        success_results = [r for r in results if isinstance(r, CheckSuccess)]
+        failure_results = [r for r in results if isinstance(r, CheckFailure) and r.severity == CheckSeverity.WARNING]
 
         # Japanese methods should return INFO (4 methods: 日本語, ひらがな, カタカナ, 漢字)
         # Mixed method should return INFO (1 method: mixed_japanese)
         # English only should return WARNING (1 method: english_only)
-        assert len(info_results) == 5  # 4 pure Japanese + 1 mixed
-        assert len(warning_results) == 1  # 1 English only
+        assert len(success_results) == 5  # 4 pure Japanese + 1 mixed
+        assert len(failure_results) == 1  # 1 English only
 
         # Verify specific methods
         japanese_methods = [
@@ -50,11 +50,11 @@ class TestJapaneseNamingIntegration:
         ]
         english_methods = ["test_english_only_method"]
 
-        info_function_names = {r.function_name for r in info_results}
-        warning_function_names = {r.function_name for r in warning_results}
+        success_function_names = {r.function_name for r in success_results}
+        failure_function_names = {r.function_name for r in failure_results}
 
-        assert info_function_names == set(japanese_methods)
-        assert warning_function_names == set(english_methods)
+        assert success_function_names == set(japanese_methods)
+        assert failure_function_names == set(english_methods)
 
     def test_rule_id_consistency(self) -> None:
         """Test that all results have consistent rule ID."""
@@ -100,15 +100,16 @@ class TestJapaneseNamingIntegration:
             function_result = self.checker.check(test_function, test_file)
             results.append(function_result)
 
-        info_results = [r for r in results if r.severity == CheckSeverity.INFO]
-        warning_results = [r for r in results if r.severity == CheckSeverity.WARNING]
+        success_results_check = [r for r in results if isinstance(r, CheckSuccess)]
+        failure_results_check = [r for r in results if isinstance(r, CheckFailure) and r.severity == CheckSeverity.WARNING]
 
         # INFO messages should mention Japanese characters are included
-        for result in info_results:
+        for result in success_results_check:
             assert "日本語文字が含まれています" in result.message
             assert "可読性が良好です" in result.message
 
         # WARNING messages should mention Japanese characters are not included
-        for result in warning_results:
-            assert "日本語文字が含まれていません" in result.message
-            assert "日本語での命名を検討してください" in result.message
+        for i in range(len(failure_results_check)):
+            failure_result = failure_results_check[i]
+            assert "日本語文字が含まれていません" in failure_result.message
+            assert "日本語での命名を検討してください" in failure_result.message

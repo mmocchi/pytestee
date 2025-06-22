@@ -3,8 +3,14 @@
 import ast
 from pathlib import Path
 
-from pytestee.domain.models import CheckSeverity, TestFile, TestFunction
-from pytestee.domain.rules.ptnm.japanese_characters import PTNM001
+from pytestee.domain.models import (
+    CheckFailure,
+    CheckSeverity,
+    CheckSuccess,
+    TestFile,
+    TestFunction,
+)
+from pytestee.domain.rules.naming.japanese_characters import PTNM001
 
 
 class TestPTNM001:
@@ -42,7 +48,7 @@ class TestPTNM001:
         result = self.rule.check(test_function, self.test_file)
 
         # Single result (not a list)
-        assert result.severity == CheckSeverity.INFO
+        assert isinstance(result, CheckSuccess)
         assert "日本語文字が含まれています" in result.message
         assert "可読性が良好です" in result.message
 
@@ -61,6 +67,7 @@ class TestPTNM001:
 
         result = self.rule.check(test_function, self.test_file)
 
+        assert isinstance(result, CheckFailure)
         assert result.severity == CheckSeverity.WARNING
         assert "日本語文字が含まれていません" in result.message
         assert "日本語での命名を検討してください" in result.message
@@ -80,7 +87,7 @@ class TestPTNM001:
 
         result = self.rule.check(test_function, self.test_file)
 
-        assert result.severity == CheckSeverity.INFO
+        assert isinstance(result, CheckSuccess)
 
     def test_hiragana_katakana_kanji_all_detected(self) -> None:
         """Test that hiragana, katakana, and kanji are all detected."""
@@ -105,7 +112,7 @@ class TestPTNM001:
 
             result = self.rule.check(test_function, self.test_file)
 
-            assert result.severity == CheckSeverity.INFO, (
+            assert isinstance(result, CheckSuccess), (
                 f"Failed for {case_type}: {method_name}"
             )
 

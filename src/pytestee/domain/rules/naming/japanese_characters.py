@@ -50,22 +50,20 @@ class PTNM001(BaseRule):
             return self._create_failure_result(
                 f"関数 '{test_function.name}' はテスト関数ではありません",
                 test_file,
-                test_function,
-                severity=CheckSeverity.INFO,
+                test_function
             )
 
         if self._contains_japanese_characters(test_function.name):
-            return self._create_failure_result(
+            return self._create_success_result(
                 f"テストメソッド名 '{test_function.name}' に日本語文字が含まれています。可読性が良好です。",
                 test_file,
-                test_function,
-                severity=CheckSeverity.INFO,
+                test_function
             )
         return self._create_failure_result(
             f"テストメソッド名 '{test_function.name}' に日本語文字が含まれていません。可読性向上のため日本語での命名を検討してください。",
             test_file,
             test_function,
-            severity=CheckSeverity.WARNING,
+            severity=CheckSeverity.WARNING
         )
 
     def _contains_japanese_characters(self, text: str) -> bool:
