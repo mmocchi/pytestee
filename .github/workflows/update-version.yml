@@ -1,0 +1,108 @@
+# pyproject.tomlのバージョンを自動更新するワークフロー
+# 手動実行（workflow_dispatch）でトリガーされ、バージョンを更新してPRを作成する
+name: Update Version
+
+on:
+  # 手動実行トリガー
+  workflow_dispatch:
+    inputs:
+      version:
+        # 新しいバージョン番号を指定（例: 1.2.3）
+        # 省略した場合は現在のパッチバージョンが自動的にインクリメントされる
+        description: 'New version number (e.g., 1.2.3). If empty, patch version will be incremented'
+        required: false
+        type: string
+
+# 必要な権限を設定
+permissions:
+  contents: write      # リポジトリへの書き込み権限（ブランチ作成・コミット用）
+  pull-requests: write # PR作成権限
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得（PR作成時に必要）
+
+      # Python環境のセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # TOMLパーサーのインストール
+      - name: Install toml
+        run: pip install toml
+
+      # pyproject.tomlのバージョンを更新
+      - name: Update version in pyproject.toml
+        run: |
+          python -c "
+          import toml
+          import sys
+          
+          # 現在のpyproject.tomlを読み込み
+          with open('pyproject.toml', 'r') as f:
+              data = toml.load(f)
+          
+          # 現在のバージョンを取得
+          current_version = data['project']['version']
+          new_version = '${{ github.event.inputs.version }}'
+          
+          # バージョンが指定されていない場合は自動インクリメント
+          if not new_version:
+              # パッチバージョンを自動的に1増やす（例: 1.0.0 → 1.0.1）
+              parts = current_version.split('.')
+              parts[-1] = str(int(parts[-1]) + 1)
+              new_version = '.'.join(parts)
+          
+          # バージョンを更新
+          data['project']['version'] = new_version
+          
+          # pyproject.tomlに書き戻し
+          with open('pyproject.toml', 'w') as f:
+              toml.dump(data, f)
+          
+          print(f'Updated version from {current_version} to {new_version}')
+          
+          # 次のステップで使用するためにバージョン情報を保存
+          with open('version_info.txt', 'w') as f:
+              f.write(f'{current_version},{new_version}')
+          "
+
+      # バージョン情報を読み取り、GitHub Outputsに設定
+      - name: Read version info
+        id: version
+        run: |
+          VERSION_INFO=$(cat version_info.txt)
+          IFS=',' read -r OLD_VERSION NEW_VERSION <<< "$VERSION_INFO"
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      # バージョン更新のPRを自動作成
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # コミットメッセージ
+          commit-message: "chore: update version from ${{ steps.version.outputs.old_version }} to ${{ steps.version.outputs.new_version }}"
+          # PRタイトル
+          title: "chore: update version to ${{ steps.version.outputs.new_version }}"
+          # PR本文
+          body: |
+            ## Version Update
+            
+            This PR updates the version in `pyproject.toml`:
+            - **From**: ${{ steps.version.outputs.old_version }}
+            - **To**: ${{ steps.version.outputs.new_version }}
+            
+            ---
+            *This PR was automatically created by the version update workflow.*
+          # PRを作成するブランチ名
+          branch: update-version-${{ steps.version.outputs.new_version }}
+          # PRがマージされた後にブランチを自動削除
+          delete-branch: true
