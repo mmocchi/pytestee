@@ -1,0 +1,14 @@
+# Test configuration for integration tests
+# Make everything informational to avoid exit code errors
+
+select = ["PTST001", "PTAS005"]  # Use minimal rule set for integration tests
+
+[severity]
+# Make everything informational to avoid exit code errors
+PTST001 = "info"
+PTAS005 = "info"
+PTCM003 = "info"
+PTLG001 = "info"
+PTNM001 = "info"
+PTVL001 = "info"
+PTVL002 = "info"

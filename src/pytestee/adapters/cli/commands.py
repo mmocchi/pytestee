@@ -47,11 +47,17 @@ def cli() -> None:
     is_flag=True,
     help="Verbose mode - show all results (warnings, info)",
 )
+@click.option(
+    "--config",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to configuration file",
+)
 def check(
     target: Path,
     output_format: str,
     quiet: bool,
     verbose: bool,
+    config: Path,
 ) -> None:
     """Check test files for quality issues.
 
@@ -66,6 +72,7 @@ def check(
             quiet=quiet,
             verbose=verbose,
             config_overrides={},
+            config_path=config,
         )
 
         # Exit with error code if there are errors
