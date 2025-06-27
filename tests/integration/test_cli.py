@@ -18,7 +18,7 @@ class TestCLI:
     def test_check_command_with_good_file(self) -> None:
         """Test check command with a good test file."""
         result = self.runner.invoke(
-            cli, ["check", str(self.fixtures_dir / "good_aaa_test.py")]
+            cli, ["check", str(self.fixtures_dir / "good_aaa_test.py"), "--config", ".pytestee-test.toml"]
         )
 
         assert result.exit_code == 0
@@ -42,6 +42,7 @@ class TestCLI:
                 "check",
                 str(self.fixtures_dir / "good_aaa_test.py"),
                 "--verbose",
+                "--config", ".pytestee-test.toml"
             ],
         )
 
@@ -85,13 +86,13 @@ class TestCLI:
         )
 
         # Should have less output in quiet mode
-        assert len(result.output) < 1200  # Arbitrary threshold for "less output"
+        assert len(result.output) < 2500  # Arbitrary threshold for "less output" (updated for PTVL rules)
 
     def test_json_output_format(self) -> None:
         """Test check command with JSON output."""
         result = self.runner.invoke(
             cli,
-            ["check", str(self.fixtures_dir / "good_aaa_test.py"), "--format", "json"],
+            ["check", str(self.fixtures_dir / "good_aaa_test.py"), "--format", "json", "--config", ".pytestee-test.toml"],
         )
 
         assert result.exit_code == 0
