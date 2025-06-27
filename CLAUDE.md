@@ -86,19 +86,7 @@ The core of pytestee is its rule system organized by categories:
 - **PTLG (Pattern Logic)**: Logical flow pattern detection (AST analysis)
 - **PTAS (Pattern Test Assertion)**: Assertion count and density analysis
 
-### Pattern Detection Priority
-
-Pattern checkers follow a priority hierarchy:
-1. **Comment-based** (PTCM) - Highest priority
-2. **Structural** (PTST) - Medium priority  
-3. **Logical** (PTLG) - Low priority
-4. **Pattern not detected** (PTST002) - Fallback warning
-
-Only the highest priority pattern found is reported to avoid noise.
-
 ### Key Components
-
-**PatternChecker**: Orchestrates pattern detection with priority logic. Contains PTCM001, PTCM002, PTST001, PTST002, and PTLG001 rules.
 
 **AssertionChecker**: Manages assertion-related rules (PTAS001-PTAS005) for count and density analysis.
 
