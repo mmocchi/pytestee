@@ -7,7 +7,12 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from pytestee.domain.models import AnalysisResult, CheckFailure, CheckSuccess
+from pytestee.domain.models import (
+    AchievementRateResult,
+    AnalysisResult,
+    CheckFailure,
+    CheckSuccess,
+)
 from pytestee.domain.rules.rule_validator import RuleConflictError, RuleValidator
 from pytestee.infrastructure.config.settings import ConfigManager
 from pytestee.registry import CheckerRegistry
@@ -42,6 +47,29 @@ class OutputService:
                     "function": check_result.function_name,
                 }
                 for check_result in result.check_results
+            ],
+        }
+        console.print(json.dumps(json_result, indent=2))
+
+    @staticmethod
+    def present_achievement_rate_json(result: AchievementRateResult) -> None:
+        """Present achievement rate results in JSON format."""
+        json_result = {
+            "summary": {
+                "total_files": result.total_files,
+                "total_tests": result.total_tests,
+                "overall_rate": result.overall_rate,
+            },
+            "rule_rates": [
+                {
+                    "rule_id": rule_rate.rule_id,
+                    "checker_name": rule_rate.checker_name,
+                    "total_checks": rule_rate.total_checks,
+                    "passed_checks": rule_rate.passed_checks,
+                    "failed_checks": rule_rate.failed_checks,
+                    "achievement_rate": rule_rate.achievement_rate,
+                }
+                for rule_rate in result.rule_rates
             ],
         }
         console.print(json.dumps(json_result, indent=2))

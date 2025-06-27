@@ -5,6 +5,9 @@ from pathlib import Path
 import click
 from rich.console import Console
 
+from pytestee.adapters.cli.handlers.achievement_rate_handler import (
+    AchievementRateCommandHandler,
+)
 from pytestee.adapters.cli.handlers.check_handler import CheckCommandHandler
 from pytestee.adapters.cli.handlers.info_handler import InfoCommandHandler
 from pytestee.adapters.cli.handlers.list_checkers_handler import (
@@ -128,6 +131,53 @@ def show_config(output_format: str) -> None:
     try:
         handler = ShowConfigCommandHandler()
         handler.execute(output_format=output_format)
+    except click.ClickException:
+        raise
+    except Exception as e:
+        console.print(f"[red]Error: {e!s}[/red]")
+        raise click.ClickException(str(e)) from e
+
+
+@cli.command(name="achievement-rate")
+@click.argument(
+    "target",
+    type=click.Path(exists=True, path_type=Path),
+    required=False,
+    default=".",
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["console", "json"]),
+    default="console",
+    help="Output format",
+)
+@click.option("--quiet", "-q", is_flag=True, help="Quiet mode - minimal output")
+def achievement_rate(
+    target: Path,
+    output_format: str,
+    quiet: bool,
+) -> None:
+    """Show achievement rate for each rule.
+
+    Display the percentage of tests that pass each quality rule.
+    This helps track progress when improving test quality.
+
+    If no target is specified, analyzes all Python files in the current directory
+    except those matching exclude patterns from configuration.
+    """
+    try:
+        handler = AchievementRateCommandHandler()
+        handler.execute(
+            target=target,
+            output_format=output_format,
+            quiet=quiet,
+            config_overrides={},
+        )
+
+    except RuleConflictError as e:
+        console.print(f"[red]{e}[/red]")
+        raise click.ClickException("Rule configuration conflicts detected") from e
     except click.ClickException:
         raise
     except Exception as e:
