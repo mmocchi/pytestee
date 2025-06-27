@@ -16,26 +16,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: arduino/setup-task@v2
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v4
-      with:
-        version: "latest"
+    - name: Install mise
+      run: |
+        curl https://mise.run | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Set up Python ${{ matrix.python-version }}
-      run: uv python install ${{ matrix.python-version }}
+      run: |
+        mise trust
+        mise install python@${{ matrix.python-version }}
+        mise install task@latest
+        mise install uv@latest
+        mise exec -- python --version
 
     - name: Install dependencies
-      run: uv sync --dev
+      run: mise exec -- task install
 
-    - name: Run checks
-      run: |
-        task lint
-        task typecheck
+    - name: Run lint
+      run: mise exec -- task lint
+
+    - name: Run type check
+      run: mise exec -- task typecheck
 
     - name: Run tests
-      run: uv run pytest --cov=src/pytestee --cov-report=xml --cov-report=term-missing
+      run: mise exec -- uv run pytest --cov=src/pytestee --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

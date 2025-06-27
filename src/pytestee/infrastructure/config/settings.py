@@ -258,6 +258,7 @@ class ConfigManager(IConfigManager):
             "PTAS004",
             "PTAS005",
             "PTNM001",
+            "PTNM002",
         }
 
         expanded_rules = set()

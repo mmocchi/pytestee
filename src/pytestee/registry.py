@@ -133,7 +133,7 @@ class CheckerRegistry(ICheckerRegistry):
             "PTST001",
             "PTLG001",
             "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
-            "PTNM001"
+            "PTNM001", "PTNM002"
         ]
 
         return [
@@ -157,6 +157,7 @@ class CheckerRegistry(ICheckerRegistry):
             "PTCM003": self._create_ptcm003,
             # Naming rules
             "PTNM001": self._create_ptnm001,
+            "PTNM002": self._create_ptnm002,
             # Structure rules
             "PTST001": self._create_ptst001,
             # Logic rules
@@ -219,6 +220,12 @@ class CheckerRegistry(ICheckerRegistry):
         from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
         from pytestee.domain.rules.naming.japanese_characters import PTNM001
         return PTNM001(PatternAnalyzer())
+
+    def _create_ptnm002(self) -> "BaseRule":
+        """Create PTNM002 rule instance."""
+        from pytestee.domain.analyzers.pattern_analyzer import PatternAnalyzer
+        from pytestee.domain.rules.naming.japanese_class_names import PTNM002
+        return PTNM002(PatternAnalyzer())
 
     def _create_ptst001(self) -> "BaseRule":
         """Create PTST001 rule instance."""

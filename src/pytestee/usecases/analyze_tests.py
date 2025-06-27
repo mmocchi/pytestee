@@ -140,6 +140,20 @@ class AnalyzeTestsUseCase:
                     # Log rule error and continue with other rules
                     raise CheckerError(rule_id, e) from e
 
+        # Run enabled rules on each test class (for rules that support check_class)
+        for test_class in test_file.test_classes:
+            for rule_id, rule in enabled_rules.items():
+                # Check if rule has check_class method (class-level rules)
+                if hasattr(rule, 'check_class'):
+                    try:
+                        # Create checker config for the rule
+                        checker_config = self._config_manager.get_checker_config(rule.name)
+                        rule_result = rule.check_class(test_class, test_file, checker_config)
+                        results.append(rule_result)
+                    except Exception as e:
+                        # Log rule error and continue with other rules
+                        raise CheckerError(rule_id, e) from e
+
         return results
 
     def _count_results(self, results: list[CheckResult]) -> tuple[int, int]:

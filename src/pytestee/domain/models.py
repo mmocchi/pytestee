@@ -69,6 +69,46 @@ class TestFunction:
 
 
 @dataclass
+class TestClass:
+    """コード内のテストクラスを表すクラス。
+
+    Python ASTから抽出されたテストクラスの情報をカプセル化し、
+    テストクラスの特定と解析に必要なメタデータを保持します。
+
+    Attributes:
+        name: テストクラスの名前
+        lineno: クラス開始行番号
+        col_offset: クラス開始のカラムオフセット
+        end_lineno: クラス終了行番号(オプション)
+        end_col_offset: クラス終了のカラムオフセット(オプション)
+        body: クラス本体のASTステートメントリスト
+        docstring: クラスのdocstring(存在する場合)
+        decorators: クラスに適用されたデコレーター名のリスト
+        test_methods: クラス内のテストメソッドリスト
+
+    """
+
+    name: str
+    lineno: int
+    col_offset: int
+    end_lineno: Optional[int]
+    end_col_offset: Optional[int]
+    body: list[ast.stmt]
+    docstring: Optional[str] = None
+    decorators: Optional[list[str]] = None
+    test_methods: Optional[list[str]] = None
+
+    def __post_init__(self) -> None:
+        """オブジェクト作成後の初期化処理を実行します。"""
+        # デコレータがNoneの場合は空のリストで初期化
+        if self.decorators is None:
+            self.decorators = []
+        # テストメソッドがNoneの場合は空のリストで初期化
+        if self.test_methods is None:
+            self.test_methods = []
+
+
+@dataclass
 class TestFile:
     """テスト関数を含むテストファイルを表すクラス。
 
@@ -80,6 +120,7 @@ class TestFile:
         content: ファイルのソースコード内容
         ast_tree: 解析されたPython AST
         test_functions: ファイル内のテスト関数リスト
+        test_classes: ファイル内のテストクラスリスト
 
     """
 
@@ -87,6 +128,7 @@ class TestFile:
     content: str
     ast_tree: ast.AST
     test_functions: list[TestFunction]
+    test_classes: list[TestClass]
 
     @property
     def relative_path(self) -> str:

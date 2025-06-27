@@ -4,24 +4,26 @@ import ast
 from pathlib import Path
 from typing import Optional
 
-from pytestee.domain.models import TestFile, TestFunction
+from pytestee.domain.models import TestClass, TestFile, TestFunction
 
 
 class ASTParser:
     """Parser for analyzing Python AST to extract test information."""
 
     def parse_file(self, file_path: Path) -> TestFile:
-        """Parse a Python test file and extract test functions."""
+        """Parse a Python test file and extract test functions and test classes."""
         content = file_path.read_text(encoding="utf-8")
         tree = ast.parse(content, filename=str(file_path))
 
         test_functions = self._extract_test_functions(tree)
+        test_classes = self._extract_test_classes(tree)
 
         return TestFile(
             path=file_path,
             content=content,
             ast_tree=tree,
             test_functions=test_functions,
+            test_classes=test_classes,
         )
 
     def _extract_test_functions(self, tree: ast.AST) -> list[TestFunction]:
@@ -118,6 +120,67 @@ class ASTParser:
             parts.append(current.id)
 
         return ".".join(reversed(parts))
+
+    def _extract_test_classes(self, tree: ast.AST) -> list[TestClass]:
+        """Extract test classes from AST."""
+        test_classes = []
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and self._is_test_class(node):
+                test_class = self._create_test_class(node)
+                test_classes.append(test_class)
+
+        return test_classes
+
+    def _is_test_class(self, node: ast.ClassDef) -> bool:
+        """Check if a class is a test class."""
+        # Check if class name starts with "Test"
+        if node.name.startswith("Test"):
+            return True
+
+        # Check if class contains test methods
+        for child_node in node.body:
+            if isinstance(child_node, ast.FunctionDef) and self._is_test_function(child_node):
+                return True
+
+        return False
+
+    def _create_test_class(self, node: ast.ClassDef) -> TestClass:
+        """Create a TestClass from an AST node."""
+        docstring = ast.get_docstring(node)
+        decorators = self._extract_class_decorators(node)
+        test_methods = self._extract_test_method_names(node)
+
+        return TestClass(
+            name=node.name,
+            lineno=node.lineno,
+            col_offset=node.col_offset,
+            end_lineno=getattr(node, "end_lineno", None),
+            end_col_offset=getattr(node, "end_col_offset", None),
+            body=node.body,
+            docstring=docstring,
+            decorators=decorators,
+            test_methods=test_methods,
+        )
+
+    def _extract_class_decorators(self, node: ast.ClassDef) -> list[str]:
+        """Extract decorator names from a class."""
+        decorators = []
+
+        for decorator in node.decorator_list:
+            decorator_name = self._get_decorator_name(decorator)
+            if decorator_name:
+                decorators.append(decorator_name)
+
+        return decorators
+
+    def _extract_test_method_names(self, node: ast.ClassDef) -> list[str]:
+        """Extract test method names from a test class."""
+        return [
+            child_node.name
+            for child_node in node.body
+            if isinstance(child_node, ast.FunctionDef) and self._is_test_function(child_node)
+        ]
 
     def count_assert_statements(self, test_function: TestFunction) -> int:
         """Count assert statements in a test function."""
