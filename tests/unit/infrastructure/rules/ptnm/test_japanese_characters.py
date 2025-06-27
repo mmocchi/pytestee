@@ -25,6 +25,7 @@ class TestPTNM001:
             content="",
             ast_tree=ast.parse(""),
             test_functions=[],
+            test_classes=[],
         )
 
     def test_rule_properties(self) -> None:

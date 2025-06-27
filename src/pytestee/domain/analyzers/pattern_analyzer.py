@@ -4,7 +4,7 @@ import re
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from pytestee.domain.models import TestFunction
+    from pytestee.domain.models import TestClass, TestFunction
 
 
 class PatternAnalyzer:
@@ -88,6 +88,23 @@ class PatternAnalyzer:
             r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF]'
         )
         return bool(japanese_pattern.search(test_function.name))
+
+    @staticmethod
+    def has_japanese_characters_in_class(test_class: "TestClass") -> bool:
+        """Check if test class name contains Japanese characters.
+
+        Args:
+            test_class: The test class to analyze
+
+        Returns:
+            True if Japanese characters are found in class name
+
+        """
+        # Japanese character ranges
+        japanese_pattern = re.compile(
+            r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF]'
+        )
+        return bool(japanese_pattern.search(test_class.name))
 
     @staticmethod
     def _extract_function_lines(test_function: "TestFunction", file_content: str) -> list[str]:
