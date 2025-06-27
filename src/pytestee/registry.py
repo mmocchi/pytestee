@@ -133,7 +133,8 @@ class CheckerRegistry(ICheckerRegistry):
             "PTST001",
             "PTLG001",
             "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
-            "PTNM001", "PTNM002", "PTNM003"
+            "PTNM001", "PTNM002", "PTNM003",
+            "PTVL001", "PTVL002", "PTVL003", "PTVL004", "PTVL005"
         ]
 
         return [
@@ -163,6 +164,12 @@ class CheckerRegistry(ICheckerRegistry):
             "PTST001": self._create_ptst001,
             # Logic rules
             "PTLG001": self._create_ptlg001,
+            # Vulnerability rules
+            "PTVL001": self._create_ptvl001,
+            "PTVL002": self._create_ptvl002,
+            "PTVL003": self._create_ptvl003,
+            "PTVL004": self._create_ptvl004,
+            "PTVL005": self._create_ptvl005,
         }
 
         factory = rule_factories.get(rule_id)
@@ -242,6 +249,31 @@ class CheckerRegistry(ICheckerRegistry):
         """Create PTLG001 rule instance."""
         from pytestee.domain.rules.logic.logical_flow_pattern import PTLG001
         return PTLG001()
+
+    def _create_ptvl001(self) -> "BaseRule":
+        """Create PTVL001 rule instance."""
+        from pytestee.domain.rules.vulnerability.ptvl001 import PTVL001
+        return PTVL001()
+
+    def _create_ptvl002(self) -> "BaseRule":
+        """Create PTVL002 rule instance."""
+        from pytestee.domain.rules.vulnerability.ptvl002 import PTVL002
+        return PTVL002()
+
+    def _create_ptvl003(self) -> "BaseRule":
+        """Create PTVL003 rule instance."""
+        from pytestee.domain.rules.vulnerability.ptvl003 import PTVL003
+        return PTVL003()
+
+    def _create_ptvl004(self) -> "BaseRule":
+        """Create PTVL004 rule instance."""
+        from pytestee.domain.rules.vulnerability.ptvl004 import PTVL004
+        return PTVL004()
+
+    def _create_ptvl005(self) -> "BaseRule":
+        """Create PTVL005 rule instance."""
+        from pytestee.domain.rules.vulnerability.ptvl005 import PTVL005
+        return PTVL005()
 
     def _validate_rule_conflicts(self) -> None:
         """ルール競合を検証します。"""
