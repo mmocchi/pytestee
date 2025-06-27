@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install mise
+      run: |
+        curl https://mise.run | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: |
+        mise trust
+        mise install python@${{ matrix.python-version }}
+        mise install task@latest
+        mise install uv@latest
+        mise exec -- python --version
+
+    - name: Install dependencies
+      run: mise exec -- task install
+
+    - name: Run lint
+      run: mise exec -- task lint
+
+    - name: Run type check
+      run: mise exec -- task typecheck
+
+    - name: Run tests
+      run: mise exec -- uv run pytest --cov=src/pytestee --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      if: matrix.python-version == '3.11'
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
