@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {file = "LICENSE"}
 authors = [
-    {name = "pytestee", email = "example@example.com"}
+    {name = "mmocchi", email = "mmocchi@example.com"}
 ]
 keywords = ["pytest", "testing", "quality", "cli"]
 classifiers = [
@@ -45,10 +45,10 @@ dev = [
 pytestee = "pytestee.main:main"
 
 [project.urls]
-Homepage = "https://github.com/example/pytestee"
-Documentation = "https://github.com/example/pytestee"
-Repository = "https://github.com/example/pytestee"
-Issues = "https://github.com/example/pytestee/issues"
+Homepage = "https://github.com/mmocchi/pytestee"
+Documentation = "https://github.com/mmocchi/pytestee"
+Repository = "https://github.com/mmocchi/pytestee"
+Issues = "https://github.com/mmocchi/pytestee/issues"
 
 [tool.ruff.lint]
 exclude = [".venv"]
