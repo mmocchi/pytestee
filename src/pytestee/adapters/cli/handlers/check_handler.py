@@ -8,6 +8,7 @@ from pytestee.adapters.cli.handlers.base_handler import BaseCommandHandler
 from pytestee.adapters.cli.services.output_service import OutputService
 from pytestee.adapters.presenters.console_presenter import ConsolePresenter
 from pytestee.domain.rules.rule_validator import RuleConflictError
+from pytestee.infrastructure.config.settings import ConfigManager
 from pytestee.usecases.analyze_tests import AnalyzeTestsUseCase
 
 if TYPE_CHECKING:
@@ -52,13 +53,11 @@ class CheckCommandHandler(BaseCommandHandler):
         try:
             # Override config manager if config_path is provided
             if config_path:
-                from pytestee.infrastructure.config.settings import ConfigManager
                 self._config_manager = ConfigManager()
                 self._config_manager.load_config(config_path)
                 # Reset dependencies to use new config
                 self._registry = None
                 self._repository = None
-            
             registry = self.registry
         except RuleConflictError as e:
             raise RuleConflictError(
