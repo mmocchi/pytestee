@@ -31,6 +31,8 @@ class ConfigManager(IConfigManager):
                 "PTLG001",
                 "PTAS005",  # Only PTAS005 to avoid conflicts between assertion rules
                 "PTNM001",
+                "PTVL001",  # Private access detection
+                "PTVL002",  # Time dependency detection
             ],  # Default selection (PTCM003 and PTAS005 to avoid conflicts)
             "ignore": [],  # Rules to ignore
             # Rule severity configuration
