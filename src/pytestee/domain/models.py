@@ -289,3 +289,57 @@ class CheckerConfig:
         # 設定がNoneの場合は空の辞書で初期化
         if self.config is None:
             self.config = {}
+
+
+@dataclass
+class RuleAchievementRate:
+    """個別ルールの達成率。
+
+    各ルールごとの達成率(成功率)とその詳細情報を保持します。
+
+    Attributes:
+        rule_id: ルールID(例: PTAS001)
+        checker_name: チェッカー名
+        total_checks: 総チェック数
+        passed_checks: 成功したチェック数
+        failed_checks: 失敗したチェック数
+
+    """
+
+    rule_id: str
+    checker_name: str
+    total_checks: int
+    passed_checks: int
+    failed_checks: int
+
+    @property
+    def achievement_rate(self) -> float:
+        """達成率をパーセンテージで計算します。
+
+        Returns:
+            達成率(0.0-100.0の範囲)
+
+        """
+        if self.total_checks == 0:
+            return 100.0
+        return (self.passed_checks / self.total_checks) * 100.0
+
+
+@dataclass
+class AchievementRateResult:
+    """全体の達成率結果。
+
+    全ルールの達成率と統計情報を集約したものです。
+
+    Attributes:
+        total_files: 解析したファイル数
+        total_tests: 発見したテスト関数の総数
+        rule_rates: 各ルールの達成率リスト
+        overall_rate: 全体の達成率
+
+    """
+
+    total_files: int
+    total_tests: int
+    rule_rates: list[RuleAchievementRate]
+    overall_rate: float
