@@ -4,208 +4,149 @@
 
 Pytesteeは、pytestテストの品質をチェックするCLIツールです。Clean Architectureの原則に従い、ルールベースのシステムでテスト品質の問題とパターンを検出します。
 
-## アーキテクチャ図
+## C4モデル - Container レベル アーキテクチャ図
 
+### システム概要
 ```mermaid
-graph TB
-    %% Clean Architecture Layers
-    subgraph "Adapters Layer"
-        CLI[CLI Handlers<br/>Click Commands]
-        PRES[Presenters<br/>Rich Console & JSON]
-        REPO[Repository<br/>File System Access]
-    end
+C4Container
+    title Container Diagram for Pytestee - Test Quality Checker
+
+    Person(user, "開発者", "Pytestテストの品質を向上させたい開発者")
+    System_Boundary(pytestee, "Pytestee System") {
+        Container(cli, "CLI Interface", "Click Framework", "コマンドライン入力を処理し、結果を表示")
+        Container(core, "Core Engine", "Python", "テスト分析とルール実行のメインロジック")
+        Container(rules, "Rule Engine", "Python", "品質チェックルールの実行エンジン")
+        Container(analyzer, "Code Analyzer", "Python AST", "Pythonテストコードの解析")
+        Container(config, "Configuration", "TOML", "設定管理とルール選択")
+    }
     
-    subgraph "Use Cases Layer"
-        UC1[AnalyzeTestsUseCase]
-        UC2[CheckQualityUseCase] 
-        UC3[CalculateAchievementRateUseCase]
-    end
+    System_Ext(filesystem, "File System", "テストファイルとPythonコード")
+    System_Ext(output, "Output Targets", "コンソール/JSON/統計レポート")
+
+    Rel(user, cli, "実行", "コマンドライン")
+    Rel(cli, core, "処理要求", "Use Cases")
+    Rel(core, rules, "ルール実行", "チェック要求")
+    Rel(core, analyzer, "コード解析", "AST解析")
+    Rel(core, config, "設定取得", "TOML読み込み")
+    Rel(analyzer, filesystem, "読み込み", "Pythonファイル")
+    Rel(cli, output, "結果出力", "Rich/JSON")
     
-    subgraph "Domain Layer"
-        subgraph "Models"
-            TF[TestFunction]
-            TC[TestClass]
-            TFILE[TestFile]
-            CR[CheckResult]
-            AR[AnalysisResult]
-        end
-        
-        subgraph "Interfaces"
-            ITEST[ITestRepository]
-            ICHK[IChecker]
-            IPRES[IPresenter]
-            ICONF[IConfigManager]
-            IREG[ICheckerRegistry]
-        end
-        
-        subgraph "Rules by Category"
-            subgraph "PTCM - Comment Pattern"
-                PTCM001[PTCM001: AAA Comments]
-                PTCM002[PTCM002: GWT Comments]
-                PTCM003[PTCM003: Either Pattern]
-            end
-            
-            subgraph "PTST - Structural Pattern"
-                PTST001[PTST001: Empty Line Structure]
-            end
-            
-            subgraph "PTLG - Logic Pattern"
-                PTLG001[PTLG001: AST Logic Flow]
-            end
-            
-            subgraph "PTAS - Assertion Analysis"
-                PTAS001[PTAS001: Too Few Assertions]
-                PTAS002[PTAS002: Too Many Assertions]
-                PTAS003[PTAS003: High Density]
-                PTAS004[PTAS004: No Assertions]
-                PTAS005[PTAS005: Good Count]
-            end
-            
-            subgraph "PTNM - Naming"
-                PTNM001[PTNM001: Function Names]
-                PTNM002[PTNM002: Class Names]
-            end
-        end
-        
-        subgraph "Analyzers"
-            PA[PatternAnalyzer<br/>Static Methods]
-            AA[AssertionAnalyzer<br/>Static Methods]
-        end
-        
-        RV[RuleValidator<br/>Conflict Detection]
-    end
-    
-    subgraph "Infrastructure Layer"
-        AST[AST Parser<br/>Python Code Analysis]
-        CONF[Config Manager<br/>TOML Settings]
-        REG[CheckerRegistry<br/>Rule Factory]
-        ERR[Custom Errors]
-    end
-    
-    %% Data Flow
-    CLI --> UC1
-    CLI --> UC2
-    CLI --> UC3
-    
-    UC1 --> REPO
-    UC2 --> REPO
-    UC3 --> REG
-    
-    REPO --> AST
-    AST --> TFILE
-    TFILE --> TF
-    TFILE --> TC
-    
-    UC1 --> REG
-    UC2 --> REG
-    REG --> PTCM001
-    REG --> PTCM002
-    REG --> PTCM003
-    REG --> PTST001
-    REG --> PTLG001
-    REG --> PTAS001
-    REG --> PTAS002
-    REG --> PTAS003
-    REG --> PTAS004
-    REG --> PTAS005
-    REG --> PTNM001
-    REG --> PTNM002
-    
-    %% Rule Dependencies
-    PTCM001 --> PA
-    PTCM002 --> PA
-    PTCM003 --> PA
-    PTST001 --> PA
-    PTLG001 --> PA
-    PTAS001 --> AA
-    PTAS002 --> AA
-    PTAS003 --> AA
-    PTAS004 --> AA
-    PTAS005 --> AA
-    PTNM001 --> PA
-    PTNM002 --> PA
-    
-    %% Configuration Flow
-    CONF --> REG
-    CONF --> RV
-    RV --> REG
-    
-    %% Results Flow
-    PTCM001 --> CR
-    PTCM002 --> CR
-    PTCM003 --> CR
-    PTST001 --> CR
-    PTLG001 --> CR
-    PTAS001 --> CR
-    PTAS002 --> CR
-    PTAS003 --> CR
-    PTAS004 --> CR
-    PTAS005 --> CR
-    PTNM001 --> CR
-    PTNM002 --> CR
-    
-    CR --> AR
-    UC1 --> AR
-    UC2 --> AR
-    UC3 --> AR
-    
-    AR --> PRES
-    
-    %% Interface Implementation
-    REPO -.-> ITEST
-    REG -.-> IREG
-    PRES -.-> IPRES
-    CONF -.-> ICONF
-    
-    %% Styling
-    classDef domainLayer fill:#e1f5fe
-    classDef usecaseLayer fill:#f3e5f5
-    classDef adapterLayer fill:#e8f5e8
-    classDef infraLayer fill:#fff3e0
-    classDef ruleClass fill:#ffebee
-    
-    class TF,TC,TFILE,CR,AR,ITEST,ICHK,IPRES,ICONF,IREG,PA,AA,RV domainLayer
-    class UC1,UC2,UC3 usecaseLayer
-    class CLI,PRES,REPO adapterLayer
-    class AST,CONF,REG,ERR infraLayer
-    class PTCM001,PTCM002,PTCM003,PTST001,PTLG001,PTAS001,PTAS002,PTAS003,PTAS004,PTAS005,PTNM001,PTNM002 ruleClass
+    UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
-## アーキテクチャの主要な階層
+### 詳細Container図
+```mermaid
+graph TB
+    subgraph "External"
+        USER[開発者<br/>CLI実行]
+        FS[ファイルシステム<br/>Pythonテストファイル]
+        OUT[出力先<br/>コンソール/JSON]
+    end
+    
+    subgraph "Pytestee System"
+        subgraph "Presentation Layer"
+            CLI[CLI Interface<br/>Click Framework<br/>- コマンド処理<br/>- 引数解析<br/>- 結果表示]
+        end
+        
+        subgraph "Application Layer"  
+            CORE[Core Engine<br/>Use Cases<br/>- AnalyzeTestsUseCase<br/>- CheckQualityUseCase<br/>- AchievementRateUseCase]
+        end
+        
+        subgraph "Domain Services"
+            RULES[Rule Engine<br/>Quality Rules<br/>- パターン検出ルール<br/>- アサーション分析<br/>- 命名規則チェック]
+            
+            ANALYZER[Code Analyzer<br/>AST Parser<br/>- テスト関数抽出<br/>- コード構造解析<br/>- メトリクス計算]
+        end
+        
+        subgraph "Infrastructure"
+            CONFIG[Configuration<br/>TOML Manager<br/>- 設定ファイル読み込み<br/>- ルール選択<br/>- パラメータ管理]
+            
+            REPO[Repository<br/>File Access<br/>- テストファイル発見<br/>- ディレクトリ走査<br/>- ファイル読み込み]
+        end
+    end
+    
+    %% External connections
+    USER --> CLI
+    CLI --> OUT
+    REPO --> FS
+    
+    %% Internal connections  
+    CLI --> CORE
+    CORE --> RULES
+    CORE --> ANALYZER
+    CORE --> CONFIG
+    CORE --> REPO
+    RULES --> ANALYZER
+    CONFIG --> RULES
+    
+    %% Styling
+    classDef external fill:#f9f9f9,stroke:#333,stroke-width:2px,color:#000
+    classDef presentation fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef application fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px  
+    classDef domain fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef infrastructure fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    
+    class USER,FS,OUT external
+    class CLI presentation
+    class CORE application
+    class RULES,ANALYZER domain
+    class CONFIG,REPO infrastructure
+```
 
-### 1. Domain Layer（ドメイン層）
-**責任**: 外部システムに依存しないビジネスロジックとモデル
+## Containerの詳細説明
 
-**主要コンポーネント**:
-- **Models**: `TestFunction`、`TestClass`、`TestFile`、`CheckResult`、`AnalysisResult`などのコアエンティティ
-- **Interfaces**: `ITestRepository`、`IChecker`、`IPresenter`などの抽象契約
-- **Rules**: カテゴリ別に整理された個別ルール実装
-- **Analyzers**: パターンとアサーション分析のヘルパークラス
-- **RuleValidator**: ルール設定の競合を検証
+### 1. CLI Interface（プレゼンテーション層）
+**責任**: ユーザーインターフェースとコマンド処理
+- **技術**: Click Framework
+- **機能**: 
+  - コマンドライン引数の解析
+  - サブコマンド処理（analyze, check, achievement-rate）
+  - Rich形式での結果表示
+  - JSON出力対応
 
-### 2. Use Cases Layer（ユースケース層）
-**責任**: ドメインサービスを協調させるアプリケーションビジネスロジック
+### 2. Core Engine（アプリケーション層）
+**責任**: ビジネスロジックの協調とワークフロー管理
+- **技術**: Python Use Cases
+- **主要Use Cases**:
+  - `AnalyzeTestsUseCase`: 複数ファイルの一括分析
+  - `CheckQualityUseCase`: 単一ファイルの品質チェック
+  - `CalculateAchievementRateUseCase`: ルール達成率の計算
 
-**主要コンポーネント**:
-- `AnalyzeTestsUseCase`: テストファイル分析のメインオーケストレータ
-- `CheckQualityUseCase`: 個別ファイル/関数の品質チェック処理
-- `CalculateAchievementRateUseCase`: ルール達成統計の計算
+### 3. Rule Engine（ドメインサービス）
+**責任**: 品質チェックルールの実行
+- **技術**: Python Rule Classes
+- **ルールカテゴリ**:
+  - **PTCM**: コメントパターン検出
+  - **PTST**: 構造的パターン検出
+  - **PTLG**: 論理フローパターン検出
+  - **PTAS**: アサーション分析
+  - **PTNM**: 命名規則チェック
 
-### 3. Adapters Layer（アダプター層）
-**責任**: 外部インターフェースの実装
+### 4. Code Analyzer（ドメインサービス）
+**責任**: Pythonコードの静的解析
+- **技術**: Python AST（抽象構文木）
+- **機能**:
+  - テスト関数・クラスの抽出
+  - コード構造の解析
+  - アサーション数の計算
+  - パターン検出のサポート
 
-**主要コンポーネント**:
-- **CLI**: Clickベースのコマンドラインインターフェース
-- **Presenters**: Richベースのコンソール出力とJSON形式化
-- **Repositories**: テストファイル発見のためのファイルシステムアクセス
+### 5. Configuration（インフラ層）
+**責任**: 設定管理とルール選択
+- **技術**: TOML設定ファイル
+- **機能**:
+  - `.pytestee.toml`、`pyproject.toml`の読み込み
+  - ルールの有効/無効制御
+  - ルール固有パラメータの管理
+  - 競合ルールの検証
 
-### 4. Infrastructure Layer（インフラ層）
-**責任**: 具体的な実装と技術的詳細
-
-**主要コンポーネント**:
-- **AST Parser**: テスト抽出のためのPython AST解析
-- **Config**: TOML対応の設定管理
-- **Errors**: カスタム例外定義
+### 6. Repository（インフラ層）
+**責任**: ファイルシステムアクセス
+- **技術**: Python標準ライブラリ
+- **機能**:
+  - テストファイルの自動発見
+  - ディレクトリの再帰的走査
+  - ファイル内容の読み込み
 
 ## ルールシステムの組織
 
