@@ -25,6 +25,8 @@ jobs:
       run: |
         mise trust
         mise install python@${{ matrix.python-version }}
+        mise install task@latest
+        mise install uv@latest
         mise exec -- python --version
 
     - name: Install dependencies
