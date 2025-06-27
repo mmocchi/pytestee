@@ -172,11 +172,8 @@ exclude_lines = [
 ]
 
 [tool.pytestee]
-max_asserts = 5
-min_asserts = 1
-require_aaa_comments = true
 
-select = ["PTST001", "PTAS005"]  # Use structural patterns + assertion count OK
+# select = ["PTST001", "PTAS005"]  # Use structural patterns + assertion count OK
 
 # Import Linter Configuration for Clean Architecture
 [tool.importlinter]

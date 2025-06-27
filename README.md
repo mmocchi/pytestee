@@ -87,6 +87,23 @@ pytestee list-checkers
 
 ## Configuration
 
+### Default Rule Selection
+
+pytesteeは以下のルールをデフォルトで有効にしています：
+
+- **PTCM003**: AAAまたはGWTパターン検出（コメントベース）
+- **PTST001**: 構造的分離による暗黙的なAAAパターン検出
+- **PTLG001**: 論理フロー解析によるAAAパターン検出
+- **PTAS005**: アサーション数が適切な範囲内
+- **PTNM001**: テストメソッド名の日本語文字チェック
+- **PTVL001**: プライベート属性・メソッドアクセス検出
+- **PTVL002**: 時間依存コード検出
+
+この選択は以下の理由に基づいています：
+- **実用性**: 最も一般的で重要な問題を検出
+- **競合回避**: 重複する機能のルール（例：PTAS001/002/004 vs PTAS005）は片方のみ選択
+- **段階的導入**: 新しいルールカテゴリ（PTVL）は段階的に導入
+
 ### Configuration File
 
 `.pytestee.toml`を作成するか、`pyproject.toml`に追加してください：
@@ -97,8 +114,8 @@ pytestee list-checkers
 # デフォルトでは全ての.pyファイルが対象
 exclude = ["**/conftest.py", "**/test_fixtures/**"]  # 除外するファイルパターン
 
-# 有効にするルールを選択（デフォルトで全て有効）
-select = ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001"]
+# 有効にするルールを選択（以下がデフォルト選択）
+select = ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001", "PTVL001", "PTVL002"]
 
 # 無視するルール
 ignore = ["PTLG001"]  # 論理フロー解析を無効化
@@ -144,6 +161,14 @@ max_density = 0.5
 ### 命名規則ルール
 
 - **PTNM001**: テストメソッド名の日本語文字チェック
+
+### 脆弱性検出ルール（PTVL）
+
+- **PTVL001**: プライベート属性・メソッドアクセス検出（デフォルト有効）
+- **PTVL002**: 時間依存コード検出（`datetime.now()`, `time.time()`等）（デフォルト有効）
+- **PTVL003**: ランダム依存コード検出（`random()`関数等）
+- **PTVL004**: グローバル状態変更検出
+- **PTVL005**: クラス変数操作検出
 
 ## Architecture
 
@@ -253,8 +278,14 @@ src/pytestee/domain/rules/
 │   ├── high_assertion_density.py # PTAS003: 高いアサーション密度
 │   ├── no_assertions.py          # PTAS004: アサーション未発見
 │   └── assertion_count_ok.py     # PTAS005: アサーション数OK
-└── naming/         # 命名規則
-    └── japanese_characters.py     # PTNM001: 日本語文字チェック
+├── naming/         # 命名規則
+│   └── japanese_characters.py     # PTNM001: 日本語文字チェック
+└── vulnerability/  # 脆弱性検出
+    ├── ptvl001.py                 # PTVL001: プライベートアクセス検出
+    ├── ptvl002.py                 # PTVL002: 時間依存検出
+    ├── ptvl003.py                 # PTVL003: ランダム依存検出
+    ├── ptvl004.py                 # PTVL004: グローバル状態変更検出
+    └── ptvl005.py                 # PTVL005: クラス変数操作検出
 ```
 
 ### Adding New Rules
