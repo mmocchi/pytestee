@@ -1,0 +1,89 @@
+name: Update Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version number (e.g., 1.2.3). If empty, patch version will be incremented'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install toml
+        run: pip install toml
+
+      - name: Update version in pyproject.toml
+        run: |
+          python -c "
+          import toml
+          import sys
+          
+          # Read current pyproject.toml
+          with open('pyproject.toml', 'r') as f:
+              data = toml.load(f)
+          
+          current_version = data['project']['version']
+          new_version = '${{ github.event.inputs.version }}'
+          
+          if not new_version:
+              # Auto-increment patch version
+              parts = current_version.split('.')
+              parts[-1] = str(int(parts[-1]) + 1)
+              new_version = '.'.join(parts)
+          
+          # Update version
+          data['project']['version'] = new_version
+          
+          # Write back to pyproject.toml
+          with open('pyproject.toml', 'w') as f:
+              toml.dump(data, f)
+          
+          print(f'Updated version from {current_version} to {new_version}')
+          
+          # Output for next steps
+          with open('version_info.txt', 'w') as f:
+              f.write(f'{current_version},{new_version}')
+          "
+
+      - name: Read version info
+        id: version
+        run: |
+          VERSION_INFO=$(cat version_info.txt)
+          IFS=',' read -r OLD_VERSION NEW_VERSION <<< "$VERSION_INFO"
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update version from ${{ steps.version.outputs.old_version }} to ${{ steps.version.outputs.new_version }}"
+          title: "chore: update version to ${{ steps.version.outputs.new_version }}"
+          body: |
+            ## Version Update
+            
+            This PR updates the version in `pyproject.toml`:
+            - **From**: ${{ steps.version.outputs.old_version }}
+            - **To**: ${{ steps.version.outputs.new_version }}
+            
+            ---
+            *This PR was automatically created by the version update workflow.*
+          branch: update-version-${{ steps.version.outputs.new_version }}
+          delete-branch: true
