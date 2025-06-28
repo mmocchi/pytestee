@@ -197,6 +197,16 @@ class IConfigManager(ABC):
         """
         pass
 
+    @abstractmethod
+    def apply_overrides(self, overrides: dict[str, Any]) -> None:
+        """設定オーバーライドを適用します。
+
+        Args:
+            overrides: 適用する設定オーバーライド
+
+        """
+        pass
+
 
 
 class ICheckerRegistry(ABC):
