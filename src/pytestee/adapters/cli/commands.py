@@ -52,12 +52,24 @@ def cli() -> None:
     type=click.Path(exists=True, path_type=Path),
     help="Path to configuration file",
 )
+@click.option(
+    "--select",
+    multiple=True,
+    help="Select specific rules to run (comma-separated). Overrides config file settings.",
+)
+@click.option(
+    "--ignore",
+    multiple=True,
+    help="Ignore specific rules (comma-separated). Overrides config file settings.",
+)
 def check(
     target: Path,
     output_format: str,
     quiet: bool,
     verbose: bool,
     config: Path,
+    select: tuple[str, ...],
+    ignore: tuple[str, ...],
 ) -> None:
     """Check test files for quality issues.
 
@@ -65,13 +77,31 @@ def check(
     except those matching exclude patterns from configuration.
     """
     try:
+        # Build config overrides from CLI arguments
+        config_overrides = {}
+        if select:
+            # Flatten comma-separated values and filter empty strings
+            select_rules = []
+            for item in select:
+                select_rules.extend([rule.strip() for rule in item.split(",") if rule.strip()])
+            if select_rules:
+                config_overrides["select"] = select_rules
+
+        if ignore:
+            # Flatten comma-separated values and filter empty strings
+            ignore_rules = []
+            for item in ignore:
+                ignore_rules.extend([rule.strip() for rule in item.split(",") if rule.strip()])
+            if ignore_rules:
+                config_overrides["ignore"] = ignore_rules
+
         handler = CheckCommandHandler()
         result = handler.execute(
             target=target,
             output_format=output_format,
             quiet=quiet,
             verbose=verbose,
-            config_overrides={},
+            config_overrides=config_overrides,
             config_path=config,
         )
 
@@ -160,10 +190,22 @@ def show_config(output_format: str) -> None:
     help="Output format",
 )
 @click.option("--quiet", "-q", is_flag=True, help="Quiet mode - minimal output")
+@click.option(
+    "--select",
+    multiple=True,
+    help="Select specific rules to run (comma-separated). Overrides config file settings.",
+)
+@click.option(
+    "--ignore",
+    multiple=True,
+    help="Ignore specific rules (comma-separated). Overrides config file settings.",
+)
 def achievement_rate(
     target: Path,
     output_format: str,
     quiet: bool,
+    select: tuple[str, ...],
+    ignore: tuple[str, ...],
 ) -> None:
     """Show achievement rate for each rule.
 
@@ -174,12 +216,30 @@ def achievement_rate(
     except those matching exclude patterns from configuration.
     """
     try:
+        # Build config overrides from CLI arguments
+        config_overrides = {}
+        if select:
+            # Flatten comma-separated values and filter empty strings
+            select_rules = []
+            for item in select:
+                select_rules.extend([rule.strip() for rule in item.split(",") if rule.strip()])
+            if select_rules:
+                config_overrides["select"] = select_rules
+
+        if ignore:
+            # Flatten comma-separated values and filter empty strings
+            ignore_rules = []
+            for item in ignore:
+                ignore_rules.extend([rule.strip() for rule in item.split(",") if rule.strip()])
+            if ignore_rules:
+                config_overrides["ignore"] = ignore_rules
+
         handler = AchievementRateCommandHandler()
         handler.execute(
             target=target,
             output_format=output_format,
             quiet=quiet,
-            config_overrides={},
+            config_overrides=config_overrides,
         )
 
     except RuleConflictError as e:

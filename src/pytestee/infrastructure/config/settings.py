@@ -185,6 +185,11 @@ class ConfigManager(IConfigManager):
         """Set a configuration value."""
         self._config[key] = value
 
+    def apply_overrides(self, overrides: dict[str, Any]) -> None:
+        """Apply configuration overrides temporarily."""
+        for key, value in overrides.items():
+            self._config[key] = value
+
     def get_config(
         self, key: str, default: Optional[ConfigValue] = None
     ) -> Optional[ConfigValue]:

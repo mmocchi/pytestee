@@ -48,6 +48,109 @@ class TestCLI:
 
         assert result.exit_code == 0
 
+    def test_check_command_with_select_option(self) -> None:
+        """Test check command with --select option."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--select", "PTCM003",
+            ],
+        )
+
+        # PTCM003 should detect both passing and failing tests, so exit code should be 1
+        assert result.exit_code == 1
+        assert "Analysis Summary" in result.output
+        assert "PTCM003" in result.output  # Rule should be mentioned in output
+
+    def test_check_command_with_ignore_option(self) -> None:
+        """Test check command with --ignore option."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "bad_test.py"),
+                "--ignore", "PTAS005",
+            ],
+        )
+
+        # Test should pass now that PTAS005 is ignored
+        # (assuming PTAS005 was the only failing rule)
+        assert "Analysis Summary" in result.output
+
+    def test_check_command_with_multiple_select_rules(self) -> None:
+        """Test check command with multiple rules in --select."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--select", "PTCM003,PTST001",
+            ],
+        )
+
+        # Should have rule violations so exit code is 1
+        assert result.exit_code == 1
+        assert "Analysis Summary" in result.output
+
+    def test_check_command_with_category_select(self) -> None:
+        """Test check command with category selection."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--select", "PTCM",
+            ],
+        )
+
+        # Should have rule violations so exit code is 1
+        assert result.exit_code == 1
+        assert "Analysis Summary" in result.output
+
+    def test_check_command_with_select_and_ignore(self) -> None:
+        """Test check command with both --select and --ignore options."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "check",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--select", "PTCM",
+                "--ignore", "PTCM",  # Ignore all PTCM rules
+            ],
+        )
+
+        # Since we ignore all selected rules, this should pass
+        assert result.exit_code == 0
+        assert "Analysis Summary" in result.output
+
+    def test_achievement_rate_with_select_option(self) -> None:
+        """Test achievement-rate command with --select option."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "achievement-rate",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--select", "PTCM003",
+            ],
+        )
+
+        assert result.exit_code == 0
+
+    def test_achievement_rate_with_ignore_option(self) -> None:
+        """Test achievement-rate command with --ignore option."""
+        result = self.runner.invoke(
+            cli,
+            [
+                "achievement-rate",
+                str(self.fixtures_dir / "good_aaa_test.py"),
+                "--ignore", "PTAS005",
+            ],
+        )
+
+        assert result.exit_code == 0
+
     def test_info_command(self) -> None:
         """Test info command."""
         result = self.runner.invoke(cli, ["info", str(self.fixtures_dir)])

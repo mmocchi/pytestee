@@ -60,7 +60,10 @@ class AnalyzeTestsUseCase:
 
         # Load configuration
         config = self._config_manager.load_config()
-        config.update(config_overrides)
+
+        # Apply overrides to the config manager
+        if config_overrides:
+            self._config_manager.apply_overrides(config_overrides)
 
         # Find test files
         test_file_paths = self._test_repository.find_test_files(target_path)

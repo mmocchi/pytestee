@@ -392,3 +392,75 @@ class TestPTCM001:
         assert result.function_name == "test_metadata"
         assert result.line_number == 42
         assert result.file_path == Path("/test/dummy.py")
+
+    def test_ignores_aaa_patterns_in_strings(self) -> None:
+        """Test that AAA patterns inside strings are ignored."""
+        content = """def test_with_string_patterns():
+    message1 = "This has # Arrange in string"
+    message2 = "And # Act here"
+    message3 = "Finally # Assert text"
+    result = process_messages(message1, message2, message3)
+    assert result is not None"""
+
+        test_file = TestFile(
+            path=Path("/test/dummy.py"),
+            content=content,
+            ast_tree=ast.parse(content),
+            test_functions=[],
+            test_classes=[],
+        )
+
+        test_function = TestFunction(
+            name="test_with_string_patterns",
+            lineno=1,
+            col_offset=0,
+            end_lineno=6,
+            end_col_offset=0,
+            body=[],
+            decorators=[],
+            docstring=None,
+        )
+
+        result = self.rule.check(test_function, test_file)
+
+        # Should fail because there are no actual AAA comments, only strings containing the patterns
+        assert isinstance(result, CheckFailure)
+        assert "AAA pattern not detected in comments" in result.message
+
+    def test_detects_real_aaa_comments_with_strings_present(self) -> None:
+        """Test that real AAA comments are detected even when strings with patterns are present."""
+        content = """def test_with_both_strings_and_comments():
+    # Arrange
+    message = "This string has # Act pattern in it"
+    another = "And # Assert too"
+
+    # Act
+    result = process_message(message)
+
+    # Assert
+    assert result is not None"""
+
+        test_file = TestFile(
+            path=Path("/test/dummy.py"),
+            content=content,
+            ast_tree=ast.parse(content),
+            test_functions=[],
+            test_classes=[],
+        )
+
+        test_function = TestFunction(
+            name="test_with_both_strings_and_comments",
+            lineno=1,
+            col_offset=0,
+            end_lineno=10,
+            end_col_offset=0,
+            body=[],
+            decorators=[],
+            docstring=None,
+        )
+
+        result = self.rule.check(test_function, test_file)
+
+        # Should succeed because there are real AAA comments present
+        assert isinstance(result, CheckSuccess)
+        assert "AAA pattern detected in comments" in result.message
