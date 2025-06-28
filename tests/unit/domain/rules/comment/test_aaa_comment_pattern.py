@@ -33,10 +33,10 @@ class TestPTCM001:
     # Arrange
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     # Assert
     assert result == 3"""
 
@@ -69,10 +69,10 @@ class TestPTCM001:
         content = """def test_lowercase():
     # arrange
     data = [1, 2, 3]
-    
+
     # act
     length = len(data)
-    
+
     # assert
     assert length == 3"""
 
@@ -105,10 +105,10 @@ class TestPTCM001:
         content = """def test_mixed_case():
     # ARRANGE
     user = User("test")
-    
+
     # act
     result = user.get_name()
-    
+
     # Assert
     assert result == "test\""""
 
@@ -141,10 +141,10 @@ class TestPTCM001:
         content = """def test_missing_arrange():
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     # Assert
     assert result == 3"""
 
@@ -180,9 +180,9 @@ class TestPTCM001:
     # Arrange
     x = 1
     y = 2
-    
+
     result = x + y
-    
+
     # Assert
     assert result == 3"""
 
@@ -216,10 +216,10 @@ class TestPTCM001:
     # Arrange
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     assert result == 3"""
 
         test_file = TestFile(
@@ -251,10 +251,10 @@ class TestPTCM001:
         content = """def test_assert_in_comment():
     # Arrange
     value = 42
-    
+
     # Act
     result = str(value)
-    
+
     # Check assert that result is string
     assert isinstance(result, str)"""
 
@@ -325,10 +325,10 @@ class TestPTCM001:
         content = """def test_aaa_with_extra():
     # Arrange - Setup test data
     user_id = 123
-    
+
     # Act - Perform the operation
     user = get_user(user_id)
-    
+
     # Assert - Verify the result
     assert user.id == user_id"""
 

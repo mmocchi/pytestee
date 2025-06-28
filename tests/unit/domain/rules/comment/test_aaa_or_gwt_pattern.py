@@ -34,10 +34,10 @@ class TestPTCM003:
     # Arrange
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     # Assert
     assert result == 3"""
 
@@ -70,10 +70,10 @@ class TestPTCM003:
         content = """def test_gwt_pattern():
     # Given
     user = User("test")
-    
+
     # When
     result = user.get_name()
-    
+
     # Then
     assert result == "test\""""
 
@@ -107,10 +107,10 @@ class TestPTCM003:
     # Arrange (Given)
     x = 1
     y = 2
-    
+
     # Act (When)
     result = x + y
-    
+
     # Assert (Then)
     assert result == 3"""
 
@@ -145,10 +145,10 @@ class TestPTCM003:
     # Setup
     x = 1
     y = 2
-    
+
     # Execute
     result = x + y
-    
+
     # Verify
     assert result == 3"""
 
@@ -186,10 +186,10 @@ class TestPTCM003:
     # Arrange
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     assert result == 3"""
 
         test_file = TestFile(
@@ -221,10 +221,10 @@ class TestPTCM003:
         content = """def test_partial_gwt():
     # Given
     user = User("test")
-    
+
     # When
     result = user.get_name()
-    
+
     assert result == "test\""""
 
         test_file = TestFile(
@@ -294,10 +294,10 @@ class TestPTCM003:
         content = """def test_case_insensitive():
     # ARRANGE
     value = 42
-    
+
     # act
     result = str(value)
-    
+
     # Assert
     assert isinstance(result, str)"""
 
@@ -330,10 +330,10 @@ class TestPTCM003:
         content = """def test_gwt_case_insensitive():
     # GIVEN
     calculator = Calculator()
-    
+
     # when
     result = calculator.add(2, 3)
-    
+
     # Then
     assert result == 5"""
 
@@ -366,10 +366,10 @@ class TestPTCM003:
         content = """def test_mixed_patterns():
     # Arrange (Given setup)
     x = 1
-    
-    # Act 
+
+    # Act
     result = x + 1
-    
+
     # Assert (Then verify)
     assert result == 2"""
 

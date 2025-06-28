@@ -66,7 +66,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_clear_aaa",
             lineno=1,
@@ -85,11 +85,11 @@ class TestPTLG001:
 
     def test_arrange_only_returns_failure(self) -> None:
         """Test that function with only arrange section returns failure."""
-        body = [
+        body: list[ast.stmt] = [
             ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=1)),
             ast.Assign(targets=[ast.Name(id="y", ctx=ast.Store())], value=ast.Constant(value=2)),
         ]
-        
+
         test_function = TestFunction(
             name="test_arrange_only",
             lineno=1,
@@ -110,7 +110,7 @@ class TestPTLG001:
 
     def test_assert_only_returns_failure(self) -> None:
         """Test that function with only assert section returns failure."""
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -120,7 +120,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_assert_only",
             lineno=1,
@@ -151,7 +151,7 @@ class TestPTLG001:
                 )
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_arrange_act_only",
             lineno=1,
@@ -183,7 +183,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_arrange_assert_only",
             lineno=1,
@@ -221,7 +221,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_act_assert_only",
             lineno=1,
@@ -240,8 +240,8 @@ class TestPTLG001:
 
     def test_empty_function_returns_failure(self) -> None:
         """Test that empty function returns failure."""
-        body = []
-        
+        body: list[ast.stmt] = []
+
         test_function = TestFunction(
             name="test_empty",
             lineno=1,
@@ -298,7 +298,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_complex_aaa",
             lineno=1,
@@ -349,7 +349,7 @@ class TestPTLG001:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_assignment_after_assert",
             lineno=1,
@@ -373,8 +373,8 @@ class TestPTLG001:
             ast.Expr(value=ast.Call(func=ast.Name(id="func", ctx=ast.Load()), args=[], keywords=[])),  # act
             ast.Assert(test=ast.Constant(value=True), msg=None),  # assert
         ]
-        
-        test_function = TestFunction(
+
+        TestFunction(
             name="test_categorization",
             lineno=1,
             col_offset=0,
@@ -386,7 +386,7 @@ class TestPTLG001:
         )
 
         sections = self.rule._categorize_statements(body)
-        
+
         assert len(sections["arrange"]) == 1
         assert len(sections["act"]) == 1
         assert len(sections["assert"]) == 1
@@ -398,7 +398,7 @@ class TestPTLG001:
             ast.Expr(value=ast.Call(func=ast.Name(id="func", ctx=ast.Load()), args=[], keywords=[])),
             ast.Assert(test=ast.Constant(value=True), msg=None),
         ]
-        
+
         test_function = TestFunction(
             name="test_metadata",
             lineno=42,

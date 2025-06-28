@@ -5,8 +5,8 @@ from pathlib import Path
 
 from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 from pytestee.domain.models import (
-    CheckFailure,
     CheckerConfig,
+    CheckFailure,
     CheckSeverity,
     CheckSuccess,
     TestFile,
@@ -36,7 +36,7 @@ class TestPTAS003:
     y = 2
     z = x + y
     assert z == 3"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -44,7 +44,7 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
+
         body = [
             ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=1)),
             ast.Assign(targets=[ast.Name(id="y", ctx=ast.Store())], value=ast.Constant(value=2)),
@@ -65,7 +65,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_something",
             lineno=1,
@@ -90,7 +90,7 @@ class TestPTAS003:
     assert 1 == 1
     assert 2 == 2
     assert 3 == 3"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -98,8 +98,8 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
-        body = [
+
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -125,7 +125,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_multiple",
             lineno=1,
@@ -150,7 +150,7 @@ class TestPTAS003:
         content = """def test_threshold():
     x = 5
     assert x == 5"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -158,7 +158,7 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
+
         body = [
             ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=5)),
             ast.Assert(
@@ -170,7 +170,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_threshold",
             lineno=1,
@@ -190,14 +190,14 @@ class TestPTAS003:
     def test_custom_density_threshold(self) -> None:
         """Test with custom density threshold configuration."""
         config = CheckerConfig(name="test_config", config={"max_density": 0.3})  # 30% threshold
-        
+
         # Function with 40% density (above custom threshold)
         content = """def test_custom():
     x = 1
     y = 2
     assert x == 1
     assert y == 2"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -205,7 +205,7 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
+
         body = [
             ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=1)),
             ast.Assign(targets=[ast.Name(id="y", ctx=ast.Store())], value=ast.Constant(value=2)),
@@ -226,7 +226,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_custom",
             lineno=1,
@@ -248,7 +248,7 @@ class TestPTAS003:
         """Test that function with no effective lines returns success."""
         content = """def test_empty():
     pass"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -256,9 +256,9 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
-        body = [ast.Pass()]
-        
+
+        body: list[ast.stmt] = [ast.Pass()]
+
         test_function = TestFunction(
             name="test_empty",
             lineno=1,
@@ -282,10 +282,10 @@ class TestPTAS003:
         content = """def test_comments():
     # This is a comment
     x = 1
-    
+
     # Another comment
     assert x == 1"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -293,7 +293,7 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
+
         body = [
             ast.Assign(targets=[ast.Name(id="x", ctx=ast.Store())], value=ast.Constant(value=1)),
             ast.Assert(
@@ -305,7 +305,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_comments",
             lineno=1,
@@ -327,14 +327,14 @@ class TestPTAS003:
     def test_config_fallback_to_default(self) -> None:
         """Test that missing config falls back to default density."""
         config = CheckerConfig(name="test_config", config={})  # Empty config
-        
+
         # Function with 75% density (above default 50% threshold)
         content = """def test_fallback():
     assert 1 == 1
     assert 2 == 2
     x = 3
     assert x == 3"""
-        
+
         test_file = TestFile(
             path=Path("/test/dummy.py"),
             content=content,
@@ -342,7 +342,7 @@ class TestPTAS003:
             test_functions=[],
             test_classes=[],
         )
-        
+
         body = [
             ast.Assert(
                 test=ast.Compare(
@@ -370,7 +370,7 @@ class TestPTAS003:
                 msg=None,
             ),
         ]
-        
+
         test_function = TestFunction(
             name="test_fallback",
             lineno=1,

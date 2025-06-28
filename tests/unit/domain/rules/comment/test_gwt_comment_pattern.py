@@ -32,10 +32,10 @@ class TestPTCM002:
         content = """def test_something():
     # Given
     user = User("test")
-    
+
     # When
     result = user.get_name()
-    
+
     # Then
     assert result == "test\""""
 
@@ -68,10 +68,10 @@ class TestPTCM002:
         content = """def test_lowercase():
     # given
     data = [1, 2, 3]
-    
+
     # when
     length = len(data)
-    
+
     # then
     assert length == 3"""
 
@@ -104,10 +104,10 @@ class TestPTCM002:
         content = """def test_mixed_case():
     # GIVEN
     calculator = Calculator()
-    
+
     # when
     result = calculator.add(2, 3)
-    
+
     # Then
     assert result == 5"""
 
@@ -139,10 +139,10 @@ class TestPTCM002:
         """Test that function missing Given comment returns failure."""
         content = """def test_missing_given():
     user = User("test")
-    
+
     # When
     result = user.get_name()
-    
+
     # Then
     assert result == "test\""""
 
@@ -177,9 +177,9 @@ class TestPTCM002:
         content = """def test_missing_when():
     # Given
     user = User("test")
-    
+
     result = user.get_name()
-    
+
     # Then
     assert result == "test\""""
 
@@ -212,10 +212,10 @@ class TestPTCM002:
         content = """def test_missing_then():
     # Given
     user = User("test")
-    
+
     # When
     result = user.get_name()
-    
+
     assert result == "test\""""
 
         test_file = TestFile(
@@ -247,10 +247,10 @@ class TestPTCM002:
         content = """def test_words_in_comments():
     # Given
     value = 42
-    
+
     # Check when value is processed
     result = process(value)
-    
+
     # Verify then result is correct
     assert result is not None"""
 
@@ -320,10 +320,10 @@ class TestPTCM002:
         content = """def test_gwt_with_extra():
     # Given - Setup test data
     account_id = 123
-    
+
     # When - Perform the withdrawal
     result = withdraw_money(account_id, 50)
-    
+
     # Then - Verify the operation
     assert result.success is True"""
 

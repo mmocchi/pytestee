@@ -5,7 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from pytestee.domain.models import CheckFailure, CheckSuccess, TestClass, TestFile, TestFunction
+from pytestee.domain.models import (
+    CheckFailure,
+    CheckSuccess,
+    TestClass,
+    TestFile,
+    TestFunction,
+)
 from pytestee.domain.rules.vulnerability.ptvl005 import PTVL005
 
 
@@ -20,7 +26,7 @@ def create_test_function_and_class(code: str, func_name: str = "test_example", c
     tree = ast.parse(code)
     class_def = next(node for node in tree.body if isinstance(node, ast.ClassDef))
     func_def = next(node for node in class_def.body if isinstance(node, ast.FunctionDef) and node.name == func_name)
-    
+
     test_function = TestFunction(
         name=func_name,
         lineno=func_def.lineno,
@@ -31,7 +37,7 @@ def create_test_function_and_class(code: str, func_name: str = "test_example", c
         docstring=None,
         decorators=[],
     )
-    
+
     test_class = TestClass(
         name=class_name,
         lineno=class_def.lineno,
@@ -43,7 +49,7 @@ def create_test_function_and_class(code: str, func_name: str = "test_example", c
         decorators=[],
         docstring=None,
     )
-    
+
     test_file = TestFile(
         path=Path("test_file.py"),
         content=code,
@@ -51,7 +57,7 @@ def create_test_function_and_class(code: str, func_name: str = "test_example", c
         test_functions=[test_function],
         test_classes=[test_class],
     )
-    
+
     return test_function, test_file
 
 
@@ -59,7 +65,7 @@ def create_standalone_test_function(code: str, name: str = "test_example") -> tu
     """Create a standalone TestFunction (not in a class) from code string."""
     tree = ast.parse(code)
     func_def = next(node for node in tree.body if isinstance(node, ast.FunctionDef))
-    
+
     test_function = TestFunction(
         name=name,
         lineno=func_def.lineno,
@@ -70,7 +76,7 @@ def create_standalone_test_function(code: str, name: str = "test_example") -> tu
         docstring=None,
         decorators=[],
     )
-    
+
     test_file = TestFile(
         path=Path("test_file.py"),
         content=code,
@@ -78,7 +84,7 @@ def create_standalone_test_function(code: str, name: str = "test_example") -> tu
         test_functions=[test_function],
         test_classes=[],
     )
-    
+
     return test_function, test_file
 
 
@@ -104,7 +110,7 @@ def test_example():
         code = '''
 class TestExample:
     shared_data = "initial"
-    
+
     def test_example(self):
         user = User("Alice")
         result = user.get_name()
@@ -122,7 +128,7 @@ class TestExample:
         code = '''
 class TestExample:
     shared_counter = 0
-    
+
     def test_example(self):
         self.shared_counter = 5
         result = process_data()
@@ -142,7 +148,7 @@ class TestExample:
         code = '''
 class TestExample:
     shared_config = "default"
-    
+
     def test_example(self):
         TestExample.shared_config = "test_config"
         result = get_config()
@@ -162,7 +168,7 @@ class TestExample:
 class TestExample:
     counter = 0
     flag = False
-    
+
     def test_example(self):
         self.counter = 10
         self.flag = True
@@ -183,7 +189,7 @@ class TestExample:
         code = '''
 class TestExample:
     shared_data = "initial"
-    
+
     def test_example(self):
         self.instance_var = "value"
         self.another_instance_var = 123
@@ -201,7 +207,7 @@ class TestExample:
         code = '''
 class TestExample:
     shared_counter: int = 0
-    
+
     def test_example(self):
         self.shared_counter = 42
         result = get_counter_value()
@@ -235,11 +241,11 @@ class TestExample:
         code = '''
 class TestExample:
     shared_data = "initial"
-    
+
     @classmethod
     def get_shared_data(cls):
         return cls.shared_data
-    
+
     def test_example(self):
         result = self.get_shared_data()
         assert result == "initial"
@@ -255,7 +261,7 @@ class TestExample:
         code = '''
 class TestExample:
     expected_value = "test"
-    
+
     def test_example(self):
         result = get_value()
         assert result == self.expected_value
@@ -271,7 +277,7 @@ class TestExample:
         code = '''
 class TestExample:
     shared_setting = "default"
-    
+
     def test_example(self):
         self.shared_setting = "modified"  # This is class variable modification
         self.instance_setting = "instance"  # This is instance variable (allowed)
@@ -309,18 +315,18 @@ class TestExample:
 class TestExample:
     regular_var = "value"
     annotated_var: int = 42
-    
+
     def __init__(self):
         self.instance_var = "instance"
-    
+
     def test_method(self):
         pass
 '''
         tree = ast.parse(code)
         class_def = next(node for node in tree.body if isinstance(node, ast.ClassDef))
-        
+
         class_variables = rule._extract_class_variables(class_def)
-        
+
         assert "regular_var" in class_variables
         assert "annotated_var" in class_variables
         # Should not include instance variables or methods
@@ -332,7 +338,7 @@ class TestExample:
         code = '''
 class TestExample:
     config = {"key": "value"}
-    
+
     def test_example(self):
         self.user = User()
         self.user.profile.name = "Alice"

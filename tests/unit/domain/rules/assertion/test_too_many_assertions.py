@@ -5,8 +5,8 @@ from pathlib import Path
 
 from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 from pytestee.domain.models import (
-    CheckFailure,
     CheckerConfig,
+    CheckFailure,
     CheckSeverity,
     CheckSuccess,
     TestFile,
@@ -38,7 +38,7 @@ class TestPTAS002:
     def test_within_limit_returns_success(self) -> None:
         """Test that function within assertion limit returns success."""
         # 3 assertions (default maximum)
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -84,19 +84,18 @@ class TestPTAS002:
     def test_exceeds_limit_returns_failure(self) -> None:
         """Test that function exceeding assertion limit returns failure."""
         # 4 assertions (exceeds default maximum of 3)
-        body = []
-        for i in range(4):
-            body.append(
-                ast.Assert(
-                    test=ast.Compare(
-                        left=ast.Constant(value=i),
-                        ops=[ast.Eq()],
-                        comparators=[ast.Constant(value=i)],
-                    ),
-                    msg=None,
-                )
+        body: list[ast.stmt] = [
+            ast.Assert(
+                test=ast.Compare(
+                    left=ast.Constant(value=i),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=i)],
+                ),
+                msg=None,
             )
-        
+            for i in range(4)
+        ]
+
         test_function = TestFunction(
             name="test_exceeds_limit",
             lineno=1,
@@ -118,21 +117,20 @@ class TestPTAS002:
     def test_custom_maximum_config(self) -> None:
         """Test with custom maximum configuration."""
         config = CheckerConfig(name="test_config", config={"max_asserts": 2})
-        
+
         # Function with 3 assertions (exceeds maximum of 2)
-        body = []
-        for i in range(3):
-            body.append(
-                ast.Assert(
-                    test=ast.Compare(
-                        left=ast.Constant(value=i),
-                        ops=[ast.Eq()],
-                        comparators=[ast.Constant(value=i)],
-                    ),
-                    msg=None,
-                )
+        body: list[ast.stmt] = [
+            ast.Assert(
+                test=ast.Compare(
+                    left=ast.Constant(value=i),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=i)],
+                ),
+                msg=None,
             )
-        
+            for i in range(3)
+        ]
+
         test_function = TestFunction(
             name="test_custom_max",
             lineno=1,
@@ -153,21 +151,20 @@ class TestPTAS002:
     def test_custom_maximum_success(self) -> None:
         """Test success with custom maximum configuration."""
         config = CheckerConfig(name="test_config", config={"max_asserts": 5})
-        
+
         # Function with 3 assertions (within maximum of 5)
-        body = []
-        for i in range(3):
-            body.append(
-                ast.Assert(
-                    test=ast.Compare(
-                        left=ast.Constant(value=i),
-                        ops=[ast.Eq()],
-                        comparators=[ast.Constant(value=i)],
-                    ),
-                    msg=None,
-                )
+        body: list[ast.stmt] = [
+            ast.Assert(
+                test=ast.Compare(
+                    left=ast.Constant(value=i),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=i)],
+                ),
+                msg=None,
             )
-        
+            for i in range(3)
+        ]
+
         test_function = TestFunction(
             name="test_custom_max_success",
             lineno=1,
@@ -187,7 +184,7 @@ class TestPTAS002:
 
     def test_zero_assertions_returns_success(self) -> None:
         """Test that zero assertions is within limit."""
-        body = [ast.Expr(value=ast.Constant(value="no assertions"))]
+        body: list[ast.stmt] = [ast.Expr(value=ast.Constant(value="no assertions"))]
         test_function = TestFunction(
             name="test_zero",
             lineno=1,
@@ -208,21 +205,20 @@ class TestPTAS002:
     def test_config_fallback_to_default(self) -> None:
         """Test that missing config falls back to default."""
         config = CheckerConfig(name="test_config", config={})  # Empty config
-        
+
         # 4 assertions (exceeds default maximum of 3)
-        body = []
-        for i in range(4):
-            body.append(
-                ast.Assert(
-                    test=ast.Compare(
-                        left=ast.Constant(value=i),
-                        ops=[ast.Eq()],
-                        comparators=[ast.Constant(value=i)],
-                    ),
-                    msg=None,
-                )
+        body: list[ast.stmt] = [
+            ast.Assert(
+                test=ast.Compare(
+                    left=ast.Constant(value=i),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=i)],
+                ),
+                msg=None,
             )
-        
+            for i in range(4)
+        ]
+
         test_function = TestFunction(
             name="test_fallback",
             lineno=1,

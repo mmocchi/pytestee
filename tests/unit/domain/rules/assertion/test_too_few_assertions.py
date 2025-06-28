@@ -5,8 +5,8 @@ from pathlib import Path
 
 from pytestee.domain.analyzers.assertion_analyzer import AssertionAnalyzer
 from pytestee.domain.models import (
-    CheckFailure,
     CheckerConfig,
+    CheckFailure,
     CheckSeverity,
     CheckSuccess,
     TestFile,
@@ -37,7 +37,7 @@ class TestPTAS001:
 
     def test_no_assertions_returns_failure(self) -> None:
         """Test that function with no assertions returns failure."""
-        body = [ast.Expr(value=ast.Constant(value="some code"))]
+        body: list[ast.stmt] = [ast.Expr(value=ast.Constant(value="some code"))]
         test_function = TestFunction(
             name="test_something",
             lineno=1,
@@ -58,7 +58,7 @@ class TestPTAS001:
 
     def test_one_assertion_returns_success(self) -> None:
         """Test that function with one assertion returns success."""
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -88,9 +88,9 @@ class TestPTAS001:
     def test_custom_minimum_config(self) -> None:
         """Test with custom minimum configuration."""
         config = CheckerConfig(name="test_config", config={"min_asserts": 3})
-        
+
         # Function with 2 assertions (below minimum of 3)
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -128,9 +128,9 @@ class TestPTAS001:
     def test_custom_minimum_success(self) -> None:
         """Test success with custom minimum configuration."""
         config = CheckerConfig(name="test_config", config={"min_asserts": 2})
-        
+
         # Function with 2 assertions (meets minimum of 2)
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -168,8 +168,8 @@ class TestPTAS001:
     def test_config_fallback_to_default(self) -> None:
         """Test that missing config falls back to default."""
         config = CheckerConfig(name="test_config", config={})  # Empty config
-        
-        body = [ast.Expr(value=ast.Constant(value="no assertions"))]
+
+        body: list[ast.stmt] = [ast.Expr(value=ast.Constant(value="no assertions"))]
         test_function = TestFunction(
             name="test_fallback",
             lineno=1,
@@ -194,7 +194,7 @@ class TestPTAS001:
 
     def test_with_pytest_raises(self) -> None:
         """Test that pytest.raises counts as assertion."""
-        body = [
+        body: list[ast.stmt] = [
             ast.With(
                 items=[
                     ast.withitem(

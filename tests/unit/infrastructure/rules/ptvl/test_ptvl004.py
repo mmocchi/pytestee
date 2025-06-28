@@ -246,7 +246,7 @@ def test_example():
         assert rule._looks_like_global_var("DATABASE_CONNECTION_URL") is True
         assert rule._looks_like_global_var("X") is True  # Single uppercase letters are considered global
         assert rule._looks_like_global_var("Y") is True
-        
+
         # Should not be detected as global
         assert rule._looks_like_global_var("local_var") is False
         assert rule._looks_like_global_var("user") is False

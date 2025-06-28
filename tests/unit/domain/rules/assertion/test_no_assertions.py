@@ -37,7 +37,7 @@ class TestPTAS004:
     def test_no_assertions_returns_failure(self) -> None:
         """Test that function with no assertions returns failure."""
         # Create function with no assertions
-        body = [ast.Expr(value=ast.Constant(value="some code"))]
+        body: list[ast.stmt] = [ast.Expr(value=ast.Constant(value="some code"))]
         test_function = TestFunction(
             name="test_something",
             lineno=1,
@@ -59,7 +59,7 @@ class TestPTAS004:
     def test_with_assert_statement_returns_success(self) -> None:
         """Test that function with assert statement returns success."""
         # Create function with assert statement
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -88,7 +88,7 @@ class TestPTAS004:
     def test_with_pytest_raises_returns_success(self) -> None:
         """Test that function with pytest.raises returns success."""
         # Create function with pytest.raises
-        body = [
+        body: list[ast.stmt] = [
             ast.With(
                 items=[
                     ast.withitem(
@@ -125,7 +125,7 @@ class TestPTAS004:
 
     def test_multiple_assertions_returns_success(self) -> None:
         """Test that function with multiple assertions returns success."""
-        body = [
+        body: list[ast.stmt] = [
             ast.Assert(
                 test=ast.Compare(
                     left=ast.Constant(value=1),
@@ -167,7 +167,7 @@ class TestPTAS004:
 
     def test_result_contains_correct_metadata(self) -> None:
         """Test that results contain correct metadata."""
-        body = [ast.Expr(value=ast.Constant(value="no assertions"))]
+        body: list[ast.stmt] = [ast.Expr(value=ast.Constant(value="no assertions"))]
         test_function = TestFunction(
             name="test_metadata",
             lineno=42,

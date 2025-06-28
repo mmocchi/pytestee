@@ -32,10 +32,10 @@ class TestPTST001:
     # Arrange
     x = 1
     y = 2
-    
+
     # Act
     result = x + y
-    
+
     # Assert
     assert result == 3"""
 
@@ -68,9 +68,9 @@ class TestPTST001:
         content = """def test_three_sections():
     x = 1
     y = 2
-    
+
     result = x + y
-    
+
     assert result == 3"""
 
         test_file = TestFile(
@@ -102,9 +102,9 @@ class TestPTST001:
         content = """def test_two_sections():
     x = 1
     result = x + 1
-    
+
     # Second section
-    
+
     assert result == 2"""
 
         test_file = TestFile(
@@ -170,7 +170,7 @@ class TestPTST001:
         content = """def test_one_empty_line():
     x = 1
     y = 2
-    
+
     result = x + y
     assert result == 3"""
 
@@ -203,9 +203,9 @@ class TestPTST001:
         content = """def test_no_assert():
     x = 1
     y = 2
-    
+
     result = x + y
-    
+
     print(result)"""
 
         test_file = TestFile(
@@ -272,10 +272,10 @@ class TestPTST001:
         """Test that assert in any section counts for pattern detection."""
         content = """def test_assert_middle():
     x = 1
-    
+
     assert x == 1
     result = x + 1
-    
+
     print(result)
     assert result == 2"""
 
@@ -336,7 +336,7 @@ class TestPTST001:
         """Test that function with only empty lines returns failure."""
         content = """def test_only_empty():
     pass
-    
+
     """
 
         test_file = TestFile(
@@ -369,11 +369,11 @@ class TestPTST001:
     # Setup data
     data = [1, 2, 3]
     processor = DataProcessor()
-    
+
     # Process the data
     result = processor.process(data)
     processed = result.get_values()
-    
+
     # Verify results
     assert len(processed) == 3
     assert all(x > 0 for x in processed)"""
@@ -414,9 +414,9 @@ class TestPTST001:
             "    assert result == 3"
         ]
         empty_line_indices = [3, 5]
-        
+
         sections = self.rule._analyze_sections(function_lines, empty_line_indices)
-        
+
         assert len(sections) == 3
         assert "x = 1" in sections[0][0]
         assert "y = 2" in sections[0][1]
@@ -432,7 +432,7 @@ class TestPTST001:
             ["assert result == 3"]
         ]
         assert self.rule._looks_like_aaa_structure(sections_with_assert) is True
-        
+
         # No assert in any section
         sections_no_assert = [
             ["x = 1", "y = 2"],
@@ -440,11 +440,11 @@ class TestPTST001:
             ["print(result)"]
         ]
         assert self.rule._looks_like_aaa_structure(sections_no_assert) is False
-        
+
         # Only one section
         sections_one = [["x = 1"]]
         assert self.rule._looks_like_aaa_structure(sections_one) is False
-        
+
         # Two sections with assert
         sections_two_with_assert = [
             ["x = 1", "result = x + 1"],
@@ -456,9 +456,9 @@ class TestPTST001:
         """Test that results contain correct metadata."""
         content = """def test_metadata():
     x = 1
-    
+
     result = x + 1
-    
+
     assert result == 2"""
 
         test_file = TestFile(
