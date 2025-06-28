@@ -152,4 +152,4 @@ src/pytestee/
 
 ## ライセンス
 
-MIT License - 詳細は [LICENSE](../LICENSE) ファイルを参照してください。
+MIT License - 詳細は [GitHub リポジトリ](https://github.com/mmocchi/pytestee/blob/main/LICENSE) で確認してください。

@@ -234,4 +234,4 @@ pytestee check --help
 
 - [ルールリファレンス](rules.md)でより詳細なルール情報を確認
 - [設定ガイド](configuration.md)で高度な設定方法を学習
-- [開発者ガイド](development.md)でPytesteeの拡張方法を理解
+- [CLIリファレンス](cli-reference.md)でコマンドの詳細を確認
