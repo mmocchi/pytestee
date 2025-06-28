@@ -183,6 +183,34 @@ class IConfigManager(ABC):
         """
         pass
 
+    @abstractmethod
+    def is_rule_enabled_for_file(self, rule_id: str, file_path: Path) -> bool:
+        """特定のファイルパスに対してルールが有効かどうかをチェックします。
+
+        Args:
+            rule_id: ルールID
+            file_path: ファイルパス
+
+        Returns:
+            ルールが有効な場合True
+
+        """
+        pass
+
+    @abstractmethod
+    def get_rule_config_for_file(self, rule_id: str, file_path: Path) -> dict[str, Any]:
+        """特定のファイルパスに対するルール固有の設定を取得します。
+
+        Args:
+            rule_id: ルールID
+            file_path: ファイルパス
+
+        Returns:
+            ルール固有の設定
+
+        """
+        pass
+
 
 class ICheckerRegistry(ABC):
     """チェッカーレジストリのインターフェース。

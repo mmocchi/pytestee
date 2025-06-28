@@ -39,6 +39,18 @@ class BaseRule(ABC):
             return config_manager.is_rule_enabled(self.rule_id)
         return True
 
+    def is_enabled_for_file(self, test_file: TestFile, config_manager: Optional[object]) -> bool:
+        """Check if this rule is enabled for a specific file."""
+        if config_manager is not None and hasattr(config_manager, "is_rule_enabled_for_file"):
+            return config_manager.is_rule_enabled_for_file(self.rule_id, test_file.path)
+        return self.is_enabled(config_manager)
+
+    def get_config_for_file(self, test_file: TestFile, config_manager: Optional[object]) -> dict:
+        """Get rule-specific configuration for a specific file."""
+        if config_manager is not None and hasattr(config_manager, "get_rule_config_for_file"):
+            return config_manager.get_rule_config_for_file(self.rule_id, test_file.path)
+        return {}
+
     def _create_failure_result(
         self,
         message: str,
