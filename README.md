@@ -6,6 +6,7 @@
 
 - **AAA/GWT Pattern Detection**: テストがArrange-Act-Assert（準備-実行-検証）またはGiven-When-Then（前提-実行-検証）パターンに従っているかをチェック
 - **Assert Density Analysis**: テスト関数ごとの適切なアサーション数と密度を検証
+- **Per-File Rule Customization**: ファイルやディレクトリごとにルールを個別設定（ruff風の設定）
 - **Clean Architecture**: 新しい品質チェッカーを追加するための拡張可能な設計
 - **Rich CLI Output**: 詳細な分析結果を表示する美しいコンソール出力
 - **Configurable**: ファイルやコマンドラインオプションによる設定サポート
@@ -39,6 +40,10 @@ pytestee check --verbose
 
 # JSON出力を取得
 pytestee check --format=json
+
+# 設定ファイルを使ってファイル別にルールをカスタマイズ
+# .pytestee.tomlに[per_file_ignores]を設定後:
+pytestee check  # ファイル別無視設定が自動適用される
 ```
 
 ## Usage Examples
@@ -136,6 +141,49 @@ allow_gwt = true
 
 [tool.pytestee.rules.PTAS003]
 max_density = 0.5
+```
+
+### Per-File Ignores
+
+特定のファイルやディレクトリに対してルールを無視したい場合、`per_file_ignores`設定を使用できます（ruff風の設定）：
+
+```toml
+[tool.pytestee]
+# グローバルルール設定
+select = ["PTCM001", "PTAS005", "PTNM001"]
+
+# ファイル別無視設定
+[tool.pytestee.per_file_ignores]
+"tests/unit/**" = ["PTCM001"]                    # ユニットテストはAAAコメント不要
+"tests/integration/**" = ["PTAS005"]             # 統合テストはアサーション数制限なし
+"**/conftest.py" = ["PTCM001", "PTAS005"]       # conftest.pyは全体的に緩い
+"**/__init__.py" = ["PTNM001"]                  # __init__.pyは命名ルール緩い
+"tests/fixtures/**" = ["PTCM001", "PTAS005"]    # フィクスチャファイルは緩い
+```
+
+#### サポートパターン
+
+- **完全一致**: `"conftest.py"` - ファイル名の完全一致
+- **ディレクトリワイルドカード**: `"tests/**"` - ディレクトリとその全サブディレクトリ
+- **ファイルパターン**: `"**/test_*.py"` - 任意の深さのtest_で始まるファイル
+- **複合パターン**: `"tests/unit/**/test_*.py"` - 複数の条件の組み合わせ
+
+#### 使用例
+
+```bash
+# この設定では以下のような動作になります:
+
+# tests/unit/test_user.py - PTCM001が無視される
+pytestee check tests/unit/test_user.py
+
+# tests/integration/test_api.py - PTAS005が無視される  
+pytestee check tests/integration/test_api.py
+
+# src/myapp/__init__.py - PTNM001が無視される
+pytestee check src/myapp/__init__.py
+
+# 通常のファイル - 全ルールが適用される
+pytestee check src/myapp/service.py
 ```
 
 

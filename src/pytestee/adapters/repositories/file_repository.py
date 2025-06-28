@@ -88,7 +88,22 @@ class FileRepository(ITestRepository):
             return False
 
         name = file_path.name
-        return name.startswith("test_") or name.endswith("_test.py")
+
+        # First check naming conventions
+        if name.startswith("test_") or name.endswith("_test.py"):
+            return True
+
+        # Special case: conftest.py is not a test file (it's a configuration file)
+        if name == "conftest.py":
+            return False
+
+        # For other files, check if they contain test functions
+        try:
+            test_file = self._parser.parse_file(file_path)
+            return len(test_file.test_functions) > 0 or len(test_file.test_classes) > 0
+        except Exception:
+            # If parsing fails, fall back to naming convention
+            return False
 
     def _should_include_file(self, file_path: Path) -> bool:
         """ファイルがexcludeパターンに基づいて含まれるべきかを判定します。
@@ -100,10 +115,14 @@ class FileRepository(ITestRepository):
             ファイルを含めるべき場合True
 
         """
+        file_name = file_path.name
+
+        # Always exclude conftest.py files as they are configuration files, not test files
+        if file_name == "conftest.py":
+            return False
+
         if not self._exclude_patterns:
             return True
-
-        file_name = file_path.name
 
         # Check if file matches any exclude pattern
         matches_exclude = any(

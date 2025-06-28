@@ -183,6 +183,21 @@ class IConfigManager(ABC):
         """
         pass
 
+    @abstractmethod
+    def is_rule_enabled_for_file(self, rule_id: str, file_path: Path) -> bool:
+        """特定のファイルパスに対してルールが有効かどうかをチェックします。
+
+        Args:
+            rule_id: ルールID
+            file_path: ファイルパス
+
+        Returns:
+            ルールが有効な場合True
+
+        """
+        pass
+
+
 
 class ICheckerRegistry(ABC):
     """チェッカーレジストリのインターフェース。

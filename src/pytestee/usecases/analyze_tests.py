@@ -121,32 +121,27 @@ class AnalyzeTestsUseCase:
         # Get all rule instances from registry
         all_rule_instances = self._checker_registry.get_all_rule_instances()
 
-        # Filter to enabled rules only
-        enabled_rules = {
-            rule_id: rule
-            for rule_id, rule in all_rule_instances.items()
-            if self._config_manager.is_rule_enabled(rule_id)
-        }
-
-        # Run enabled rules on each test function
+        # Run rules on each test function (with file-specific rule filtering)
         for test_function in test_file.test_functions:
-            for rule_id, rule in enabled_rules.items():
-                try:
-                    # Create checker config for the rule
-                    checker_config = self._config_manager.get_checker_config(rule.name)
-                    rule_result = rule.check(test_function, test_file, checker_config)
-                    results.append(rule_result)
-                except Exception as e:
-                    # Log rule error and continue with other rules
-                    raise CheckerError(rule_id, e) from e
-
-        # Run enabled rules on each test class (for rules that support check_class)
-        for test_class in test_file.test_classes:
-            for rule_id, rule in enabled_rules.items():
-                # Check if rule has check_class method (class-level rules)
-                if hasattr(rule, 'check_class'):
+            for rule_id, rule in all_rule_instances.items():
+                # Check if rule is enabled for this specific file
+                if rule.is_enabled_for_file(test_file, self._config_manager):
                     try:
-                        # Create checker config for the rule
+                        # Use global checker config (no file-specific overrides needed)
+                        checker_config = self._config_manager.get_checker_config(rule.name)
+                        rule_result = rule.check(test_function, test_file, checker_config)
+                        results.append(rule_result)
+                    except Exception as e:
+                        # Log rule error and continue with other rules
+                        raise CheckerError(rule_id, e) from e
+
+        # Run rules on each test class (with file-specific rule filtering)
+        for test_class in test_file.test_classes:
+            for rule_id, rule in all_rule_instances.items():
+                # Check if rule is enabled for this specific file and has check_class method
+                if rule.is_enabled_for_file(test_file, self._config_manager) and hasattr(rule, 'check_class'):
+                    try:
+                        # Use global checker config (no file-specific overrides needed)
                         checker_config = self._config_manager.get_checker_config(rule.name)
                         rule_result = rule.check_class(test_class, test_file, checker_config)
                         results.append(rule_result)
