@@ -4,18 +4,23 @@ Pytesteeは、pytest形式のテストコードの品質をチェックするCLI
 
 ## インストール
 
-### 要件
-- Python 3.9以上
+!!! note "要件"
+    Python 3.9以上が必要です
 
-### pipを使用したインストール
-```bash
-pip install pytestee
-```
+=== "pip"
+    ```bash
+    pip install pytestee
+    ```
 
-### uvを使用したインストール（推奨）
-```bash
-uv add pytestee
-```
+=== "uv（推奨）"
+    ```bash
+    uv add pytestee
+    ```
+
+=== "pipx（グローバル）"
+    ```bash
+    pipx install pytestee
+    ```
 
 ## 基本的な使用方法
 
@@ -162,50 +167,58 @@ Pytesteeは以下のカテゴリのルールを提供します：
 
 ### 良いテストの例
 
-```python
-def test_ユーザー作成():
-    """ユーザー作成機能のテスト。"""
-    # Arrange
-    name = "田中太郎"
-    email = "tanaka@example.com"
-    
-    # Act
-    user = User.create(name, email)
-    
-    # Assert
-    assert user.name == name
-    assert user.email == email
-    assert user.is_valid()
-```
+!!! success "推奨パターン"
+    ```python
+    def test_ユーザー作成():
+        """ユーザー作成機能のテスト。"""
+        # Arrange
+        name = "田中太郎"
+        email = "tanaka@example.com"
+        
+        # Act
+        user = User.create(name, email)
+        
+        # Assert
+        assert user.name == name
+        assert user.email == email
+        assert user.is_valid()
+    ```
 
 ### 改善が必要なテストの例
 
-```python
-def test_user_creation():  # PTNM001: 日本語の使用を推奨
-    user = User("田中太郎", "tanaka@example.com")  # PTST002: パターン不明確
-    # PTAS004: アサーションが不足
-```
+!!! warning "要改善パターン"
+    ```python
+    def test_user_creation():  # PTNM001: 日本語の使用を推奨
+        user = User("田中太郎", "tanaka@example.com")  # PTST002: パターン不明確
+        # PTAS004: アサーションが不足
+    ```
+    
+    このテストの問題点：
+    
+    - :material-close: 英語メソッド名（日本語推奨）
+    - :material-close: 構造が不明確（AAA/GWTパターンなし）
+    - :material-close: アサーションがない
 
 ## トラブルシューティング
 
 ### よくある問題
 
-1. **設定ファイルが見つからない**
-   ```bash
-   pytestee tests/ --config .pytestee.toml
-   ```
+!!! question "Q: 設定ファイルが見つからない"
+    ```bash
+    pytestee tests/ --config .pytestee.toml
+    ```
 
-2. **特定のルールを無効化したい**
-   ```toml
-   [tool.pytestee]
-   ignore = ["PTNM001"]  # 日本語命名ルールを無効化
-   ```
+!!! question "Q: 特定のルールを無効化したい"
+    ```toml
+    [tool.pytestee]
+    ignore = ["PTNM001"]  # 日本語命名ルールを無効化
+    ```
 
-3. **すべてのルールを情報レベルにしたい**
-   ```toml
-   [tool.pytestee.severity]
-   "PT" = "info"  # すべてのルールを情報レベルに
-   ```
+!!! question "Q: すべてのルールを情報レベルにしたい"
+    ```toml
+    [tool.pytestee.severity]
+    "PT" = "info"  # すべてのルールを情報レベルに
+    ```
 
 ### ヘルプの表示
 

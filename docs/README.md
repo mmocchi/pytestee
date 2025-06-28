@@ -1,13 +1,11 @@
-# Pytestee Documentation
+# Pytestee
 
-Pytesteeは、pytest形式のテストコードの品質を向上させるためのCLIツールです。Clean Architectureの原則に基づいて構築され、ルールベースのアプローチでテストの品質を評価します。
+Pytesteeは、pytest形式のテストコードの品質を向上させるためのCLIツールです。ルールベースのアプローチでテストの品質を評価し、より良いテストコードの作成をサポートします。
 
-## ドキュメント一覧
-
-### はじめに
-- **[Getting Started](getting-started.md)** - インストールと基本的な使用方法
-- **[Configuration](configuration.md)** - 詳細な設定ガイド
-- **[Rules Reference](rules.md)** - 全ルールの詳細なリファレンス
+!!! info "ドキュメントナビゲーション"
+    - 初めての方は **[はじめに](getting-started.md)** からお読みください
+    - 詳細な設定は **[設定ガイド](configuration.md)** をご覧ください
+    - 全ルールの詳細は **[ルールリファレンス](rules.md)** で確認できます
 
 ### 主要機能
 
@@ -44,27 +42,48 @@ pip install pytestee
 ```
 
 ### 基本的な使用方法
-```bash
-# テストファイルをチェック
-pytestee tests/
 
-# JSON形式で出力
-pytestee tests/ --format json
+=== "基本チェック"
+    ```bash
+    # テストファイルをチェック
+    pytestee tests/
+    ```
 
-# 特定のルールのみ実行
-pytestee tests/ --select PTCM,PTAS
-```
+=== "JSON出力"
+    ```bash
+    # JSON形式で出力
+    pytestee tests/ --format json
+    ```
+
+=== "ルール選択"
+    ```bash
+    # 特定のルールのみ実行
+    pytestee tests/ --select PTCM,PTAS
+    ```
 
 ### 設定例
-```toml
-[tool.pytestee]
-select = ["PTCM", "PTAS", "PTEC"]
-ignore = ["PTST002"]
 
-[tool.pytestee.severity]
-PTCM001 = "info"      # AAA パターン検出
-PTAS004 = "error"     # アサーションなし
-```
+=== "基本設定"
+    ```toml
+    [tool.pytestee]
+    select = ["PTCM", "PTAS"]
+    
+    [tool.pytestee.severity]
+    PTCM001 = "info"      # AAA パターン検出
+    PTAS004 = "error"     # アサーションなし
+    ```
+
+=== "厳格設定"
+    ```toml
+    [tool.pytestee]
+    select = ["PT"]  # すべてのルール
+    max_asserts = 3
+    min_asserts = 1
+    
+    [tool.pytestee.severity]
+    "PTAS" = "error"
+    "PTVL" = "error"
+    ```
 
 ## ルール体系
 
@@ -102,41 +121,28 @@ src/pytestee/
 
 ## 良いテストの例
 
-```python
-def test_ユーザー作成():
-    """ユーザー作成機能のテスト。"""
-    # Arrange
-    name = "田中太郎"
-    email = "tanaka@example.com"
+!!! example "推奨されるテストパターン"
+    ```python
+    def test_ユーザー作成():
+        """ユーザー作成機能のテスト。"""
+        # Arrange
+        name = "田中太郎"
+        email = "tanaka@example.com"
+        
+        # Act
+        user = User.create(name, email)
+        
+        # Assert
+        assert user.name == name
+        assert user.email == email
+        assert user.is_valid()
+    ```
+
+    このテストは以下の点で優れています：
     
-    # Act
-    user = User.create(name, email)
-    
-    # Assert
-    assert user.name == name
-    assert user.email == email
-    assert user.is_valid()
-```
-
-## コントリビューション
-
-### 新しいルールの追加
-1. 適切なカテゴリを選択または作成
-2. `infrastructure/rules/` に実装
-3. テストケースを追加
-4. ドキュメントを更新
-
-### 開発環境のセットアップ
-```bash
-# 依存関係のインストール
-uv sync
-
-# 全チェックの実行
-task check
-
-# テストの実行
-task test
-```
+    - :material-check: **日本語メソッド名** で可読性が高い
+    - :material-check: **AAAパターン** で構造が明確
+    - :material-check: **適切なアサーション数** で検証が十分
 
 ## リソース
 
