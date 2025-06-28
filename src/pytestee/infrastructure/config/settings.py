@@ -308,46 +308,9 @@ class ConfigManager(IConfigManager):
             return []
 
         # Convert file path to relative path from project root
-        if file_path.is_absolute():
-            try:
-                # Try to get relative path from current working directory
-                relative_path = file_path.relative_to(Path.cwd())
-                relative_path_str = str(relative_path)
-            except ValueError:
-                # If file is outside current directory, try limited pattern matching
-                # Only for files that seem to be in temporary test directories
-                file_str = str(file_path)
-                
-                # Only try pattern matching for files in temporary directories (like tests)
-                # This is a compromise to support testing while preventing false matches
-                if "/tmp" in file_str or "/temp" in file_str.lower() or "temp" in file_path.parts:
-                    # Look for common directory patterns like tests/*, docs/*, etc.
-                    parts = file_path.parts
-                    common_dirs = ['tests', 'test', 'docs', 'doc', 'tools', 'src', 'lib', 'examples']
-                    
-                    for common_dir in common_dirs:
-                        if common_dir in parts:
-                            # Find the index of the common directory and create subpath from there
-                            try:
-                                dir_index = parts.index(common_dir)
-                                subpath = "/".join(parts[dir_index:])
-                                file_ignores = []
-                                for pattern, ignores in per_file_ignores.items():
-                                    if self._matches_file_pattern(subpath, pattern):
-                                        if isinstance(ignores, list):
-                                            file_ignores.extend(ignores)
-                                        elif isinstance(ignores, str):
-                                            file_ignores.append(ignores)
-                                if file_ignores:  # If we found matches with this subpath, return them
-                                    return file_ignores
-                            except ValueError:
-                                continue
-                
-                # For files outside project and not in temp directories, return no ignores
-                return []
-        else:
-            # File path is already relative, use it directly
-            relative_path_str = str(file_path)
+        relative_path_str = self._get_relative_path_for_matching(file_path, per_file_ignores)
+        if relative_path_str is None:
+            return []
 
         # Collect all matching ignore patterns
         file_ignores = []
@@ -359,6 +322,52 @@ class ConfigManager(IConfigManager):
                     file_ignores.append(ignores)
 
         return file_ignores
+
+    def _get_relative_path_for_matching(self, file_path: Path, per_file_ignores: dict[str, Union[list[str], str]]) -> Optional[str]:
+        """Get relative path for pattern matching, with special handling for external files."""
+        if file_path.is_absolute():
+            try:
+                # Try to get relative path from current working directory
+                relative_path = file_path.relative_to(Path.cwd())
+                return str(relative_path)
+            except ValueError:
+                # If file is outside current directory, try limited pattern matching
+                return self._handle_external_file_matching(file_path, per_file_ignores)
+        else:
+            # File path is already relative, use it directly
+            return str(file_path)
+
+    def _handle_external_file_matching(self, file_path: Path, per_file_ignores: dict[str, Union[list[str], str]]) -> Optional[str]:
+        """Handle pattern matching for files outside project directory."""
+        file_str = str(file_path)
+
+        # Only try pattern matching for files in temporary directories (like tests)
+        # This is a compromise to support testing while preventing false matches
+        if "/tmp" in file_str or "/temp" in file_str.lower() or "temp" in file_path.parts:  # noqa: S108
+            # Look for common directory patterns like tests/*, docs/*, etc.
+            parts = file_path.parts
+            common_dirs = ['tests', 'test', 'docs', 'doc', 'tools', 'src', 'lib', 'examples']
+
+            for common_dir in common_dirs:
+                if common_dir in parts:
+                    # Find the index of the common directory and create subpath from there
+                    try:
+                        dir_index = parts.index(common_dir)
+                        subpath = "/".join(parts[dir_index:])
+                        file_ignores = []
+                        for pattern, ignores in per_file_ignores.items():
+                            if self._matches_file_pattern(subpath, pattern):
+                                if isinstance(ignores, list):
+                                    file_ignores.extend(ignores)
+                                elif isinstance(ignores, str):
+                                    file_ignores.append(ignores)
+                        if file_ignores:  # If we found matches with this subpath, use this subpath
+                            return subpath
+                    except ValueError:
+                        continue
+
+        # For files outside project and not in temp directories, return None
+        return None
 
     def _matches_file_pattern(self, file_path: str, pattern: str) -> bool:
         """Check if a file path matches a pattern (ruff-like).

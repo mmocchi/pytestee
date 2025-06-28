@@ -88,15 +88,15 @@ class FileRepository(ITestRepository):
             return False
 
         name = file_path.name
-        
+
         # First check naming conventions
         if name.startswith("test_") or name.endswith("_test.py"):
             return True
-        
+
         # Special case: conftest.py is not a test file (it's a configuration file)
         if name == "conftest.py":
             return False
-            
+
         # For other files, check if they contain test functions
         try:
             test_file = self._parser.parse_file(file_path)
@@ -116,7 +116,7 @@ class FileRepository(ITestRepository):
 
         """
         file_name = file_path.name
-        
+
         # Always exclude conftest.py files as they are configuration files, not test files
         if file_name == "conftest.py":
             return False
