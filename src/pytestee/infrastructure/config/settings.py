@@ -118,6 +118,12 @@ class ConfigManager(IConfigManager):
             # Handle pyproject.toml format
             if file_path.name == "pyproject.toml":
                 return data.get("tool", {}).get("pytestee", {})
+            
+            # Handle .pytestee.toml format - check if it has the tool.pytestee structure
+            if "tool" in data and "pytestee" in data["tool"]:
+                return data["tool"]["pytestee"]
+            
+            # Direct pytestee config (legacy format)
             return data
 
         except Exception:
