@@ -86,7 +86,7 @@ class TestCLI:
         )
 
         # Should have less output in quiet mode
-        assert len(result.output) < 2500  # Arbitrary threshold for "less output" (updated for PTVL rules)
+        assert len(result.output) < 4000  # Arbitrary threshold for "less output" (updated for PTEC rules)
 
     def test_json_output_format(self) -> None:
         """Test check command with JSON output."""

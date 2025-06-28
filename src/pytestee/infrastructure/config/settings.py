@@ -33,6 +33,11 @@ class ConfigManager(IConfigManager):
                 "PTNM001",
                 "PTVL001",  # Private access detection
                 "PTVL002",  # Time dependency detection
+                "PTEC001",  # Numeric edge cases
+                "PTEC002",  # Collection edge cases
+                "PTEC003",  # String edge cases
+                "PTEC004",  # Normal/abnormal test ratio
+                "PTEC005",  # Overall edge case coverage
             ],  # Default selection (PTCM003 and PTAS005 to avoid conflicts)
             "ignore": [],  # Rules to ignore
             # Rule severity configuration
@@ -118,6 +123,12 @@ class ConfigManager(IConfigManager):
             # Handle pyproject.toml format
             if file_path.name == "pyproject.toml":
                 return data.get("tool", {}).get("pytestee", {})
+
+            # Handle .pytestee.toml format - check if it has the tool.pytestee structure
+            if "tool" in data and "pytestee" in data["tool"]:
+                return data["tool"]["pytestee"]
+
+            # Direct pytestee config (legacy format)
             return data
 
         except Exception:
@@ -377,7 +388,7 @@ class ConfigManager(IConfigManager):
         - "tests/**" - directory and all subdirectories
         - "**/{tests,docs,tools}/*" - multiple directory patterns
         """
-        import fnmatch  # noqa: PLC0415
+        import fnmatch
 
         # Normalize path separators
         file_path = file_path.replace("\\", "/")

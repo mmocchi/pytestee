@@ -359,6 +359,234 @@
           assert TestCounter.counter == 1  # Test execution order dependent
   ```
 
+### PTEC: Edge Case Coverage Rules
+
+#### PTEC001: Numeric Edge Cases Missing
+- **Default Severity**: ERROR (configurable)
+- **Description**: テスト関数が数値のエッジケース（0、負数、最大最小値、オーバーフロー）をカバーしていない場合
+- **設定**: `min_numeric_edge_cases`（デフォルト: 1）
+- **Good Examples**:
+  ```python
+  # Good: Covers numeric edge cases
+  @pytest.mark.parametrize("value", [0, -1, 1, 999999, -999999])
+  def test_numeric_validation(value):
+      result = validate_number(value)
+      assert result is not None
+  
+  # Good: Testing zero and negative cases
+  def test_calculation_edge_cases():
+      calculator = Calculator()
+      
+      # Test zero
+      assert calculator.divide(10, 1) == 10
+      assert calculator.divide(0, 1) == 0
+      
+      # Test negative numbers
+      assert calculator.multiply(-5, 3) == -15
+      assert calculator.multiply(-2, -4) == 8
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: Only tests positive normal values
+  def test_calculation():
+      calculator = Calculator()
+      assert calculator.add(2, 3) == 5
+      assert calculator.multiply(4, 5) == 20
+      # Missing: zero, negative, boundary values
+  
+  # Bad: No edge case coverage for numeric operations
+  def test_price_calculation():
+      price = calculate_price(quantity=5, unit_price=10.0)
+      assert price == 50.0
+      # Missing: quantity=0, negative values, very large numbers
+  ```
+
+#### PTEC002: Collection Edge Cases Missing
+- **Default Severity**: ERROR (configurable)
+- **Description**: テスト関数がコレクション（リスト、辞書など）のエッジケース（空、単一要素、大きなサイズ）をカバーしていない場合
+- **設定**: `min_collection_edge_cases`（デフォルト: 1）
+- **Good Examples**:
+  ```python
+  # Good: Tests empty, single, and multiple element cases
+  @pytest.mark.parametrize("items", [[], [1], [1, 2, 3, 4, 5]])
+  def test_list_processing(items):
+      result = process_list(items)
+      assert isinstance(result, list)
+  
+  # Good: Explicit edge case testing
+  def test_user_list_operations():
+      user_service = UserService()
+      
+      # Empty list
+      empty_result = user_service.get_users([])
+      assert empty_result == []
+      
+      # Single user
+      single_result = user_service.get_users([1])
+      assert len(single_result) == 1
+      
+      # Multiple users
+      multi_result = user_service.get_users([1, 2, 3])
+      assert len(multi_result) == 3
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: Only tests with normal-sized collections
+  def test_user_processing():
+      users = [User("Alice"), User("Bob"), User("Charlie")]
+      result = process_users(users)
+      assert len(result) == 3
+      # Missing: empty list, single user cases
+  
+  # Bad: No consideration of collection size variations
+  def test_data_aggregation():
+      data = {"key1": "value1", "key2": "value2"}
+      result = aggregate_data(data)
+      assert result is not None
+      # Missing: empty dict, single key, very large dict
+  ```
+
+#### PTEC003: String Edge Cases Missing
+- **Default Severity**: ERROR (configurable)
+- **Description**: テスト関数が文字列のエッジケース（None、空文字、特殊文字、長い文字列）をカバーしていない場合
+- **設定**: `min_string_edge_cases`（デフォルト: 1）
+- **Good Examples**:
+  ```python
+  # Good: Comprehensive string edge case testing
+  @pytest.mark.parametrize("text", [
+      None, "", "a", "normal text", 
+      "text\nwith\nnewlines", "日本語テキスト", "x" * 1000
+  ])
+  def test_text_processing(text):
+      result = process_text(text)
+      # Each case handled appropriately
+      if text is None:
+          assert result is None
+      elif text == "":
+          assert result == ""
+      else:
+          assert len(result) > 0
+  
+  # Good: Explicit string edge cases
+  def test_email_validation():
+      validator = EmailValidator()
+      
+      # None and empty
+      assert validator.is_valid(None) is False
+      assert validator.is_valid("") is False
+      
+      # Special characters
+      assert validator.is_valid("test@example.com") is True
+      assert validator.is_valid("user+tag@domain.co.jp") is True
+      
+      # Very long email
+      long_email = "a" * 200 + "@example.com"
+      assert validator.is_valid(long_email) is False
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: Only tests normal string cases
+  def test_name_formatting():
+      formatter = NameFormatter()
+      result = formatter.format("John Doe")
+      assert result == "John Doe"
+      # Missing: None, empty string, special characters
+  
+  # Bad: No consideration of string edge cases
+  def test_message_processing():
+      message = "Hello, World!"
+      result = process_message(message)
+      assert "Hello" in result
+      # Missing: empty message, None, very long message, special chars
+  ```
+
+#### PTEC004: Normal/Abnormal Test Ratio Warning
+- **Default Severity**: ERROR (configurable)
+- **Description**: テスト関数の正常ケースと異常ケースの比率が推奨される7:3比率から大きく逸脱している場合
+- **設定**: `normal_ratio_target`（デフォルト: 0.7）、`abnormal_ratio_target`（デフォルト: 0.3）
+- **Good Examples**:
+  ```python
+  # Good: Balanced normal/abnormal case ratio
+  @pytest.mark.parametrize("input_data,expected", [
+      # Normal cases (70%)
+      ("valid@email.com", True),
+      ("user@domain.org", True),
+      ("test123@example.net", True),
+      ("name+tag@site.com", True),
+      ("user@subdomain.example.com", True),
+      ("simple@test.co", True),
+      ("long.name@example-site.com", True),
+      # Abnormal cases (30%)
+      ("invalid-email", False),
+      ("@missing-local.com", False),
+      ("missing-at-sign.com", False),
+  ])
+  def test_email_validation_comprehensive(input_data, expected):
+      result = validate_email(input_data)
+      assert result == expected
+  ```
+- **Warning Examples** (would trigger this rule):
+  ```python
+  # Warning: Too many normal cases, not enough edge/error cases
+  @pytest.mark.parametrize("value", [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10  # All normal cases, no edge cases
+  ])
+  def test_number_processing(value):
+      result = process_number(value)
+      assert result > 0
+  
+  # Warning: Too many abnormal cases, not enough normal cases  
+  @pytest.mark.parametrize("invalid_input", [
+      None, "", "invalid", -1, 0, [], {}, False
+  ])
+  def test_validation_errors_only(invalid_input):
+      with pytest.raises(ValueError):
+          validate_input(invalid_input)
+  ```
+
+#### PTEC005: Overall Edge Case Coverage Score
+- **Default Severity**: ERROR (configurable)
+- **Description**: テスト関数の全体的なエッジケース網羅性スコアが低い場合（数値、コレクション、文字列の各カテゴリを総合評価）
+- **設定**: `min_coverage_score`（デフォルト: 0.6）
+- **Good Examples**:
+  ```python
+  # Good: High edge case coverage across multiple types
+  def test_user_data_processing():
+      processor = UserDataProcessor()
+      
+      # Numeric edge cases
+      assert processor.validate_age(0) is False
+      assert processor.validate_age(-1) is False
+      assert processor.validate_age(150) is False
+      assert processor.validate_age(25) is True
+      
+      # String edge cases  
+      assert processor.validate_name(None) is False
+      assert processor.validate_name("") is False
+      assert processor.validate_name("A" * 1000) is False
+      assert processor.validate_name("John Doe") is True
+      
+      # Collection edge cases
+      assert processor.process_tags([]) == []
+      assert processor.process_tags(["tag1"]) == ["tag1"]
+      assert processor.process_tags(["tag1", "tag2"]) == ["tag1", "tag2"]
+  ```
+- **Bad Examples** (would trigger this rule):
+  ```python
+  # Bad: Low overall edge case coverage
+  def test_basic_functionality():
+      service = DataService()
+      
+      # Only normal cases, no edge case consideration
+      result = service.process_data("normal input")
+      assert result is not None
+      
+      result2 = service.process_list([1, 2, 3])
+      assert len(result2) == 3
+      
+      # Missing: None/empty inputs, boundary values, error conditions
+  ```
+
 ### PTAS: Assertion Rules
 
 #### PTAS001: Too Few Assertions
@@ -515,6 +743,7 @@ PT[CATEGORY][NUMBER]
 - **AS**: Assertion rules
 - **NM**: Naming conventions
 - **VL**: Vulnerability detection
+- **EC**: Edge case coverage
 - **PR**: Performance rules (planned)
 - **DP**: Dependencies (planned)
 - **DC**: Documentation (planned)
@@ -528,8 +757,8 @@ PT[CATEGORY][NUMBER]
 ```toml
 [tool.pytestee]
 # Rule selection (ruff-like)
-select = ["PTCM", "PTAS"]  # Only check comment patterns and assertions
-ignore = ["PTST002"]       # Ignore pattern not detected warnings
+select = ["PTCM", "PTAS", "PTEC"]  # Check comment patterns, assertions, and edge cases
+ignore = ["PTST002"]               # Ignore pattern not detected warnings
 
 # Rule severity customization
 [tool.pytestee.severity]
@@ -543,12 +772,25 @@ PTNM001 = "warning"   # Japanese characters in method names - warning
 PTAS001 = "warning"   # Too few assertions - warning
 PTAS002 = "warning"   # Too many assertions - warning
 PTAS004 = "error"     # No assertions found - error (default)
+PTEC001 = "warning"   # Numeric edge cases missing - warning
+PTEC002 = "warning"   # Collection edge cases missing - warning
+PTEC003 = "warning"   # String edge cases missing - warning
+PTEC004 = "info"      # Normal/abnormal ratio analysis - informational
+PTEC005 = "warning"   # Overall edge case coverage score - warning
 
 # Behavioral thresholds
 max_asserts = 5          # PTAS002 threshold
 min_asserts = 1          # PTAS001 threshold
 require_aaa_comments = true  # Prefer PTCM001/PTCM002 over other patterns
 max_density = 0.6        # PTAS003 threshold
+
+# Edge case coverage thresholds
+min_numeric_edge_cases = 1      # PTEC001 threshold
+min_collection_edge_cases = 1   # PTEC002 threshold  
+min_string_edge_cases = 1       # PTEC003 threshold
+normal_ratio_target = 0.7       # PTEC004 normal case ratio
+abnormal_ratio_target = 0.3     # PTEC004 abnormal case ratio
+min_coverage_score = 0.6        # PTEC005 minimum coverage score
 ```
 
 ### Severity Levels
@@ -609,3 +851,6 @@ Pattern matching supports:
 - **PTST**: コード構造と整理
 - **PTLG**: コードフローの暗黙のパターン
 - **PTAS**: アサーションの量と質
+- **PTNM**: テストメソッドの命名規則
+- **PTVL**: テストの脆弱性と依存関係の検出
+- **PTEC**: エッジケース網羅性とテストパターン分析
