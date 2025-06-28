@@ -26,9 +26,12 @@ class PatternAnalyzer:
             test_function, file_content
         )
 
-        has_arrange = any("# arrange" in line.lower() for line in function_lines)
-        has_act = any("# act" in line.lower() for line in function_lines)
-        has_assert = any("# assert" in line.lower() or ("assert" in line.lower() and "#" in line) for line in function_lines)
+        # Extract only actual comments (lines with # outside of strings)
+        comments = PatternAnalyzer._extract_comments(function_lines)
+
+        has_arrange = any("arrange" in comment.lower() for comment in comments)
+        has_act = any("act" in comment.lower() for comment in comments)
+        has_assert = any("assert" in comment.lower() for comment in comments)
 
         return has_arrange and has_act and has_assert
 
@@ -48,9 +51,12 @@ class PatternAnalyzer:
             test_function, file_content
         )
 
-        has_given = any("# given" in line.lower() for line in function_lines)
-        has_when = any("# when" in line.lower() or ("when" in line.lower() and "#" in line) for line in function_lines)
-        has_then = any("# then" in line.lower() or ("then" in line.lower() and "#" in line) for line in function_lines)
+        # Extract only actual comments (lines with # outside of strings)
+        comments = PatternAnalyzer._extract_comments(function_lines)
+
+        has_given = any("given" in comment.lower() for comment in comments)
+        has_when = any("when" in comment.lower() for comment in comments)
+        has_then = any("then" in comment.lower() for comment in comments)
 
         return has_given and has_when and has_then
 
@@ -128,3 +134,59 @@ class PatternAnalyzer:
         if 0 <= start_line < len(lines) and start_line < end_line:
             return lines[start_line:end_line]
         return []
+
+    @staticmethod
+    def _extract_comments(lines: list[str]) -> list[str]:
+        """Extract actual comments from lines, ignoring comments inside strings.
+
+        Args:
+            lines: List of lines to extract comments from
+
+        Returns:
+            List of comment texts (without the # prefix)
+
+        """
+        comments = []
+        for line in lines:
+            # Find comment position, but ignore # inside strings
+            comment_pos = PatternAnalyzer._find_comment_position(line)
+            if comment_pos != -1:
+                comment_text = line[comment_pos + 1:].strip()
+                if comment_text:  # Only add non-empty comments
+                    comments.append(comment_text)
+        return comments
+
+    @staticmethod
+    def _find_comment_position(line: str) -> int:
+        """Find the position of comment start (#), ignoring # inside strings.
+
+        Args:
+            line: Line to search for comment
+
+        Returns:
+            Position of comment start, or -1 if no comment found
+
+        """
+        in_single_quote = False
+        in_double_quote = False
+        i = 0
+
+        while i < len(line):
+            char = line[i]
+
+            # Handle escape sequences
+            if char == '\\' and i + 1 < len(line):
+                i += 2  # Skip escaped character
+                continue
+
+            # Track string boundaries
+            if char == "'" and not in_double_quote:
+                in_single_quote = not in_single_quote
+            elif char == '"' and not in_single_quote:
+                in_double_quote = not in_double_quote
+            elif char == '#' and not in_single_quote and not in_double_quote:
+                return i
+
+            i += 1
+
+        return -1
