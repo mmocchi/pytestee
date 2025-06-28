@@ -92,10 +92,10 @@ class TestFileRepository:
 
     def test_should_include_file_method(self) -> None:
         """Test the _should_include_file method directly."""
-        # Default repo (no excludes) should include everything
+        # Default repo (no excludes) should include everything except conftest.py
         assert self.repo._should_include_file(Path("test_example.py")) is True
         assert self.repo._should_include_file(Path("helper.py")) is True
-        assert self.repo._should_include_file(Path("conftest.py")) is True
+        assert self.repo._should_include_file(Path("conftest.py")) is False  # conftest.py is always excluded
 
         # Repo with exclude patterns
         repo = self.repo_with_patterns
@@ -107,8 +107,8 @@ class TestFileRepository:
 
         # Files matching exclude patterns should be excluded
         assert repo._should_include_file(Path("test_skip_this.py")) is False
-        assert repo._should_include_file(Path("conftest.py")) is True  # conftest.py by itself doesn't match **/conftest.py when checked as file name only
-        assert repo._should_include_file(Path("src/conftest.py")) is False  # This matches **/conftest.py pattern
+        assert repo._should_include_file(Path("conftest.py")) is False  # conftest.py is always excluded
+        assert repo._should_include_file(Path("src/conftest.py")) is False  # This also matches **/conftest.py pattern
 
     def test_load_test_file_error_handling(self) -> None:
         """Test error handling in load_test_file."""
