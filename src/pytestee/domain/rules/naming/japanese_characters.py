@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 from pytestee.domain.models import (
     CheckerConfig,
     CheckResult,
-    CheckSeverity,
     TestFile,
     TestFunction,
 )
@@ -65,7 +64,6 @@ class PTNM001(BaseRule):
         return self._create_failure_result(
             f"テストメソッド名 '{test_function.name}' に日本語文字が含まれていません。可読性向上のため日本語での命名を検討してください。",
             test_file,
-            test_function,
-            severity=CheckSeverity.WARNING
+            test_function
         )
 

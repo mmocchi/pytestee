@@ -54,8 +54,8 @@ class TestPTNM001:
         assert "日本語文字が含まれています" in result.message
         assert "可読性が良好です" in result.message
 
-    def test_english_test_method_returns_warning(self) -> None:
-        """Test that test method without Japanese characters returns warning."""
+    def test_english_test_method_returns_error(self) -> None:
+        """Test that test method without Japanese characters returns error."""
         test_function = TestFunction(
             name="test_user_creation",
             lineno=1,
@@ -70,7 +70,7 @@ class TestPTNM001:
         result = self.rule.check(test_function, self.test_file)
 
         assert isinstance(result, CheckFailure)
-        assert result.severity == CheckSeverity.WARNING
+        assert result.severity == CheckSeverity.ERROR
         assert "日本語文字が含まれていません" in result.message
         assert "日本語での命名を検討してください" in result.message
 
