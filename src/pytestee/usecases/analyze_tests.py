@@ -1,6 +1,5 @@
 """Use case for analyzing test files."""
 
-import dataclasses
 from pathlib import Path
 from typing import Any, Optional
 
@@ -128,20 +127,8 @@ class AnalyzeTestsUseCase:
                 # Check if rule is enabled for this specific file
                 if rule.is_enabled_for_file(test_file, self._config_manager):
                     try:
-                        # Get file-specific configuration for the rule
-                        file_specific_config = rule.get_config_for_file(test_file, self._config_manager)
-
-                        # Create checker config with file-specific overrides
-                        base_checker_config = self._config_manager.get_checker_config(rule.name)
-
-                        # Merge file-specific config into base config
-                        if file_specific_config:
-                            merged_config = (base_checker_config.config or {}).copy()
-                            merged_config.update(file_specific_config)
-                            checker_config = dataclasses.replace(base_checker_config, config=merged_config)
-                        else:
-                            checker_config = base_checker_config
-
+                        # Use global checker config (no file-specific overrides needed)
+                        checker_config = self._config_manager.get_checker_config(rule.name)
                         rule_result = rule.check(test_function, test_file, checker_config)
                         results.append(rule_result)
                     except Exception as e:
@@ -154,20 +141,8 @@ class AnalyzeTestsUseCase:
                 # Check if rule is enabled for this specific file and has check_class method
                 if rule.is_enabled_for_file(test_file, self._config_manager) and hasattr(rule, 'check_class'):
                     try:
-                        # Get file-specific configuration for the rule
-                        file_specific_config = rule.get_config_for_file(test_file, self._config_manager)
-
-                        # Create checker config with file-specific overrides
-                        base_checker_config = self._config_manager.get_checker_config(rule.name)
-
-                        # Merge file-specific config into base config
-                        if file_specific_config:
-                            merged_config = (base_checker_config.config or {}).copy()
-                            merged_config.update(file_specific_config)
-                            checker_config = dataclasses.replace(base_checker_config, config=merged_config)
-                        else:
-                            checker_config = base_checker_config
-
+                        # Use global checker config (no file-specific overrides needed)
+                        checker_config = self._config_manager.get_checker_config(rule.name)
                         rule_result = rule.check_class(test_class, test_file, checker_config)
                         results.append(rule_result)
                     except Exception as e:

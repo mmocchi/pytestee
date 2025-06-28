@@ -63,8 +63,8 @@ class ConfigManager(IConfigManager):
                     "allow_gwt": True,
                 },
             },
-            # Directory-specific rule configuration
-            "per_directory_rules": {},
+            # Per-file rule ignores (ruff-like)
+            "per_file_ignores": {},
         }
 
     def load_config(self, config_path: Optional[Path] = None) -> dict[str, Any]:
@@ -293,26 +293,19 @@ class ConfigManager(IConfigManager):
         """Get file exclude patterns."""
         return self._config.get("exclude", [])
 
-    def get_directory_config(self, file_path: Path) -> dict[str, Any]:
-        """Get configuration for a specific file path, considering directory-specific rules.
+    def get_file_specific_ignores(self, file_path: Path) -> list[str]:
+        """Get file-specific ignores for a given file path (ruff-like).
 
         Args:
             file_path: Path to the test file being analyzed
 
         Returns:
-            Merged configuration with directory-specific overrides applied
+            List of rules to ignore for this specific file
 
         """
-        # Start with global configuration
-        config = self._config.copy()
-
-        # Get per-directory rules
-        per_dir_rules = self._config.get("per_directory_rules", {})
-        if not per_dir_rules:
-            return config
-
-        # Find matching directory patterns and apply their configurations
-        matching_configs = []
+        per_file_ignores = self._config.get("per_file_ignores", {})
+        if not per_file_ignores:
+            return []
 
         # Convert file path to relative path from project root
         try:
@@ -324,26 +317,24 @@ class ConfigManager(IConfigManager):
 
         relative_path_str = str(relative_path)
 
-        for pattern, dir_config in per_dir_rules.items():
-            if self._matches_directory_pattern(relative_path_str, pattern):
-                matching_configs.append((pattern, dir_config))
+        # Collect all matching ignore patterns
+        file_ignores = []
+        for pattern, ignores in per_file_ignores.items():
+            if self._matches_file_pattern(relative_path_str, pattern):
+                if isinstance(ignores, list):
+                    file_ignores.extend(ignores)
+                elif isinstance(ignores, str):
+                    file_ignores.append(ignores)
 
-        # Sort by specificity (longer patterns first for more specific matches)
-        matching_configs.sort(key=lambda x: len(x[0]), reverse=True)
+        return file_ignores
 
-        # Apply configurations in order of specificity
-        for _pattern, dir_config in matching_configs:
-            self._merge_config_deep(config, dir_config)
-
-        return config
-
-    def _matches_directory_pattern(self, file_path: str, pattern: str) -> bool:
-        """Check if a file path matches a directory pattern.
+    def _matches_file_pattern(self, file_path: str, pattern: str) -> bool:
+        """Check if a file path matches a pattern (ruff-like).
 
         Supports patterns like:
-        - "tests/unit" - exact directory match
+        - "__init__.py" - exact file match
         - "tests/**" - directory and all subdirectories
-        - "**/integration" - any integration directory at any level
+        - "**/{tests,docs,tools}/*" - multiple directory patterns
         """
         import fnmatch  # noqa: PLC0415
 
@@ -351,47 +342,14 @@ class ConfigManager(IConfigManager):
         file_path = file_path.replace("\\", "/")
         pattern = pattern.replace("\\", "/")
 
-        # Handle directory-only patterns (add /** if needed)
-        if not pattern.endswith("/**") and not pattern.endswith("/*") and "**" not in pattern:
-            # Check if file is in this directory or subdirectory
-            if file_path.startswith(pattern + "/") or file_path == pattern:
-                return True
-            # Also check the pattern with /** appended
-            pattern = pattern + "/**"
-
         return fnmatch.fnmatch(file_path, pattern)
-
-    def _merge_config_deep(self, base_config: dict[str, Any], override_config: dict[str, Any]) -> None:
-        """Deeply merge override configuration into base configuration."""
-        for key, value in override_config.items():
-            if key in base_config and isinstance(base_config[key], dict) and isinstance(value, dict):
-                self._merge_config_deep(base_config[key], value)
-            else:
-                base_config[key] = value
 
     def is_rule_enabled_for_file(self, rule_id: str, file_path: Path) -> bool:
         """Check if a specific rule is enabled for a given file path."""
-        # Get directory-specific configuration
-        file_config = self.get_directory_config(file_path)
+        # First check global rule enablement
+        if not self.is_rule_enabled(rule_id):
+            return False
 
-        select_patterns = file_config.get("select", [])
-        ignore_patterns = file_config.get("ignore", [])
-
-        # If select is specified and not empty, only selected rules are enabled
-        if select_patterns:
-            is_selected = self._matches_patterns(rule_id, select_patterns)
-            if not is_selected:
-                return False
-
-        # Check if rule is ignored
-        if ignore_patterns:
-            is_ignored = self._matches_patterns(rule_id, ignore_patterns)
-            if is_ignored:
-                return False
-
-        return True
-
-    def get_rule_config_for_file(self, rule_id: str, file_path: Path) -> dict[str, Any]:
-        """Get rule-specific configuration for a given file path."""
-        file_config = self.get_directory_config(file_path)
-        return file_config.get("rules", {}).get(rule_id, {})
+        # Then check file-specific ignores
+        file_ignores = self.get_file_specific_ignores(file_path)
+        return not self._matches_patterns(rule_id, file_ignores)
