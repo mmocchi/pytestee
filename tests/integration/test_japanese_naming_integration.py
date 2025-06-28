@@ -33,11 +33,11 @@ class TestJapaneseNamingIntegration:
 
         # Count results by type
         success_results = [r for r in results if isinstance(r, CheckSuccess)]
-        failure_results = [r for r in results if isinstance(r, CheckFailure) and r.severity == CheckSeverity.WARNING]
+        failure_results = [r for r in results if isinstance(r, CheckFailure) and r.severity == CheckSeverity.ERROR]
 
         # Japanese methods should return INFO (4 methods: 日本語, ひらがな, カタカナ, 漢字)
         # Mixed method should return INFO (1 method: mixed_japanese)
-        # English only should return WARNING (1 method: english_only)
+        # English only should return ERROR (1 method: english_only)
         assert len(success_results) == 5  # 4 pure Japanese + 1 mixed
         assert len(failure_results) == 1  # 1 English only
 
