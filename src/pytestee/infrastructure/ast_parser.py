@@ -2,7 +2,7 @@
 
 import ast
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from pytestee.domain.models import TestClass, TestFile, TestFunction
 
@@ -214,3 +214,132 @@ class ASTParser:
                 comments.append((i + 1, line))  # Convert back to 1-based line numbers
 
         return comments
+
+    def extract_function_parameters(self, test_function: TestFunction) -> list[tuple[str, Optional[type]]]:
+        """Extract parameter names and inferred types from test function calls."""
+        parameters = []
+
+        for node in ast.walk(ast.Module(body=test_function.body, type_ignores=[])):
+            if isinstance(node, ast.Call):
+                # Extract function call arguments
+                for arg in node.args:
+                    param_info = self._analyze_argument(arg)
+                    if param_info:
+                        parameters.append(param_info)
+
+        return parameters
+
+    def _analyze_argument(self, arg: ast.expr) -> Optional[tuple[str, Optional[type]]]:
+        """Analyze a function argument to extract name and type."""
+        if isinstance(arg, ast.Constant):
+            # Direct constant value
+            value_type = type(arg.value) if arg.value is not None else type(None)
+            return (str(arg.value), value_type)
+        if isinstance(arg, ast.Name):
+            # Variable reference
+            return (arg.id, None)  # Type unknown without additional analysis
+        if isinstance(arg, ast.List):
+            # List literal
+            return ("list_literal", list)
+        if isinstance(arg, ast.Dict):
+            # Dict literal
+            return ("dict_literal", dict)
+        if isinstance(arg, ast.Set):
+            # Set literal
+            return ("set_literal", set)
+
+        return None
+
+    def extract_pytest_parametrize_data(self, test_function: TestFunction) -> list[tuple]:
+        """Extract test data from pytest.mark.parametrize decorators."""
+        parametrize_data = []
+
+        for decorator_name in test_function.decorators or []:
+            if "parametrize" in decorator_name:
+                # Find the actual decorator AST node
+                for node in ast.walk(ast.Module(body=test_function.body, type_ignores=[])):
+                    if isinstance(node, ast.Call) and self._is_parametrize_decorator(node):
+                        data = self._extract_parametrize_values(node)
+                        parametrize_data.extend(data)
+
+        return parametrize_data
+
+    def _is_parametrize_decorator(self, node: ast.Call) -> bool:
+        """Check if a call node is a pytest.mark.parametrize decorator."""
+        if isinstance(node.func, ast.Attribute):
+            if (isinstance(node.func.value, ast.Attribute) and
+                isinstance(node.func.value.value, ast.Name) and
+                node.func.value.value.id == "pytest" and
+                node.func.value.attr == "mark" and
+                node.func.attr == "parametrize"):
+                return True
+        return False
+
+    def _extract_parametrize_values(self, node: ast.Call) -> list[tuple]:
+        """Extract values from a parametrize decorator."""
+        values = []
+
+        # Parametrize typically has at least 2 arguments: parameter names and values
+        if len(node.args) >= 2:
+            values_arg = node.args[1]
+
+            if isinstance(values_arg, ast.List):
+                for item in values_arg.elts:
+                    if isinstance(item, ast.Tuple):
+                        # Multiple parameters
+                        tuple_values = []
+                        for elt in item.elts:
+                            if isinstance(elt, ast.Constant):
+                                tuple_values.append(elt.value)
+                        if tuple_values:
+                            values.append(tuple(tuple_values))
+                    elif isinstance(item, ast.Constant):
+                        # Single parameter
+                        values.append((item.value,))
+
+        return values
+
+    def find_variable_assignments(self, test_function: TestFunction) -> dict[str, list[Any]]:
+        """Find all variable assignments and their values in a test function."""
+        assignments: dict[str, list[Any]] = {}
+
+        for node in ast.walk(ast.Module(body=test_function.body, type_ignores=[])):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        var_name = target.id
+                        value = self._extract_assignment_value(node.value)
+
+                        if var_name not in assignments:
+                            assignments[var_name] = []
+                        assignments[var_name].append(value)
+
+        return assignments
+
+    def _extract_assignment_value(self, value_node: ast.expr) -> Any:
+        """Extract the value from an assignment node."""
+        if isinstance(value_node, ast.Constant):
+            return value_node.value
+        if isinstance(value_node, ast.List):
+            return [self._extract_assignment_value(elt) for elt in value_node.elts]
+        if isinstance(value_node, ast.Dict):
+            result = {}
+            for k, v in zip(value_node.keys, value_node.values):
+                if isinstance(k, ast.Constant):
+                    result[k.value] = self._extract_assignment_value(v)
+            return result
+        if isinstance(value_node, ast.Set):
+            return {self._extract_assignment_value(elt) for elt in value_node.elts}
+        if isinstance(value_node, ast.Name):
+            return f"var:{value_node.id}"  # Variable reference
+        if isinstance(value_node, ast.Call):
+            return f"call:{self._get_call_name(value_node)}"
+        return f"complex:{type(value_node).__name__}"
+
+    def _get_call_name(self, call_node: ast.Call) -> str:
+        """Get the name of a function call."""
+        if isinstance(call_node.func, ast.Name):
+            return call_node.func.id
+        if isinstance(call_node.func, ast.Attribute):
+            return self._get_attribute_name(call_node.func)
+        return "unknown_call"

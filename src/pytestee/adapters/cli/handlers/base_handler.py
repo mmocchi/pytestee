@@ -44,7 +44,7 @@ class BaseCommandHandler(ABC):
         return self._registry
 
     @abstractmethod
-    def execute(self, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    def execute(self, *args: Any, **kwargs: Any) -> Any:
         """Execute the command.
 
         Args:

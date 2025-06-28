@@ -126,7 +126,10 @@ class CheckerRegistry(ICheckerRegistry):
         """設定に基づいて有効化されたルールIDのリストを取得します。"""
         if not self.config_manager or not hasattr(self.config_manager, "is_rule_enabled"):
             # No config manager or no rule filtering - return default rules
-            return ["PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001"]
+            return [
+                "PTCM003", "PTST001", "PTLG001", "PTAS005", "PTNM001",
+                "PTEC001", "PTEC002", "PTEC003", "PTEC004", "PTEC005"
+            ]
 
         all_possible_rules = [
             "PTCM001", "PTCM002", "PTCM003",
@@ -134,7 +137,8 @@ class CheckerRegistry(ICheckerRegistry):
             "PTLG001",
             "PTAS001", "PTAS002", "PTAS003", "PTAS004", "PTAS005",
             "PTNM001", "PTNM002", "PTNM003",
-            "PTVL001", "PTVL002", "PTVL003", "PTVL004", "PTVL005"
+            "PTVL001", "PTVL002", "PTVL003", "PTVL004", "PTVL005",
+            "PTEC001", "PTEC002", "PTEC003", "PTEC004", "PTEC005"
         ]
 
         return [
@@ -170,6 +174,12 @@ class CheckerRegistry(ICheckerRegistry):
             "PTVL003": self._create_ptvl003,
             "PTVL004": self._create_ptvl004,
             "PTVL005": self._create_ptvl005,
+            # Edge case rules
+            "PTEC001": self._create_ptec001,
+            "PTEC002": self._create_ptec002,
+            "PTEC003": self._create_ptec003,
+            "PTEC004": self._create_ptec004,
+            "PTEC005": self._create_ptec005,
         }
 
         factory = rule_factories.get(rule_id)
@@ -274,6 +284,36 @@ class CheckerRegistry(ICheckerRegistry):
         """Create PTVL005 rule instance."""
         from pytestee.domain.rules.vulnerability.ptvl005 import PTVL005
         return PTVL005()
+
+    def _create_ptec001(self) -> "BaseRule":
+        """Create PTEC001 rule instance."""
+        from pytestee.domain.analyzers.edge_case_analyzer import EdgeCaseAnalyzer
+        from pytestee.domain.rules.edge_case.ptec001 import PTEC001
+        return PTEC001(EdgeCaseAnalyzer())
+
+    def _create_ptec002(self) -> "BaseRule":
+        """Create PTEC002 rule instance."""
+        from pytestee.domain.analyzers.edge_case_analyzer import EdgeCaseAnalyzer
+        from pytestee.domain.rules.edge_case.ptec002 import PTEC002
+        return PTEC002(EdgeCaseAnalyzer())
+
+    def _create_ptec003(self) -> "BaseRule":
+        """Create PTEC003 rule instance."""
+        from pytestee.domain.analyzers.edge_case_analyzer import EdgeCaseAnalyzer
+        from pytestee.domain.rules.edge_case.ptec003 import PTEC003
+        return PTEC003(EdgeCaseAnalyzer())
+
+    def _create_ptec004(self) -> "BaseRule":
+        """Create PTEC004 rule instance."""
+        from pytestee.domain.analyzers.edge_case_analyzer import EdgeCaseAnalyzer
+        from pytestee.domain.rules.edge_case.ptec004 import PTEC004
+        return PTEC004(EdgeCaseAnalyzer())
+
+    def _create_ptec005(self) -> "BaseRule":
+        """Create PTEC005 rule instance."""
+        from pytestee.domain.analyzers.edge_case_analyzer import EdgeCaseAnalyzer
+        from pytestee.domain.rules.edge_case.ptec005 import PTEC005
+        return PTEC005(EdgeCaseAnalyzer())
 
     def _validate_rule_conflicts(self) -> None:
         """ルール競合を検証します。"""

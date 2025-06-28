@@ -97,6 +97,12 @@ ignore = [
     "TRY300", # move statement to else block (not always clearer)
     "PERF203", # try-except in loop (error handling required)
     "ARG002", # unused method argument (config parameter for future use)
+    "PLR0911", # too many return statements (edge case analysis needs multiple returns)
+    "PLR0912", # too many branches (edge case analysis needs comprehensive checks)
+    "ANN401", # dynamically typed expressions (Any needed for flexible value analysis)
+    "PLC0415", # import should be at top-level (AST imports needed only in analysis functions)
+    "SIM102", # nested if statements (edge case conditions need clarity over simplification)
+    "PERF401", # list comprehension (explicit loops clearer for complex edge case logic)
 ]
 
 # Per-file ignores for fixtures
