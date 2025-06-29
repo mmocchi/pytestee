@@ -1,0 +1,41 @@
+/* Custom styles for Pytestee documentation */
+
+/* Improve code block styling */
+.highlight .hll {
+  background-color: var(--md-code-hl-color);
+}
+
+/* Better spacing for rule examples */
+.md-typeset .admonition {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Improve table styling for rule references */
+.md-typeset table:not([class]) {
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  border: 1px solid var(--md-default-fg-color--light);
+  padding: 0.5rem;
+}
+
+/* Better spacing for navigation items */
+.md-nav__item .md-nav__link {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Improve search highlighting */
+[data-md-component="search-result"] mark {
+  background-color: var(--md-accent-fg-color--transparent);
+  color: var(--md-accent-fg-color);
+}
+
+/* Better code copy button positioning */
+.md-clipboard {
+  right: 0.5rem;
+  top: 0.5rem;
+}

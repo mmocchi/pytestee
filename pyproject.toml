@@ -46,7 +46,7 @@ pytestee = "pytestee.main:main"
 
 [project.urls]
 Homepage = "https://github.com/mmocchi/pytestee"
-Documentation = "https://github.com/mmocchi/pytestee"
+Documentation = "https://pytestee.readthedocs.io/"
 Repository = "https://github.com/mmocchi/pytestee"
 Issues = "https://github.com/mmocchi/pytestee/issues"
 
@@ -246,4 +246,11 @@ dev = [
     "types-colorama>=0.4.15.20240311",
     "types-toml>=0.10.8.20240310",
     "import-linter>=2.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "mkdocs-mermaid2-plugin>=1.1.0",
+    "pymdown-extensions>=10.3.0",
+    "mkdocstrings[python]>=0.24.0",
 ]

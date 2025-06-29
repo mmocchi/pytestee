@@ -6,6 +6,11 @@ tasks:
     cmds:
       - uv sync
 
+  install:docs:
+    desc: "Install documentation dependencies"
+    cmds:
+      - uv sync --group docs
+
   check:
     desc: "Check all"
     cmds:
@@ -60,3 +65,18 @@ tasks:
     desc: "Clean build artifacts"
     cmds:
       - rm -rf dist/ build/ *.egg-info/
+
+  docs:serve:
+    desc: "Serve documentation locally for development"
+    cmds:
+      - uv run --group docs mkdocs serve
+
+  docs:build:
+    desc: "Build documentation"
+    cmds:
+      - uv run --group docs mkdocs build
+
+  docs:clean:
+    desc: "Clean documentation build artifacts"
+    cmds:
+      - rm -rf site/
