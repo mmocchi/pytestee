@@ -77,7 +77,10 @@ nav:
   - 設定ガイド: configuration.md
   - ルールリファレンス: rules.md
   - リファレンス:
-    - CLIコマンド: cli-reference.md
+    - CLIコマンド: cli/index.md
+    - check: cli/check.md
+    - show-config: cli/show-config.md
+    - list-rules: cli/list-rules.md
     - 設定ファイル: config-reference.md
 
 extra:
