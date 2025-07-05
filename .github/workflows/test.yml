@@ -42,7 +42,7 @@ jobs:
       run: mise exec -- uv run pytest --cov=src/pytestee --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
       if: matrix.python-version == '3.11'
       with:
         files: ./coverage.xml
