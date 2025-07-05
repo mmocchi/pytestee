@@ -383,10 +383,6 @@ src/pytestee/domain/rules/
 5. テストスイートとリンティングを実行
 6. プルリクエストを提出
 
-## License
-
-MIT License - see LICENSE file for details.
-
 ## Roadmap
 
 - [ ] 追加のパターンチェッカー（Page Object、Builder等）

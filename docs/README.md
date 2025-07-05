@@ -150,6 +150,3 @@ src/pytestee/
 - **[Issue Tracker](https://github.com/mmocchi/pytestee/issues)**
 - **[PyPI Package](https://pypi.org/project/pytestee/)**
 
-## ライセンス
-
-MIT License - 詳細は [GitHub リポジトリ](https://github.com/mmocchi/pytestee/blob/main/LICENSE) で確認してください。
