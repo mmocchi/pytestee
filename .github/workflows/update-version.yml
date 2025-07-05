@@ -32,7 +32,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       # TOMLパーサーのインストール
       - name: Install toml
@@ -85,7 +85,7 @@ jobs:
 
       # バージョン更新のPRを自動作成
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # コミットメッセージ
