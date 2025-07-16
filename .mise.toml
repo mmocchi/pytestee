@@ -1,4 +1,5 @@
 [tools]
+pinact = "latest"
 python = "3.13.5"
 task = "latest"
 uv = "latest"
