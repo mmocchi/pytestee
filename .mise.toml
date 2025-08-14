@@ -1,6 +1,6 @@
 [tools]
 pinact = "latest"
-python = "3.13.6"
+python = "3.13.7"
 task = "latest"
 uv = "latest"
 
